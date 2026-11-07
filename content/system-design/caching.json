@@ -557,6 +557,74 @@
     ],
     "answer": "a",
     "explanation": "CAS checks the token returned by gets. On a conflict, fetch the current value/token and recompute the update rather than overwriting a concurrent change. Source: [Memcached protocol](https://docs.memcached.org/protocols/basic/)"
-  }
-
+  },
+{
+  "id": "sd-caching-continuation-021",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "Which Redis SET option only writes an absent cache key?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "NX"
+    },
+    {
+      "id": "o1",
+      "text": "XX"
+    },
+    {
+      "id": "o2",
+      "text": "KEEPTTL"
+    },
+    {
+      "id": "o3",
+      "text": "GET"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "NX makes the write conditional on key absence; XX requires an existing key. Source: [Redis SET](https://redis.io/docs/latest/commands/set/)",
+  "difficulty_rating": 950,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-caching-continuation-022",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "Which single Redis command sets this value and its 30-second lifetime?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "SET hint value EX 30"
+    },
+    {
+      "id": "o1",
+      "text": "SET hint value; later EXPIRE hint 30"
+    },
+    {
+      "id": "o2",
+      "text": "GET hint"
+    },
+    {
+      "id": "o3",
+      "text": "SET hint value KEEPTTL"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "SET with EX attaches expiry in the same command, avoiding a crash gap between separate SET and EXPIRE calls. Source: [Redis SET](https://redis.io/docs/latest/commands/set/)",
+  "difficulty_rating": 1250,
+  "scenario": "A disposable hint must not survive indefinitely if its writer crashes after storing it.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+}
 ]

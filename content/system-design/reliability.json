@@ -555,6 +555,78 @@
       "s4"
     ],
     "explanation": "A useful canary compares a representative sample against the control and service objectives. A few successful requests alone are not sufficient evidence for expansion. Source: [Google SRE canaries](https://sre.google/workbook/canarying-releases/)"
-  }
-
+  },
+{
+  "id": "sd-reliability-continuation-021",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "mcq",
+  "prompt": "A circuit breaker is open. What should ordinary calls to its failing dependency do?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Fail promptly without calling it"
+    },
+    {
+      "id": "o1",
+      "text": "Retry continuously"
+    },
+    {
+      "id": "o2",
+      "text": "Wait without a deadline"
+    },
+    {
+      "id": "o3",
+      "text": "Report successful processing"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "An open breaker rejects calls locally, limiting repeated pressure on a dependency likely to fail. Source: [Azure circuit breakers](https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-reliability-continuation-022",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "reorder",
+  "prompt": "Order a typical circuit-breaker recovery after its reset timeout.",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Enter half-open state"
+    },
+    {
+      "id": "o1",
+      "text": "Allow limited trial calls"
+    },
+    {
+      "id": "o2",
+      "text": "Evaluate trial outcomes"
+    },
+    {
+      "id": "o3",
+      "text": "Close after sufficient success, or reopen on failure"
+    }
+  ],
+  "answer": [
+    "o0",
+    "o1",
+    "o2",
+    "o3"
+  ],
+  "explanation": "Half-open permits a limited recovery test. Trial outcomes determine whether normal traffic resumes or protection continues. Source: [Azure circuit breakers](https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker)",
+  "difficulty_rating": 1350,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+}
 ]

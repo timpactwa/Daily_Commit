@@ -554,6 +554,78 @@
       "s4"
     ],
     "explanation": "An outbox relay can publish again after a crash. An event ID and atomic consumer-side deduplication with the durable update protect the consumer’s database effect. Source: [AWS transactional outbox](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html)"
-  }
-
+  },
+{
+  "id": "sd-async-messaging-continuation-021",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "What does XACK remove for a Redis Streams consumer group?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "The entry from that group’s pending list"
+    },
+    {
+      "id": "o1",
+      "text": "The stream entry itself"
+    },
+    {
+      "id": "o2",
+      "text": "Every consumer group"
+    },
+    {
+      "id": "o3",
+      "text": "All later entries"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Acknowledgement removes pending bookkeeping for that group; it does not itself delete the stream entry. Source: [Redis Streams](https://redis.io/docs/latest/develop/data-types/streams/)",
+  "difficulty_rating": 1100,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-async-messaging-continuation-022",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "reorder",
+  "prompt": "Order recovery of an idle pending stream entry after its worker dies.",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Identify an entry idle beyond the chosen threshold"
+    },
+    {
+      "id": "o1",
+      "text": "Claim it for a live consumer"
+    },
+    {
+      "id": "o2",
+      "text": "Process it with duplicate-safe effects"
+    },
+    {
+      "id": "o3",
+      "text": "Acknowledge successful processing"
+    }
+  ],
+  "answer": [
+    "o0",
+    "o1",
+    "o2",
+    "o3"
+  ],
+  "explanation": "Pending entries can be claimed after a worker disappears. Claiming does not prevent duplicate effects, so processing still needs idempotency. Source: [Redis Streams](https://redis.io/docs/latest/develop/data-types/streams/)",
+  "difficulty_rating": 1400,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+}
 ]

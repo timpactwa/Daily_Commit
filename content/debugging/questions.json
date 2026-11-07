@@ -1006,8 +1006,7 @@
     "tags": [
       "research-2026-11",
       "verified-code"
-    ],
-    "placement": true
+    ]
   },
   {
     "id": "dbg-longest-unique-substring-wrong-operator-01",
@@ -1982,6 +1981,267 @@
     },
     "tags": [
       "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-rotate-right-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Return a new list rotated right by nonnegative k places; empty input gives []. Tap the buggy line.",
+    "code": "def rotate_right(nums, k):\n    if not nums:\n        return []\n    n = len(nums)\n    k = k % n\n    result = nums[:]\n\n    def reverse(start, end):\n        while start < end:\n            result[start], result[end] = (result[end], result[start])\n            start += 1\n            end -= 1\n    reverse(1, n - 1)\n    reverse(0, k - 1)\n    reverse(k, n - 1)\n    return result",
+    "language": "python",
+    "test_output": "rotate_right([1, 2, 3], 0): expected [1, 2, 3], got [2, 3, 1]\nrotate_right([1, 2, 3], 1): expected [3, 1, 2], got [1, 2, 3]\nrotate_right([1, 2, 3], 2): expected [2, 3, 1], got [3, 1, 2]",
+    "answer": 13,
+    "explanation": "Line 13 should be `reverse(0, n - 1)`, but a number is off by one. That is why rotate_right([1, 2, 3], 0) fails.",
+    "difficulty_rating": 1405,
+    "provenance": {
+      "source_function": "pipeline/corpus/rotate_right.py::rotate_right",
+      "mutation_operator": "off_by_one",
+      "original_line": "    reverse(0, n - 1)",
+      "mutated_line": "    reverse(1, n - 1)",
+      "tests_failed": 8,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-rotate-right-off-by-one-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Return a new list rotated right by nonnegative k places; empty input gives []. Tap the buggy line.",
+    "code": "def rotate_right(nums, k):\n    if not nums:\n        return []\n    n = len(nums)\n    k = k % n\n    result = nums[:]\n\n    def reverse(start, end):\n        while start < end:\n            result[start], result[end] = (result[end], result[start])\n            start += 1\n            end -= 1\n    reverse(0, n - 1)\n    reverse(1, k - 1)\n    reverse(k, n - 1)\n    return result",
+    "language": "python",
+    "test_output": "rotate_right([1, 2, 3], 2): expected [2, 3, 1], got [3, 2, 1]\nrotate_right([1, 2, 3], 8): expected [2, 3, 1], got [3, 2, 1]\nrotate_right([0, 1, 2, 3, 4], 4): expected [1, 2, 3, 4, 0], got [4, 1, 2, 3, 0]",
+    "answer": 14,
+    "explanation": "Line 14 should be `reverse(0, k - 1)`, but a number is off by one. That is why rotate_right([1, 2, 3], 2) fails.",
+    "difficulty_rating": 1405,
+    "provenance": {
+      "source_function": "pipeline/corpus/rotate_right.py::rotate_right",
+      "mutation_operator": "off_by_one",
+      "original_line": "    reverse(0, k - 1)",
+      "mutated_line": "    reverse(1, k - 1)",
+      "tests_failed": 3,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-rotate-right-off-by-one-03",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Return a new list rotated right by nonnegative k places; empty input gives []. Tap the buggy line.",
+    "code": "def rotate_right(nums, k):\n    if not nums:\n        return []\n    n = len(nums)\n    k = k % n\n    result = nums[:]\n\n    def reverse(start, end):\n        while start < end:\n            result[start], result[end] = (result[end], result[start])\n            start += 2\n            end -= 1\n    reverse(0, n - 1)\n    reverse(0, k - 1)\n    reverse(k, n - 1)\n    return result",
+    "language": "python",
+    "test_output": "rotate_right([-1, 0, 4, 4], 1): expected [4, -1, 0, 4], got [4, -1, 4, 0]\nrotate_right([0, 1, 2, 3, 4], 4): expected [1, 2, 3, 4, 0], got [2, 1, 3, 4, 0]",
+    "answer": 11,
+    "explanation": "Line 11 should be `start += 1`, but a number is off by one. That is why rotate_right([-1, 0, 4, 4], 1) fails.",
+    "difficulty_rating": 1405,
+    "provenance": {
+      "source_function": "pipeline/corpus/rotate_right.py::rotate_right",
+      "mutation_operator": "off_by_one",
+      "original_line": "            start += 1",
+      "mutated_line": "            start += 2",
+      "tests_failed": 2,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-rotate-right-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Return a new list rotated right by nonnegative k places; empty input gives []. Tap the buggy line.",
+    "code": "def rotate_right(nums, k):\n    if not nums:\n        return []\n    n = len(nums)\n    k = k % n\n    result = nums[:]\n\n    def reverse(start, end):\n        while start < end:\n            result[start], result[end] = (result[end], result[start])\n            start -= 1\n            end -= 1\n    reverse(0, n - 1)\n    reverse(0, k - 1)\n    reverse(k, n - 1)\n    return result",
+    "language": "python",
+    "test_output": "rotate_right([1, 2, 3], 0): raised IndexError\nrotate_right([1, 2, 3], 1): raised IndexError\nrotate_right([1, 2, 3], 2): raised IndexError",
+    "answer": 11,
+    "explanation": "Line 11 should be `start += 1`, but it uses the wrong operator. That is why rotate_right([1, 2, 3], 0) fails.",
+    "difficulty_rating": 1305,
+    "provenance": {
+      "source_function": "pipeline/corpus/rotate_right.py::rotate_right",
+      "mutation_operator": "wrong_operator",
+      "original_line": "            start += 1",
+      "mutated_line": "            start -= 1",
+      "tests_failed": 8,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-rotate-right-wrong-operator-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Return a new list rotated right by nonnegative k places; empty input gives []. Tap the buggy line.",
+    "code": "def rotate_right(nums, k):\n    if not nums:\n        return []\n    n = len(nums)\n    k = k % n\n    result = nums[:]\n\n    def reverse(start, end):\n        while start < end:\n            result[start], result[end] = (result[end], result[start])\n            start += 1\n            end -= 1\n    reverse(0, n + 1)\n    reverse(0, k - 1)\n    reverse(k, n - 1)\n    return result",
+    "language": "python",
+    "test_output": "rotate_right([1], 3): raised IndexError\nrotate_right([1, 2, 3], 0): raised IndexError\nrotate_right([1, 2, 3], 1): raised IndexError",
+    "answer": 13,
+    "explanation": "Line 13 should be `reverse(0, n - 1)`, but it uses the wrong operator. That is why rotate_right([1], 3) fails.",
+    "difficulty_rating": 1305,
+    "provenance": {
+      "source_function": "pipeline/corpus/rotate_right.py::rotate_right",
+      "mutation_operator": "wrong_operator",
+      "original_line": "    reverse(0, n - 1)",
+      "mutated_line": "    reverse(0, n + 1)",
+      "tests_failed": 9,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-running-max-flip-comparison-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Return the maximum seen through each list position; empty input gives []. Tap the buggy line.",
+    "code": "def running_max(nums):\n    if not nums:\n        return []\n    best = nums[0]\n    result = [nums[0]]\n    i = 1\n    while i <= len(nums):\n        if nums[i] > best:\n            best = nums[i]\n        result.append(best)\n        i += 1\n    return result",
+    "language": "python",
+    "test_output": "running_max([0]): raised IndexError\nrunning_max([4]): raised IndexError\nrunning_max([-5, -9, -2]): raised IndexError",
+    "answer": 7,
+    "explanation": "Line 7 should be `while i < len(nums):`, but the comparison was flipped. That is why running_max([0]) fails.",
+    "difficulty_rating": 940,
+    "provenance": {
+      "source_function": "pipeline/corpus/running_max.py::running_max",
+      "mutation_operator": "flip_comparison",
+      "original_line": "    while i < len(nums):",
+      "mutated_line": "    while i <= len(nums):",
+      "tests_failed": 10,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-running-max-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Return the maximum seen through each list position; empty input gives []. Tap the buggy line.",
+    "code": "def running_max(nums):\n    if not nums:\n        return []\n    best = nums[0]\n    result = [nums[0]]\n    i = 2\n    while i < len(nums):\n        if nums[i] > best:\n            best = nums[i]\n        result.append(best)\n        i += 1\n    return result",
+    "language": "python",
+    "test_output": "running_max([-5, -9, -2]): expected [-5, -5, -2], got [-5, -2]\nrunning_max([1, 2, 3]): expected [1, 2, 3], got [1, 3]\nrunning_max([3, 2, 1]): expected [3, 3, 3], got [3, 3]",
+    "answer": 6,
+    "explanation": "Line 6 should be `i = 1`, but a number is off by one. That is why running_max([-5, -9, -2]) fails.",
+    "difficulty_rating": 1090,
+    "provenance": {
+      "source_function": "pipeline/corpus/running_max.py::running_max",
+      "mutation_operator": "off_by_one",
+      "original_line": "    i = 1",
+      "mutated_line": "    i = 2",
+      "tests_failed": 8,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-running-max-off-by-one-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Return the maximum seen through each list position; empty input gives []. Tap the buggy line.",
+    "code": "def running_max(nums):\n    if not nums:\n        return []\n    best = nums[0]\n    result = [nums[0]]\n    i = 0\n    while i < len(nums):\n        if nums[i] > best:\n            best = nums[i]\n        result.append(best)\n        i += 1\n    return result",
+    "language": "python",
+    "test_output": "running_max([0]): expected [0], got [0, 0]\nrunning_max([4]): expected [4], got [4, 4]\nrunning_max([-5, -9, -2]): expected [-5, -5, -2], got [-5, -5, -5, -2]",
+    "answer": 6,
+    "explanation": "Line 6 should be `i = 1`, but a number is off by one. That is why running_max([0]) fails.",
+    "difficulty_rating": 1090,
+    "provenance": {
+      "source_function": "pipeline/corpus/running_max.py::running_max",
+      "mutation_operator": "off_by_one",
+      "original_line": "    i = 1",
+      "mutated_line": "    i = 0",
+      "tests_failed": 10,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-running-max-off-by-one-03",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Return the maximum seen through each list position; empty input gives []. Tap the buggy line.",
+    "code": "def running_max(nums):\n    if not nums:\n        return []\n    best = nums[1]\n    result = [nums[0]]\n    i = 1\n    while i < len(nums):\n        if nums[i] > best:\n            best = nums[i]\n        result.append(best)\n        i += 1\n    return result",
+    "language": "python",
+    "test_output": "running_max([0]): raised IndexError\nrunning_max([4]): raised IndexError\nrunning_max([-5, -9, -2]): expected [-5, -5, -2], got [-5, -9, -2]",
+    "answer": 4,
+    "explanation": "Line 4 should be `best = nums[0]`, but a number is off by one. That is why running_max([0]) fails.",
+    "difficulty_rating": 1090,
+    "provenance": {
+      "source_function": "pipeline/corpus/running_max.py::running_max",
+      "mutation_operator": "off_by_one",
+      "original_line": "    best = nums[0]",
+      "mutated_line": "    best = nums[1]",
+      "tests_failed": 6,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-running-max-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Return the maximum seen through each list position; empty input gives []. Tap the buggy line.",
+    "code": "def running_max(nums):\n    if not nums:\n        return []\n    best = nums[0]\n    result = [nums[0]]\n    i = 1\n    while i < len(nums):\n        if nums[i] > best:\n            best = nums[i]\n        result.append(best)\n        i -= 1\n    return result",
+    "language": "python",
+    "test_output": "running_max([-5, -9, -2]): raised IndexError\nrunning_max([1, 2, 3]): raised IndexError\nrunning_max([3, 2, 1]): raised IndexError",
+    "answer": 11,
+    "explanation": "Line 11 should be `i += 1`, but it uses the wrong operator. That is why running_max([-5, -9, -2]) fails.",
+    "difficulty_rating": 990,
+    "provenance": {
+      "source_function": "pipeline/corpus/running_max.py::running_max",
+      "mutation_operator": "wrong_operator",
+      "original_line": "        i += 1",
+      "mutated_line": "        i -= 1",
+      "tests_failed": 8,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
       "verified-code"
     ]
   },

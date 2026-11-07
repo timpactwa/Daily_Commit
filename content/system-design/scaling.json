@@ -575,6 +575,73 @@
       "s4"
     ],
     "explanation": "With supported routing and slow start enabled, a newly healthy target’s traffic weight increases over the slow-start interval before reaching its full share. Source: [ALB slow start](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-target-group-attributes.html#slow-start-mode)"
-  }
-
+  },
+{
+  "id": "sd-scaling-continuation-021",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "What does maxUnavailable: 0 request during a Deployment rolling update?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "No planned reduction below desired available replicas"
+    },
+    {
+      "id": "o1",
+      "text": "No extra Pods"
+    },
+    {
+      "id": "o2",
+      "text": "Automatic database replication"
+    },
+    {
+      "id": "o3",
+      "text": "No possible outages"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "maxUnavailable limits unavailable replicas during the rollout; zero is a rollout constraint, not an outage guarantee. Source: [Kubernetes Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-scaling-continuation-022",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "With 3 desired replicas and maxSurge: 25%, what surge allowance is calculated?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "1 extra Pod"
+    },
+    {
+      "id": "o1",
+      "text": "0 extra Pods"
+    },
+    {
+      "id": "o2",
+      "text": "3 extra Pods"
+    },
+    {
+      "id": "o3",
+      "text": "25 extra Pods"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Percentage surge rounds up: 25% of 3 is 0.75, giving an allowance of one extra Pod. Terminating Pods can add resource use. Source: [Kubernetes Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)",
+  "difficulty_rating": 1400,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+}
 ]

@@ -555,6 +555,74 @@
       "s4"
     ],
     "explanation": "CREATE INDEX CONCURRENTLY avoids locking out ordinary writes but does more work and can wait for transactions. Check the finished index’s validity before relying on it. Source: [PostgreSQL CREATE INDEX](https://www.postgresql.org/docs/18/sql-createindex.html#SQL-CREATEINDEX-CONCURRENTLY)"
-  }
-
+  },
+{
+  "id": "sd-databases-continuation-021",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Why does a frequently updated PostgreSQL table need routine vacuuming?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "To reclaim space from obsolete row versions for reuse"
+    },
+    {
+      "id": "o1",
+      "text": "To remove every index"
+    },
+    {
+      "id": "o2",
+      "text": "To make all reads serializable"
+    },
+    {
+      "id": "o3",
+      "text": "To export backups"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "MVCC leaves obsolete row versions. Routine vacuuming makes their space reusable once no transaction needs them. Source: [PostgreSQL vacuuming](https://www.postgresql.org/docs/18/routine-vacuuming.html)",
+  "difficulty_rating": 1000,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-databases-continuation-022",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Which maintenance step collects planner statistics rather than compacting the whole table?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "ANALYZE"
+    },
+    {
+      "id": "o1",
+      "text": "DROP INDEX"
+    },
+    {
+      "id": "o2",
+      "text": "VACUUM FULL only"
+    },
+    {
+      "id": "o3",
+      "text": "REINDEX only"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "ANALYZE samples table contents for planner statistics. VACUUM ANALYZE combines cleanup with statistics collection. Source: [PostgreSQL vacuuming](https://www.postgresql.org/docs/18/routine-vacuuming.html)",
+  "difficulty_rating": 1400,
+  "scenario": "A large data-distribution change has left PostgreSQL choosing poor query plans.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+}
 ]
