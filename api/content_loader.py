@@ -42,13 +42,15 @@ def _read_questions(files: list[Path]) -> list[dict]:
     return out
 
 
-def find_question_files(content_dir: Path = CONTENT) -> list[Path]:
+def find_question_files(content_dir: Path | None = None) -> list[Path]:
+    content_dir = content_dir or CONTENT
     if not content_dir.is_dir():
         return []
     return sorted(p for p in content_dir.rglob("*.json") if p.name not in NON_QUESTION_FILES)
 
 
-def load(conn: sqlite3.Connection, content_dir: Path = CONTENT) -> int:
+def load(conn: sqlite3.Connection, content_dir: Path | None = None) -> int:
+    content_dir = content_dir or CONTENT
     questions = _read_questions(find_question_files(content_dir))
     if not questions:
         log.warning("no questions in %s; loading contracts/examples", content_dir)

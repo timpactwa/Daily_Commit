@@ -1,12 +1,14 @@
 import sqlite3
-from datetime import date
+from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends
 
-from api import db, repo
-from api.deps import client_date, current_user, today_for
+from api import db, history, repo
+from api.deps import client_date, current_user, demo_mode, today_for
 from api.errors import ApiError
-from engine.selection import build_lesson
+from engine.selection import LESSON_SIZE, Pick, build_lesson
+
+DEMO_LESSON_SIZE = 3
 
 router = APIRouter(prefix="/v1")
 
@@ -46,8 +48,19 @@ def lesson_payload(conn: sqlite3.Connection, lesson: sqlite3.Row) -> dict:
     }
 
 
+def lesson_size(user: sqlite3.Row) -> int:
+    return DEMO_LESSON_SIZE if demo_mode() and user["id"] == "demo" else LESSON_SIZE
+
+
+def plan(conn: sqlite3.Connection, user: sqlite3.Row, day: str) -> tuple[list[Pick], dict[str, int]]:
+    h = history.for_day(conn, user["id"], day)
+    picks = build_lesson(repo.ratings(conn, user["id"]), repo.candidates(conn), h,
+                         seed=f"{user['id']}:{day}", size=lesson_size(user))
+    return picks, h.misses_in_latest_lesson
+
+
 def create_lesson(conn: sqlite3.Connection, user: sqlite3.Row, day: str) -> sqlite3.Row:
-    picks = build_lesson(repo.ratings(conn, user["id"]), repo.candidates(conn), seed=f"{user['id']}:{day}")
+    picks, _ = plan(conn, user, day)
     lid = lesson_id_for(user["id"], day)
     conn.execute("INSERT INTO lessons (id, user_id, date) VALUES (?, ?, ?)", (lid, user["id"], day))
     conn.executemany(
@@ -70,3 +83,32 @@ def lessons_today(
     if lesson is None:
         lesson = create_lesson(conn, user, day)
     return lesson_payload(conn, lesson)
+
+
+@router.get("/lessons/next/preview")
+def next_preview(
+    user: sqlite3.Row = Depends(current_user),
+    base: date = Depends(client_date),
+    conn: sqlite3.Connection = Depends(db.get_conn),
+):
+    if not user["placed"]:
+        raise ApiError(409, "not_placed", "Take the placement test first")
+    tomorrow = (date.fromisoformat(today_for(user, base)) + timedelta(days=1)).isoformat()
+    picks, misses = plan(conn, user, tomorrow)
+    ratings = repo.ratings(conn, user["id"])
+    focus: list[str] = []
+    for p in picks:
+        if p.kind == "focus" and p.topic not in focus:
+            focus.append(p.topic)
+    return {
+        "date": tomorrow,
+        "focus_topics": [
+            {"topic": t, "reason": "missed_last_lesson" if misses.get(t) else "lowest_rating", "rating": round(ratings[t])}
+            for t in focus
+        ],
+        "items": [
+            {"topic": p.topic, "track": p.track, "format": repo.question(conn, p.question_id)["format"],
+             "difficulty_rating": round(p.rating), "kind": p.kind}
+            for p in picks
+        ],
+    }
