@@ -554,6 +554,352 @@
       "s4"
     ],
     "explanation": "An outbox relay can publish again after a crash. An event ID and atomic consumer-side deduplication with the durable update protect the consumer’s database effect. Source: [AWS transactional outbox](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html)"
-  }
-
+  },
+{
+  "id": "sd-async-messaging-continuation-021",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "What does XACK remove for a Redis Streams consumer group?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "The entry from that group’s pending list"
+    },
+    {
+      "id": "o1",
+      "text": "The stream entry itself"
+    },
+    {
+      "id": "o2",
+      "text": "Every consumer group"
+    },
+    {
+      "id": "o3",
+      "text": "All later entries"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Acknowledgement removes pending bookkeeping for that group; it does not itself delete the stream entry. Source: [Redis Streams](https://redis.io/docs/latest/develop/data-types/streams/)",
+  "difficulty_rating": 1100,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-async-messaging-continuation-022",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "reorder",
+  "prompt": "Order recovery of an idle pending stream entry after its worker dies.",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Identify an entry idle beyond the chosen threshold"
+    },
+    {
+      "id": "o1",
+      "text": "Claim it for a live consumer"
+    },
+    {
+      "id": "o2",
+      "text": "Process it with duplicate-safe effects"
+    },
+    {
+      "id": "o3",
+      "text": "Acknowledge successful processing"
+    }
+  ],
+  "answer": [
+    "o0",
+    "o1",
+    "o2",
+    "o3"
+  ],
+  "explanation": "Pending entries can be claimed after a worker disappears. Claiming does not prevent duplicate effects, so processing still needs idempotency. Source: [Redis Streams](https://redis.io/docs/latest/develop/data-types/streams/)",
+  "difficulty_rating": 1400,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-async-messaging-continuation-023",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "A queue TTL is 8 seconds and a message TTL is 3 seconds. Which lifetime applies in that queue?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "3 seconds"
+    },
+    {
+      "id": "o1",
+      "text": "8 seconds"
+    },
+    {
+      "id": "o2",
+      "text": "11 seconds"
+    },
+    {
+      "id": "o3",
+      "text": "24 seconds"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "When both queue-level message TTL and per-message TTL apply, RabbitMQ uses the smaller value. Source: [RabbitMQ TTL](https://www.rabbitmq.com/docs/ttl)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-async-messaging-continuation-024",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "The same message enters queues with different TTL policies. Does expiry in one expire it in the other?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "No; expiry is independent per queue"
+    },
+    {
+      "id": "o1",
+      "text": "Yes; the shortest TTL globally deletes all copies"
+    },
+    {
+      "id": "o2",
+      "text": "Yes; publishing replaces all queue policies"
+    },
+    {
+      "id": "o3",
+      "text": "Only if both consumers use manual acknowledgements"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A message may expire in one queue and remain deliverable in another; each queue applies its own expiry rules. Source: [RabbitMQ TTL](https://www.rabbitmq.com/docs/ttl)",
+  "difficulty_rating": 1350,
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-async-messaging-continuation-025",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "A full RabbitMQ queue uses reject-publish with publisher confirms. What signals a rejected publish?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "basic.nack"
+    },
+    {
+      "id": "o1",
+      "text": "A consumer acknowledgement"
+    },
+    {
+      "id": "o2",
+      "text": "An unconditional basic.ack"
+    },
+    {
+      "id": "o3",
+      "text": "A shorter delivery tag"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "With confirms enabled, rejecting a new publish because of queue overflow notifies the publisher with basic.nack. Source: [RabbitMQ queue limits](https://www.rabbitmq.com/docs/maxlength)",
+  "difficulty_rating": 1100,
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-async-messaging-continuation-026",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "Which limit is exceeded by the next 700-byte message body?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "The body-byte limit only"
+    },
+    {
+      "id": "o1",
+      "text": "The message-count limit only"
+    },
+    {
+      "id": "o2",
+      "text": "Both limits"
+    },
+    {
+      "id": "o3",
+      "text": "Neither limit"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Both configured bounds apply. Eleven messages remain below 100, but 400 + 700 = 1,100 body bytes exceeds 1,000. Source: [RabbitMQ queue limits](https://www.rabbitmq.com/docs/maxlength)",
+  "difficulty_rating": 1350,
+  "scenario": "A classic queue has 10 ready messages totaling 400 body bytes, max-length 100 and max-length-bytes 1000. No consumers drain it.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-async-messaging-continuation-027",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "A manual-ack consumer has prefetch 10 and ten unacknowledged deliveries. What permits another delivery?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Acknowledging a completed delivery"
+    },
+    {
+      "id": "o1",
+      "text": "Publishing an unrelated message"
+    },
+    {
+      "id": "o2",
+      "text": "Increasing only the message TTL"
+    },
+    {
+      "id": "o3",
+      "text": "Reading the message body twice"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Prefetch bounds outstanding unacknowledged deliveries. An acknowledgement releases capacity for another delivery. Source: [RabbitMQ consumer prefetch](https://www.rabbitmq.com/docs/consumer-prefetch)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-async-messaging-continuation-028",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "Two consumers share one RabbitMQ channel with prefetch 10, global=false. What is their combined outstanding limit?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "20 deliveries, ten per consumer"
+    },
+    {
+      "id": "o1",
+      "text": "10 deliveries shared between them"
+    },
+    {
+      "id": "o2",
+      "text": "1 delivery total"
+    },
+    {
+      "id": "o3",
+      "text": "Unlimited deliveries"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "RabbitMQ applies this prefetch setting separately to each consumer. A separate global channel limit would change the combined bound. Source: [RabbitMQ consumer prefetch](https://www.rabbitmq.com/docs/consumer-prefetch)",
+  "difficulty_rating": 1400,
+  "scenario": "Both use manual acknowledgements; no additional channel-wide limit is configured.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-async-messaging-continuation-029",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "Which SQS receive setting enables long polling with the maximum supported wait?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "WaitTimeSeconds = 20"
+    },
+    {
+      "id": "o1",
+      "text": "WaitTimeSeconds = 0"
+    },
+    {
+      "id": "o2",
+      "text": "VisibilityTimeout = 20 only"
+    },
+    {
+      "id": "o3",
+      "text": "MaxNumberOfMessages = 20"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A positive WaitTimeSeconds enables long polling; the supported maximum is 20 seconds. Visibility timeout controls a different lifecycle stage. Source: [SQS polling](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-short-and-long-polling.html)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-async-messaging-continuation-030",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "What can an empty SQS short-poll response mean even while messages exist?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "The sampled servers had no matching messages"
+    },
+    {
+      "id": "o1",
+      "text": "The entire queue is proven empty"
+    },
+    {
+      "id": "o2",
+      "text": "Every message has permanently expired"
+    },
+    {
+      "id": "o3",
+      "text": "All messages were acknowledged by this caller"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Short polling samples a subset of servers, so an empty result does not prove the whole queue is empty. Long polling reduces these false empty results. Source: [SQS polling](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-short-and-long-polling.html)",
+  "difficulty_rating": 1350,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+}
 ]

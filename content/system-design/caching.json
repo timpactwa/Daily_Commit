@@ -557,6 +557,353 @@
     ],
     "answer": "a",
     "explanation": "CAS checks the token returned by gets. On a conflict, fetch the current value/token and recompute the update rather than overwriting a concurrent change. Source: [Memcached protocol](https://docs.memcached.org/protocols/basic/)"
-  }
-
+  },
+{
+  "id": "sd-caching-continuation-021",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "Which Redis SET option only writes an absent cache key?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "NX"
+    },
+    {
+      "id": "o1",
+      "text": "XX"
+    },
+    {
+      "id": "o2",
+      "text": "KEEPTTL"
+    },
+    {
+      "id": "o3",
+      "text": "GET"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "NX makes the write conditional on key absence; XX requires an existing key. Source: [Redis SET](https://redis.io/docs/latest/commands/set/)",
+  "difficulty_rating": 950,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-caching-continuation-022",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "Which single Redis command sets this value and its 30-second lifetime?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "SET hint value EX 30"
+    },
+    {
+      "id": "o1",
+      "text": "SET hint value; later EXPIRE hint 30"
+    },
+    {
+      "id": "o2",
+      "text": "GET hint"
+    },
+    {
+      "id": "o3",
+      "text": "SET hint value KEEPTTL"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "SET with EX attaches expiry in the same command, avoiding a crash gap between separate SET and EXPIRE calls. Source: [Redis SET](https://redis.io/docs/latest/commands/set/)",
+  "difficulty_rating": 1250,
+  "scenario": "A disposable hint must not survive indefinitely if its writer crashes after storing it.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-caching-continuation-023",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "What happens to a Redis key’s TTL after INCR changes its numeric value?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "The existing expiry remains"
+    },
+    {
+      "id": "o1",
+      "text": "The expiry is cleared"
+    },
+    {
+      "id": "o2",
+      "text": "The expiry always doubles"
+    },
+    {
+      "id": "o3",
+      "text": "The key expires immediately"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Commands that alter a value without replacing the key, such as INCR, preserve its existing timeout. Source: [Redis EXPIRE](https://redis.io/docs/latest/commands/expire/)",
+  "difficulty_rating": 1000,
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-caching-continuation-024",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "Which EXPIRE option extends a finite TTL only when the proposed TTL is longer?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "GT"
+    },
+    {
+      "id": "o1",
+      "text": "LT"
+    },
+    {
+      "id": "o2",
+      "text": "NX"
+    },
+    {
+      "id": "o3",
+      "text": "XX"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "GT applies expiry only when the new timeout exceeds the current one. A persistent key counts as having infinite TTL. Source: [Redis EXPIRE](https://redis.io/docs/latest/commands/expire/)",
+  "difficulty_rating": 1350,
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-caching-continuation-025",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "With minimum TTL 0 and maximum TTL 600, how long does CloudFront cache max-age=900?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "600 seconds"
+    },
+    {
+      "id": "o1",
+      "text": "900 seconds"
+    },
+    {
+      "id": "o2",
+      "text": "0 seconds"
+    },
+    {
+      "id": "o3",
+      "text": "1,500 seconds"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "CloudFront caps the origin’s requested cache duration at its configured maximum TTL. Source: [CloudFront expiration](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)",
+  "difficulty_rating": 1150,
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-caching-continuation-026",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "Which cache-policy setting must be removed to let no-store prevent CloudFront caching?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "A positive minimum TTL"
+    },
+    {
+      "id": "o1",
+      "text": "A maximum TTL above zero"
+    },
+    {
+      "id": "o2",
+      "text": "A short default TTL alone"
+    },
+    {
+      "id": "o3",
+      "text": "An origin connection timeout"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A positive minimum TTL can override no-store, no-cache and private. Set minimum TTL to zero when these origin restrictions must be respected. Source: [CloudFront expiration](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)",
+  "difficulty_rating": 1450,
+  "scenario": "The origin sends Cache-Control: no-store, but the cache policy has minimum TTL 60 seconds.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-caching-continuation-027",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "A CloudFront behavior uses HTTPS only. What happens to an HTTP viewer request?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "It receives 403 Forbidden"
+    },
+    {
+      "id": "o1",
+      "text": "It always receives a 301 redirect"
+    },
+    {
+      "id": "o2",
+      "text": "CloudFront silently serves it over HTTP"
+    },
+    {
+      "id": "o3",
+      "text": "CloudFront upgrades the existing TCP connection"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "HTTPS only rejects HTTP viewers. Redirect HTTP to HTTPS is a separate viewer policy. Source: [CloudFront HTTPS policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-viewers-to-cloudfront.html)",
+  "difficulty_rating": 1000,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-caching-continuation-028",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "Does requiring HTTPS from viewers also guarantee HTTPS from CloudFront to the origin?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "No; configure the origin protocol separately"
+    },
+    {
+      "id": "o1",
+      "text": "Yes; viewer policy controls both network legs"
+    },
+    {
+      "id": "o2",
+      "text": "Yes, but only on a cache miss"
+    },
+    {
+      "id": "o3",
+      "text": "Only for GET requests"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Viewer and origin connections are separate. To require encryption on both legs, configure HTTPS for each. Source: [CloudFront HTTPS policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-viewers-to-cloudfront.html)",
+  "difficulty_rating": 1350,
+  "scenario": "The CDN terminates viewer TLS before contacting a custom origin.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-caching-continuation-029",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "What does Redis pipelining primarily save for many independent small commands?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Waiting for a network round trip after every command"
+    },
+    {
+      "id": "o1",
+      "text": "The need to execute the commands"
+    },
+    {
+      "id": "o2",
+      "text": "All server memory for replies"
+    },
+    {
+      "id": "o3",
+      "text": "The need to receive any results"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Pipelining sends commands before waiting for earlier replies, reducing repeated round-trip waiting. It does not remove command execution. Source: [Redis pipelining](https://redis.io/docs/latest/develop/using-commands/pipelining/)",
+  "difficulty_rating": 1100,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-caching-continuation-030",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "reorder",
+  "prompt": "Order a bounded pipelining loop for a large set of independent cache reads.",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Prepare a bounded batch"
+    },
+    {
+      "id": "o1",
+      "text": "Send its commands without waiting per command"
+    },
+    {
+      "id": "o2",
+      "text": "Read the batch’s replies"
+    },
+    {
+      "id": "o3",
+      "text": "Continue with the next batch"
+    }
+  ],
+  "answer": [
+    "o0",
+    "o1",
+    "o2",
+    "o3"
+  ],
+  "explanation": "The server buffers pipeline replies. Bounded batches and draining replies avoid an unbounded reply backlog. Source: [Redis pipelining](https://redis.io/docs/latest/develop/using-commands/pipelining/)",
+  "difficulty_rating": 1400,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+}
 ]

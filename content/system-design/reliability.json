@@ -555,6 +555,394 @@
       "s4"
     ],
     "explanation": "A useful canary compares a representative sample against the control and service objectives. A few successful requests alone are not sufficient evidence for expansion. Source: [Google SRE canaries](https://sre.google/workbook/canarying-releases/)"
-  }
-
+  },
+{
+  "id": "sd-reliability-continuation-021",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "mcq",
+  "prompt": "A circuit breaker is open. What should ordinary calls to its failing dependency do?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Fail promptly without calling it"
+    },
+    {
+      "id": "o1",
+      "text": "Retry continuously"
+    },
+    {
+      "id": "o2",
+      "text": "Wait without a deadline"
+    },
+    {
+      "id": "o3",
+      "text": "Report successful processing"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "An open breaker rejects calls locally, limiting repeated pressure on a dependency likely to fail. Source: [Azure circuit breakers](https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-reliability-continuation-022",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "reorder",
+  "prompt": "Order a typical circuit-breaker recovery after its reset timeout.",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Enter half-open state"
+    },
+    {
+      "id": "o1",
+      "text": "Allow limited trial calls"
+    },
+    {
+      "id": "o2",
+      "text": "Evaluate trial outcomes"
+    },
+    {
+      "id": "o3",
+      "text": "Close after sufficient success, or reopen on failure"
+    }
+  ],
+  "answer": [
+    "o0",
+    "o1",
+    "o2",
+    "o3"
+  ],
+  "explanation": "Half-open permits a limited recovery test. Trial outcomes determine whether normal traffic resumes or protection continues. Source: [Azure circuit breakers](https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker)",
+  "difficulty_rating": 1350,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-reliability-continuation-023",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "mcq",
+  "prompt": "Which monitor catches a health response whose HTTP status is 200 but whose body reports failure?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "One that checks status and the expected health payload"
+    },
+    {
+      "id": "o1",
+      "text": "One that checks TCP connectivity only"
+    },
+    {
+      "id": "o2",
+      "text": "One that checks certificate validity only"
+    },
+    {
+      "id": "o3",
+      "text": "One that accepts every HTTP 200"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Monitoring must evaluate the endpoint’s defined success criteria, which can include response content as well as status. Source: [Azure health monitoring](https://learn.microsoft.com/en-us/azure/architecture/patterns/health-endpoint-monitoring)",
+  "difficulty_rating": 1100,
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-reliability-continuation-024",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "mcq",
+  "prompt": "How should a health endpoint expose detailed internal diagnostics?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Restrict access and return only necessary health details"
+    },
+    {
+      "id": "o1",
+      "text": "Publish credentials for easier debugging"
+    },
+    {
+      "id": "o2",
+      "text": "Return all environment variables to every caller"
+    },
+    {
+      "id": "o3",
+      "text": "Disable authentication on every application endpoint"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Health checks can expose sensitive information. Authenticate authorized monitors or restrict network access, and minimize returned details. Source: [Azure health monitoring](https://learn.microsoft.com/en-us/azure/architecture/patterns/health-endpoint-monitoring)",
+  "difficulty_rating": 1300,
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-reliability-continuation-025",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "mcq",
+  "prompt": "A vendor accepts at most 100 requests per second. What reduces avoidable throttling?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Pace outgoing requests within the shared quota"
+    },
+    {
+      "id": "o1",
+      "text": "Launch every queued request immediately"
+    },
+    {
+      "id": "o2",
+      "text": "Retry every rejection without delay"
+    },
+    {
+      "id": "o3",
+      "text": "Count only successful requests when pacing"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Rate limiting controls outgoing work before it overloads a throttled service; retrying rejected bursts adds more work. Source: [Azure rate limiting](https://learn.microsoft.com/en-us/azure/architecture/patterns/rate-limiting-pattern)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-reliability-continuation-026",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "tap_node",
+  "prompt": "Tap the shared control point that should allocate the vendor’s global request budget.",
+  "options": [
+    {
+      "id": "a",
+      "text": "Worker A"
+    },
+    {
+      "id": "b",
+      "text": "Worker B"
+    },
+    {
+      "id": "limiter",
+      "text": "Shared rate limiter"
+    },
+    {
+      "id": "vendor",
+      "text": "Vendor API"
+    }
+  ],
+  "answer": "limiter",
+  "explanation": "Workers sharing one service quota must share its budget. Giving each worker the whole quota can exceed the aggregate limit. Source: [Azure rate limiting](https://learn.microsoft.com/en-us/azure/architecture/patterns/rate-limiting-pattern)",
+  "difficulty_rating": 1400,
+  "scenario": "Both workers use the same vendor account; its quota applies to their combined requests.",
+  "diagram": {
+    "nodes": [
+      {
+        "id": "a",
+        "label": "Worker A",
+        "kind": "service"
+      },
+      {
+        "id": "b",
+        "label": "Worker B",
+        "kind": "service"
+      },
+      {
+        "id": "limiter",
+        "label": "Shared rate limiter",
+        "kind": "service"
+      },
+      {
+        "id": "vendor",
+        "label": "Vendor API",
+        "kind": "external"
+      }
+    ],
+    "edges": [
+      {
+        "from": "a",
+        "to": "limiter"
+      },
+      {
+        "from": "b",
+        "to": "limiter"
+      },
+      {
+        "from": "limiter",
+        "to": "vendor"
+      }
+    ]
+  },
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-reliability-continuation-027",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "mcq",
+  "prompt": "Which recurring activity best fits SRE’s concept of toil?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Manually provisioning every new customer with the same routine"
+    },
+    {
+      "id": "o1",
+      "text": "Designing an automated provisioning system"
+    },
+    {
+      "id": "o2",
+      "text": "Investigating a new failure mode"
+    },
+    {
+      "id": "o3",
+      "text": "Removing an obsolete operational workflow"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Repetitive hands-on operations that grow with the service are candidates for toil reduction through engineering. Source: [Google SRE toil](https://sre.google/sre-book/eliminating-toil/)",
+  "difficulty_rating": 1000,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-reliability-continuation-028",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "mcq",
+  "prompt": "Which change most directly reduces hands-on toil as customer count grows?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Automatically trigger and validate the routine provisioning workflow"
+    },
+    {
+      "id": "o1",
+      "text": "Require an operator to start the same script per customer"
+    },
+    {
+      "id": "o2",
+      "text": "Write a longer manual checklist for every customer"
+    },
+    {
+      "id": "o3",
+      "text": "Add another manual approval to each routine step"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A script still consumes toil when an operator must repeatedly run it. Removing recurring hands-on execution creates lasting operational improvement. Source: [Google SRE toil](https://sre.google/sre-book/eliminating-toil/)",
+  "difficulty_rating": 1250,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-reliability-continuation-029",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "mcq",
+  "prompt": "Which evidence best validates that a recovery plan meets its recovery objectives?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "A recovery drill with measured restoration time and data loss"
+    },
+    {
+      "id": "o1",
+      "text": "A successful backup job alone"
+    },
+    {
+      "id": "o2",
+      "text": "An unexecuted recovery document"
+    },
+    {
+      "id": "o3",
+      "text": "The number of standby machines alone"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Exercises test whether the actual recovery path works and meets time and data-loss objectives; a backup-completion indicator alone does not establish this. Source: [AWS recovery testing](https://docs.aws.amazon.com/wellarchitected/latest/framework/rel_planning_for_recovery_dr_tested.html)",
+  "difficulty_rating": 1100,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-reliability-continuation-030",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "reorder",
+  "prompt": "Order a planned recovery exercise and its follow-up.",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Define recovery targets and drill boundaries"
+    },
+    {
+      "id": "o1",
+      "text": "Execute the recovery runbook"
+    },
+    {
+      "id": "o2",
+      "text": "Measure restoration time and recovered state against targets"
+    },
+    {
+      "id": "o3",
+      "text": "Record gaps and improve the next exercise"
+    }
+  ],
+  "answer": [
+    "o0",
+    "o1",
+    "o2",
+    "o3"
+  ],
+  "explanation": "Regularly exercise recovery paths and use runbooks to capture problems. Measured outcomes guide corrections before a real disaster. Source: [AWS recovery testing](https://docs.aws.amazon.com/wellarchitected/latest/framework/rel_planning_for_recovery_dr_tested.html)",
+  "difficulty_rating": 1400,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+}
 ]

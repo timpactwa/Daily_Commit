@@ -575,6 +575,414 @@
       "s4"
     ],
     "explanation": "With supported routing and slow start enabled, a newly healthy target’s traffic weight increases over the slow-start interval before reaching its full share. Source: [ALB slow start](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-target-group-attributes.html#slow-start-mode)"
-  }
-
+  },
+{
+  "id": "sd-scaling-continuation-021",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "What does maxUnavailable: 0 request during a Deployment rolling update?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "No planned reduction below desired available replicas"
+    },
+    {
+      "id": "o1",
+      "text": "No extra Pods"
+    },
+    {
+      "id": "o2",
+      "text": "Automatic database replication"
+    },
+    {
+      "id": "o3",
+      "text": "No possible outages"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "maxUnavailable limits unavailable replicas during the rollout; zero is a rollout constraint, not an outage guarantee. Source: [Kubernetes Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-scaling-continuation-022",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "With 3 desired replicas and maxSurge: 25%, what surge allowance is calculated?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "1 extra Pod"
+    },
+    {
+      "id": "o1",
+      "text": "0 extra Pods"
+    },
+    {
+      "id": "o2",
+      "text": "3 extra Pods"
+    },
+    {
+      "id": "o3",
+      "text": "25 extra Pods"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Percentage surge rounds up: 25% of 3 is 0.75, giving an allowance of one extra Pod. Terminating Pods can add resource use. Source: [Kubernetes Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)",
+  "difficulty_rating": 1400,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-scaling-continuation-023",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "Which controller fits replicas that need stable ordinal names and per-replica storage?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "StatefulSet"
+    },
+    {
+      "id": "o1",
+      "text": "Deployment alone"
+    },
+    {
+      "id": "o2",
+      "text": "DaemonSet"
+    },
+    {
+      "id": "o3",
+      "text": "CronJob"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "StatefulSets associate stable identities and storage with replicas; replacement Pods can retain those identities. Source: [Kubernetes StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-scaling-continuation-024",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "What happens to a scaled-down replica’s PVC when whenScaled is explicitly Retain?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "It is retained for later use"
+    },
+    {
+      "id": "o1",
+      "text": "It is deleted with the Pod"
+    },
+    {
+      "id": "o2",
+      "text": "It becomes a shared emptyDir"
+    },
+    {
+      "id": "o3",
+      "text": "It is copied into every remaining Pod"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Retain leaves the claim in place after scale-down. Storage retention is separate from the replica count. Source: [Kubernetes StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)",
+  "difficulty_rating": 1400,
+  "scenario": "A StatefulSet uses volumeClaimTemplates and persistentVolumeClaimRetentionPolicy.whenScaled: Retain.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-scaling-continuation-025",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "What happens when an eligible new node joins a cluster covered by a DaemonSet?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "The controller creates a matching Pod for that node"
+    },
+    {
+      "id": "o1",
+      "text": "The fixed replica count stays unchanged"
+    },
+    {
+      "id": "o2",
+      "text": "Every existing agent moves to the new node"
+    },
+    {
+      "id": "o3",
+      "text": "Only a future CronJob can start an agent"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A DaemonSet maintains node-local Pods on eligible nodes, including nodes added after its creation. Source: [Kubernetes DaemonSets](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)",
+  "difficulty_rating": 1000,
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-scaling-continuation-026",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "tap_node",
+  "prompt": "Tap the controller suited to keeping one log agent on each eligible node.",
+  "options": [
+    {
+      "id": "controller",
+      "text": "DaemonSet controller"
+    },
+    {
+      "id": "a",
+      "text": "Node A agent"
+    },
+    {
+      "id": "b",
+      "text": "Node B agent"
+    },
+    {
+      "id": "sink",
+      "text": "Log storage"
+    }
+  ],
+  "answer": "controller",
+  "explanation": "DaemonSets fit node-level agents. A fixed Deployment replica count does not itself ensure one agent on every eligible node. Source: [Kubernetes DaemonSets](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)",
+  "difficulty_rating": 1250,
+  "diagram": {
+    "nodes": [
+      {
+        "id": "controller",
+        "label": "DaemonSet controller",
+        "kind": "service"
+      },
+      {
+        "id": "a",
+        "label": "Node A agent",
+        "kind": "service"
+      },
+      {
+        "id": "b",
+        "label": "Node B agent",
+        "kind": "service"
+      },
+      {
+        "id": "sink",
+        "label": "Log storage",
+        "kind": "db"
+      }
+    ],
+    "edges": [
+      {
+        "from": "controller",
+        "to": "a"
+      },
+      {
+        "from": "controller",
+        "to": "b"
+      },
+      {
+        "from": "a",
+        "to": "sink"
+      },
+      {
+        "from": "b",
+        "to": "sink"
+      }
+    ]
+  },
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-scaling-continuation-027",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "Which Kubernetes abstraction gives clients a stable ClusterIP while backend Pods change?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "A normal ClusterIP Service"
+    },
+    {
+      "id": "o1",
+      "text": "An individual Pod IP"
+    },
+    {
+      "id": "o2",
+      "text": "A container’s restart count"
+    },
+    {
+      "id": "o3",
+      "text": "An emptyDir volume"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A Service provides a stable access point for a changing set of matching backend Pods. Source: [Kubernetes Services](https://kubernetes.io/docs/concepts/services-networking/service/)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-scaling-continuation-028",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "What does DNS for a selector-based headless Service normally return?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Addresses of its backing Pods"
+    },
+    {
+      "id": "o1",
+      "text": "One allocated Service ClusterIP"
+    },
+    {
+      "id": "o2",
+      "text": "Only the node’s public address"
+    },
+    {
+      "id": "o3",
+      "text": "The Deployment revision number"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A headless Service allocates no ClusterIP. Its DNS records expose backing Pod addresses for direct client connections. Source: [Kubernetes Services](https://kubernetes.io/docs/concepts/services-networking/service/)",
+  "difficulty_rating": 1400,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-scaling-continuation-029",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "tap_node",
+  "prompt": "Tap the zone that can accept one matching Pod without exceeding skew 1.",
+  "options": [
+    {
+      "id": "scheduler",
+      "text": "Scheduler"
+    },
+    {
+      "id": "a",
+      "text": "Zone A: 3 matching Pods"
+    },
+    {
+      "id": "b",
+      "text": "Zone B: 1 matching Pod"
+    }
+  ],
+  "answer": "b",
+  "explanation": "Adding to B yields counts 3 and 2, with skew 1. Adding to A yields 4 and 1, exceeding the hard spread constraint. Source: [Kubernetes topology spread](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/)",
+  "difficulty_rating": 1250,
+  "scenario": "Exactly two zones are eligible. maxSkew is 1, whenUnsatisfiable is DoNotSchedule, and all other scheduling requirements are satisfied.",
+  "diagram": {
+    "nodes": [
+      {
+        "id": "scheduler",
+        "label": "Scheduler",
+        "kind": "service"
+      },
+      {
+        "id": "a",
+        "label": "Zone A: 3 matching Pods",
+        "kind": "service"
+      },
+      {
+        "id": "b",
+        "label": "Zone B: 1 matching Pod",
+        "kind": "service"
+      }
+    ],
+    "edges": [
+      {
+        "from": "scheduler",
+        "to": "a"
+      },
+      {
+        "from": "scheduler",
+        "to": "b"
+      }
+    ]
+  },
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-scaling-continuation-030",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "Which topology-spread mode prefers balance without making this spread rule a hard scheduling barrier?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "ScheduleAnyway"
+    },
+    {
+      "id": "o1",
+      "text": "DoNotSchedule"
+    },
+    {
+      "id": "o2",
+      "text": "AlwaysRestart"
+    },
+    {
+      "id": "o3",
+      "text": "NeverPull"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "ScheduleAnyway contributes a balancing preference. Other scheduling constraints can still prevent placement. Source: [Kubernetes topology spread](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/)",
+  "difficulty_rating": 1450,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+}
 ]

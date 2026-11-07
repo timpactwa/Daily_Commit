@@ -555,6 +555,349 @@
       "s4"
     ],
     "explanation": "CREATE INDEX CONCURRENTLY avoids locking out ordinary writes but does more work and can wait for transactions. Check the finished index’s validity before relying on it. Source: [PostgreSQL CREATE INDEX](https://www.postgresql.org/docs/18/sql-createindex.html#SQL-CREATEINDEX-CONCURRENTLY)"
-  }
-
+  },
+{
+  "id": "sd-databases-continuation-021",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Why does a frequently updated PostgreSQL table need routine vacuuming?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "To reclaim space from obsolete row versions for reuse"
+    },
+    {
+      "id": "o1",
+      "text": "To remove every index"
+    },
+    {
+      "id": "o2",
+      "text": "To make all reads serializable"
+    },
+    {
+      "id": "o3",
+      "text": "To export backups"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "MVCC leaves obsolete row versions. Routine vacuuming makes their space reusable once no transaction needs them. Source: [PostgreSQL vacuuming](https://www.postgresql.org/docs/18/routine-vacuuming.html)",
+  "difficulty_rating": 1000,
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-databases-continuation-022",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Which maintenance step collects planner statistics rather than compacting the whole table?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "ANALYZE"
+    },
+    {
+      "id": "o1",
+      "text": "DROP INDEX"
+    },
+    {
+      "id": "o2",
+      "text": "VACUUM FULL only"
+    },
+    {
+      "id": "o3",
+      "text": "REINDEX only"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "ANALYZE samples table contents for planner statistics. VACUUM ANALYZE combines cleanup with statistics collection. Source: [PostgreSQL vacuuming](https://www.postgresql.org/docs/18/routine-vacuuming.html)",
+  "difficulty_rating": 1400,
+  "scenario": "A large data-distribution change has left PostgreSQL choosing poor query plans.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-1",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-databases-continuation-023",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Which index targets a small active subset without indexing every archived row?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "CREATE INDEX ON jobs (created_at) WHERE state = 'ready'"
+    },
+    {
+      "id": "o1",
+      "text": "CREATE INDEX ON jobs (created_at)"
+    },
+    {
+      "id": "o2",
+      "text": "CREATE INDEX ON jobs (state)"
+    },
+    {
+      "id": "o3",
+      "text": "CREATE INDEX ON jobs (id)"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A partial index stores entries only for rows satisfying its predicate, reducing index size for this workload. Source: [PostgreSQL partial indexes](https://www.postgresql.org/docs/18/indexes-partial.html)",
+  "difficulty_rating": 1150,
+  "scenario": "The query uses WHERE state = 'ready' ORDER BY created_at; almost all jobs are archived.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-databases-continuation-024",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Can this generic prepared plan assume x < $1 implies the partial-index predicate x < 10?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "No; it must hold for every possible parameter value"
+    },
+    {
+      "id": "o1",
+      "text": "Yes; the first execution makes it permanent"
+    },
+    {
+      "id": "o2",
+      "text": "Yes; predicates are checked only after index selection"
+    },
+    {
+      "id": "o3",
+      "text": "Yes; every inequality implies every narrower inequality"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Partial-index eligibility requires a provable predicate implication at planning time. An unknown bound cannot establish this implication. Source: [PostgreSQL partial indexes](https://www.postgresql.org/docs/18/indexes-partial.html)",
+  "difficulty_rating": 1500,
+  "scenario": "A PostgreSQL generic plan does not know the future value of $1.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-databases-continuation-025",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "What does INCLUDE (total) add to a B-tree on order_id?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Payload that can supply total without making it a search key"
+    },
+    {
+      "id": "o1",
+      "text": "A second uniqueness key"
+    },
+    {
+      "id": "o2",
+      "text": "A foreign key on total"
+    },
+    {
+      "id": "o3",
+      "text": "A guarantee of zero heap visits"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "INCLUDE stores non-key payload columns for covering queries. It does not make them index search keys or guarantee an index-only execution. Source: [PostgreSQL index-only scans](https://www.postgresql.org/docs/18/indexes-index-only-scans.html)",
+  "difficulty_rating": 1200,
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-databases-continuation-026",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Why can an index-only scan still visit the PostgreSQL heap?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "The page is not marked all-visible"
+    },
+    {
+      "id": "o1",
+      "text": "INCLUDE columns are always fetched from the heap"
+    },
+    {
+      "id": "o2",
+      "text": "Every index-only scan must fetch every heap row"
+    },
+    {
+      "id": "o3",
+      "text": "The query selected only indexed columns"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Without an all-visible visibility-map bit, PostgreSQL must check tuple visibility in the heap even when the index contains all requested data. Source: [PostgreSQL index-only scans](https://www.postgresql.org/docs/18/indexes-index-only-scans.html)",
+  "difficulty_rating": 1500,
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-databases-continuation-027",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "How long does a SQL PREPARE statement normally exist in PostgreSQL?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Until deallocated or the session ends"
+    },
+    {
+      "id": "o1",
+      "text": "Across every future connection"
+    },
+    {
+      "id": "o2",
+      "text": "Only until the next COMMIT"
+    },
+    {
+      "id": "o3",
+      "text": "Until the underlying rows expire"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "SQL prepared statements belong to one session; they are not a global cache shared by other database connections. Source: [PostgreSQL PREPARE](https://www.postgresql.org/docs/18/sql-prepare.html)",
+  "difficulty_rating": 1100,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-databases-continuation-028",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Why might a custom prepared-statement plan outperform a generic plan for a highly skewed tenant_id?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "It can use the current parameter value to choose a plan"
+    },
+    {
+      "id": "o1",
+      "text": "It skips transaction visibility checks"
+    },
+    {
+      "id": "o2",
+      "text": "It caches the previous query’s result rows"
+    },
+    {
+      "id": "o3",
+      "text": "It eliminates all planning overhead"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Custom plans use execution-specific parameter values. They can improve execution for skewed data, at the cost of repeated planning. Source: [PostgreSQL PREPARE](https://www.postgresql.org/docs/18/sql-prepare.html)",
+  "difficulty_rating": 1500,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-databases-continuation-029",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Does an advisory lock automatically stop code that updates the same logical resource without acquiring that lock?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "No; callers must follow the same locking protocol"
+    },
+    {
+      "id": "o1",
+      "text": "Yes; it behaves like an automatic foreign-key check"
+    },
+    {
+      "id": "o2",
+      "text": "Yes; PostgreSQL infers the resource from query text"
+    },
+    {
+      "id": "o3",
+      "text": "Only when the updater runs SELECT first"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Advisory locks carry application-defined meanings. PostgreSQL does not enforce a matching locking protocol on unrelated application code. Source: [PostgreSQL advisory locks](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS)",
+  "difficulty_rating": 1150,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-databases-continuation-030",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Which advisory-lock scope releases automatically when this transaction commits or rolls back?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Transaction-level"
+    },
+    {
+      "id": "o1",
+      "text": "Session-level"
+    },
+    {
+      "id": "o2",
+      "text": "A lock stored only in application memory"
+    },
+    {
+      "id": "o3",
+      "text": "A session-level lock with an explicit COMMIT"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Transaction-level advisory locks end with the transaction. Session-level advisory locks survive rollback until explicitly released or the session ends. Source: [PostgreSQL advisory locks](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS)",
+  "difficulty_rating": 1450,
+  "scenario": "A pooled connection coordinates a short database operation and must not retain its lock after the transaction ends.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+}
 ]
