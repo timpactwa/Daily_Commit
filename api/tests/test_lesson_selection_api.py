@@ -128,3 +128,18 @@ def test_complete_lesson_and_streak(big):
 def test_complete_unknown_lesson(big):
     h = placed(big)
     assert big.post("/v1/lessons/l_nope/complete", headers=h).status_code == 404
+
+
+def test_progress(big):
+    h = placed(big)
+    lesson = big.get("/v1/lessons/today", headers=h).json()
+    q = lesson["items"][0]["question"]
+    big.post("/v1/answers", headers=h, json={"lesson_id": lesson["lesson_id"], "question_id": q["id"],
+                                              "response": "a" if q["format"] == "mcq" else 2})
+    p = big.get("/v1/progress", headers=h).json()
+    assert set(p) == {"streak", "overall_readiness", "topics"}
+    assert len(p["topics"]) == 10 and 0 <= p["overall_readiness"] <= 100
+    t = next(t for t in p["topics"] if t["topic"] == q["topic"])
+    assert t["answered"] == 1 and t["accuracy"] == 1.0
+    assert len(t["history"]) == 2 and t["history"][-1] == t["rating"]  # placement + lesson answer
+    assert set(t) == {"topic", "track", "rating", "level", "readiness", "answered", "accuracy", "history"}
