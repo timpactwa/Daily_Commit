@@ -34,8 +34,6 @@ jobs:
           done
           pytest "${modules[@]}"
   app:
-    # Bootstrap: S3 precedes the app shell. Every PR builds once S4 lands.
-    if: hashFiles('app/package-lock.json') != ''
     name: App build
     runs-on: ubuntu-latest
     steps:
@@ -48,4 +46,20 @@ jobs:
       - run: npm ci
         working-directory: app
       - run: npm run build
+        working-directory: app
+  browser:
+    name: Phone and desktop flows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+        working-directory: app
+      - run: npx playwright install --with-deps chromium
+        working-directory: app
+      - run: npm test
         working-directory: app
