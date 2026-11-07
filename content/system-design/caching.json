@@ -1,0 +1,156 @@
+[
+  {
+    "id": "sd-caching-001", "version": 1, "track": "system-design", "topic": "caching", "format": "mcq",
+    "scenario": "A product page is read 50,000 times per second and the price changes about once a day. Reads must be fast; a price that is a few seconds stale is acceptable.",
+    "prompt": "Which caching strategy fits best?",
+    "options": [
+      { "id": "a", "text": "No cache; add read replicas" },
+      { "id": "b", "text": "Cache-aside with a TTL, and invalidate on price update" },
+      { "id": "c", "text": "Write-through cache with no TTL" },
+      { "id": "d", "text": "Client-side cache for 24 hours" }
+    ],
+    "answer": "b",
+    "explanation": "Read-heavy, rarely written, small staleness allowed: cache-aside with a TTL plus explicit invalidation keeps reads fast and bounds staleness. A 24-hour client cache would show the old price long after an update.",
+    "difficulty_rating": 1050, "tags": ["tradeoff"]
+  },
+  {
+    "id": "sd-caching-002", "version": 1, "track": "system-design", "topic": "caching", "format": "mcq",
+    "scenario": "A user changes their display name. For the next 10 minutes, other users still see the old name.",
+    "prompt": "What is the most likely cause?",
+    "options": [
+      { "id": "a", "text": "The load balancer uses sticky sessions" },
+      { "id": "b", "text": "The CDN is compressing responses" },
+      { "id": "c", "text": "Profiles are cached with a 10-minute TTL and the update does not invalidate the cache" },
+      { "id": "d", "text": "The database is out of disk space" }
+    ],
+    "answer": "c",
+    "explanation": "A stale value that fixes itself after exactly the TTL is the signature of a cache entry that was never invalidated on write. Delete or update the cached profile when the name changes.",
+    "difficulty_rating": 1000, "placement": true
+  },
+  {
+    "id": "sd-caching-003", "version": 1, "track": "system-design", "topic": "caching", "format": "mcq",
+    "scenario": "The cache entry for the home page feed expires every 60 seconds. Each time it expires, about 5,000 requests miss at once and all query the database, which briefly overloads.",
+    "prompt": "What is the best fix?",
+    "options": [
+      { "id": "a", "text": "Let one request rebuild the entry while the others wait or get the stale value" },
+      { "id": "b", "text": "Shorten the TTL to 10 seconds" },
+      { "id": "c", "text": "Stop caching the feed" },
+      { "id": "d", "text": "Increase the database connection pool" }
+    ],
+    "answer": "a",
+    "explanation": "This is a cache stampede. Request coalescing (a lock so one request recomputes) or serving stale while revalidating means one database query per expiry instead of 5,000. A shorter TTL makes stampedes more frequent.",
+    "difficulty_rating": 1200, "placement": true
+  },
+  {
+    "id": "sd-caching-004", "version": 1, "track": "system-design", "topic": "caching", "format": "mcq",
+    "scenario": "A metrics service receives 200,000 counter increments per second. The database can handle about 5,000 writes per second. Losing a few seconds of counts after a crash is acceptable.",
+    "prompt": "Which write strategy fits best?",
+    "options": [
+      { "id": "a", "text": "Write-through: update cache and database on every increment" },
+      { "id": "b", "text": "Add read replicas to the database" },
+      { "id": "c", "text": "Cache-aside on the read path only" },
+      { "id": "d", "text": "Write-back: aggregate increments in memory and flush batched totals periodically" }
+    ],
+    "answer": "d",
+    "explanation": "Write-back (write-behind) turns 200k small writes into a few batched writes per second, which the database can absorb. The tradeoff is losing unflushed data on a crash, which the scenario allows. Write-through would still send 200k writes/s to the database.",
+    "difficulty_rating": 1400, "placement": true, "tags": ["tradeoff"]
+  },
+  {
+    "id": "sd-caching-005", "version": 1, "track": "system-design", "topic": "caching", "format": "mcq",
+    "prompt": "Which of these is the best candidate to serve from a CDN?",
+    "options": [
+      { "id": "a", "text": "A user's bank balance" },
+      { "id": "b", "text": "Product images and JavaScript bundles" },
+      { "id": "c", "text": "A user's shopping cart" },
+      { "id": "d", "text": "One-time login codes" }
+    ],
+    "answer": "b",
+    "explanation": "CDNs shine for static content that is the same for everyone and changes rarely. Balances, carts and login codes are per-user and must be fresh or private.",
+    "difficulty_rating": 850
+  },
+  {
+    "id": "sd-caching-006", "version": 1, "track": "system-design", "topic": "caching", "format": "mcq",
+    "scenario": "Your cache is full. You want to keep the items that were used most recently and evict the ones nobody has touched for a while.",
+    "prompt": "Which eviction policy matches?",
+    "options": [
+      { "id": "a", "text": "FIFO (first in, first out)" },
+      { "id": "b", "text": "Random eviction" },
+      { "id": "c", "text": "LRU (least recently used)" },
+      { "id": "d", "text": "Write-through" }
+    ],
+    "answer": "c",
+    "explanation": "LRU evicts the item that has gone longest without being accessed, so recently used items stay. FIFO evicts by insertion time even if an item is hot, and write-through is a write policy, not an eviction policy.",
+    "difficulty_rating": 950
+  },
+  {
+    "id": "sd-caching-007", "version": 1, "track": "system-design", "topic": "caching", "format": "tap_node",
+    "scenario": "After a deploy that added the request timestamp to every cache key, the cache hit rate fell from 95% to 2% and p99 latency jumped from 40ms to 3s.",
+    "prompt": "Tap the bottleneck.",
+    "diagram": {
+      "nodes": [
+        { "id": "client", "label": "Web clients", "kind": "client" },
+        { "id": "lb", "label": "Load balancer", "kind": "lb" },
+        { "id": "api", "label": "API x8", "kind": "service", "note": "CPU 30%" },
+        { "id": "cache", "label": "Redis cache", "kind": "cache", "note": "hit rate 2%" },
+        { "id": "db", "label": "Postgres", "kind": "db", "note": "max 3k reads/s" }
+      ],
+      "edges": [
+        { "from": "client", "to": "lb" },
+        { "from": "lb", "to": "api" },
+        { "from": "api", "to": "cache", "label": "check first" },
+        { "from": "api", "to": "db", "label": "on miss" }
+      ]
+    },
+    "options": [
+      { "id": "client", "text": "Web clients" },
+      { "id": "lb", "text": "Load balancer" },
+      { "id": "api", "text": "API x8" },
+      { "id": "cache", "text": "Redis cache" },
+      { "id": "db", "text": "Postgres" }
+    ],
+    "answer": "db",
+    "explanation": "Every key is now unique, so almost every read misses the cache and falls through to Postgres, which caps out at 3k reads/s. The cache is healthy but useless; the fix is to remove the timestamp from the key.",
+    "difficulty_rating": 1100
+  },
+  {
+    "id": "sd-caching-008", "version": 1, "track": "system-design", "topic": "caching", "format": "reorder",
+    "prompt": "Put the steps of a cache-aside read in order.",
+    "options": [
+      { "id": "s1", "text": "App looks up the key in the cache" },
+      { "id": "s2", "text": "On a miss, app reads the value from the database" },
+      { "id": "s3", "text": "App stores the value in the cache with a TTL" },
+      { "id": "s4", "text": "App returns the value to the caller" }
+    ],
+    "answer": ["s1", "s2", "s3", "s4"],
+    "explanation": "Cache-aside: the application checks the cache, falls back to the database on a miss, populates the cache for next time, then responds.",
+    "difficulty_rating": 1000
+  },
+  {
+    "id": "sd-caching-009", "version": 1, "track": "system-design", "topic": "caching", "format": "mcq",
+    "scenario": "Five API servers each keep feature flags in an in-process memory cache. After a flag is changed, the servers disagree for several minutes and users see the feature flicker on and off.",
+    "prompt": "What is the simplest fix?",
+    "options": [
+      { "id": "a", "text": "Enable sticky sessions on the load balancer" },
+      { "id": "b", "text": "Broadcast an invalidation message to all servers on change (or use one shared cache)" },
+      { "id": "c", "text": "Increase the in-process cache TTL" },
+      { "id": "d", "text": "Add more API servers" }
+    ],
+    "answer": "b",
+    "explanation": "Each server's private cache expires on its own schedule. Pushing an invalidation to every server, or reading flags from one shared cache, makes them change together. Sticky sessions only hide the flicker per user.",
+    "difficulty_rating": 1150
+  },
+  {
+    "id": "sd-caching-010", "version": 1, "track": "system-design", "topic": "caching", "format": "mcq",
+    "scenario": "A bot requests millions of random product IDs that do not exist. Each request misses the cache and hits the database.",
+    "prompt": "Which change protects the database best?",
+    "options": [
+      { "id": "a", "text": "Briefly cache 'not found' results, or check a Bloom filter of valid IDs first" },
+      { "id": "b", "text": "Make the cache larger" },
+      { "id": "c", "text": "Switch eviction from LRU to LFU" },
+      { "id": "d", "text": "Increase the TTL of existing entries" }
+    ],
+    "answer": "a",
+    "explanation": "This is cache penetration: keys that never exist are never cached. Negative caching or a Bloom filter answers 'no such ID' without touching the database. A bigger cache does not help with keys that have no value.",
+    "difficulty_rating": 1250
+  }
+]

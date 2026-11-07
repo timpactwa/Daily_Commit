@@ -1,0 +1,156 @@
+[
+  {
+    "id": "sd-reliability-001", "version": 1, "track": "system-design", "topic": "reliability", "format": "mcq",
+    "scenario": "Your API calls a recommendation service with no timeout. When that service hangs, all of your API's worker threads end up stuck waiting and the whole site stops responding.",
+    "prompt": "What is the first thing to add?",
+    "options": [
+      { "id": "a", "text": "More API worker threads" },
+      { "id": "b", "text": "A bigger server for the recommendation service" },
+      { "id": "c", "text": "Logging on every call" },
+      { "id": "d", "text": "A timeout on the call, with a fallback when it fires" }
+    ],
+    "answer": "d",
+    "explanation": "Without a timeout, one slow dependency holds every thread hostage. A short timeout plus a fallback (for example, no recommendations) keeps the core site up. More threads just take longer to all get stuck.",
+    "difficulty_rating": 1000, "placement": true
+  },
+  {
+    "id": "sd-reliability-002", "version": 1, "track": "system-design", "topic": "reliability", "format": "mcq",
+    "scenario": "Each user may make 5 requests per second on average, but short bursts of up to 20 requests should be allowed.",
+    "prompt": "Which rate limiting algorithm fits?",
+    "options": [
+      { "id": "a", "text": "Token bucket: refill 5 tokens/s, bucket size 20" },
+      { "id": "b", "text": "Fixed window: at most 5 requests per calendar second" },
+      { "id": "c", "text": "Block the user after 20 total requests" },
+      { "id": "d", "text": "An unbounded queue for every user" }
+    ],
+    "answer": "a",
+    "explanation": "A token bucket enforces the average rate through its refill speed and allows bursts up to the bucket size. A 5-per-second fixed window would reject any burst.",
+    "difficulty_rating": 1200, "placement": true
+  },
+  {
+    "id": "sd-reliability-003", "version": 1, "track": "system-design", "topic": "reliability", "format": "mcq",
+    "scenario": "During a network partition between two data centers, the shopping cart service keeps accepting writes in both.",
+    "prompt": "What did it give up, and what must it handle later?",
+    "options": [
+      { "id": "a", "text": "Availability; it must replay the rejected writes" },
+      { "id": "b", "text": "Strong consistency; it must merge conflicting carts when the partition heals" },
+      { "id": "c", "text": "Partition tolerance; nothing needs handling" },
+      { "id": "d", "text": "Durability; it must restore from backups" }
+    ],
+    "answer": "b",
+    "explanation": "Staying available on both sides of a partition means the two copies can diverge (an AP choice under CAP). When the link returns, the carts must be reconciled, for example by merging their items.",
+    "difficulty_rating": 1400, "placement": true, "tags": ["tradeoff"]
+  },
+  {
+    "id": "sd-reliability-004", "version": 1, "track": "system-design", "topic": "reliability", "format": "mcq",
+    "prompt": "Why run at least two instances of a service in different availability zones?",
+    "options": [
+      { "id": "a", "text": "If one zone goes down, the other keeps serving traffic" },
+      { "id": "b", "text": "It is cheaper than one instance" },
+      { "id": "c", "text": "Deploys finish faster" },
+      { "id": "d", "text": "Logs get smaller" }
+    ],
+    "answer": "a",
+    "explanation": "Availability zones fail independently (power, network). Spreading instances across them removes a single point of failure.",
+    "difficulty_rating": 850
+  },
+  {
+    "id": "sd-reliability-005", "version": 1, "track": "system-design", "topic": "reliability", "format": "mcq",
+    "scenario": "A downstream service is failing. Your code keeps calling it on every request, each call waits for a timeout, and your own latency balloons.",
+    "prompt": "Which pattern helps?",
+    "options": [
+      { "id": "a", "text": "Retry each failed call five times immediately" },
+      { "id": "b", "text": "Increase the timeout" },
+      { "id": "c", "text": "A circuit breaker that fails fast for a while, then tests whether the service recovered" },
+      { "id": "d", "text": "Cache the error responses forever" }
+    ],
+    "answer": "c",
+    "explanation": "After enough failures the breaker opens and calls fail instantly instead of waiting. After a cool-down it lets a few test calls through and closes again once they succeed.",
+    "difficulty_rating": 950
+  },
+  {
+    "id": "sd-reliability-006", "version": 1, "track": "system-design", "topic": "reliability", "format": "tap_node",
+    "scenario": "Last month the whole site was down for 40 minutes when a single virtual machine rebooted.",
+    "prompt": "Tap the single point of failure.",
+    "diagram": {
+      "nodes": [
+        { "id": "client", "label": "Users", "kind": "client" },
+        { "id": "lb", "label": "Load balancer x2", "kind": "lb" },
+        { "id": "api", "label": "API x6", "kind": "service", "note": "2 zones" },
+        { "id": "auth", "label": "Auth service", "kind": "service", "note": "1 instance, no failover" },
+        { "id": "db", "label": "User DB", "kind": "db", "note": "primary + standby" }
+      ],
+      "edges": [
+        { "from": "client", "to": "lb" },
+        { "from": "lb", "to": "api" },
+        { "from": "api", "to": "auth", "label": "every request" },
+        { "from": "auth", "to": "db" }
+      ]
+    },
+    "options": [
+      { "id": "client", "text": "Users" },
+      { "id": "lb", "text": "Load balancer x2" },
+      { "id": "api", "text": "API x6" },
+      { "id": "auth", "text": "Auth service" },
+      { "id": "db", "text": "User DB" }
+    ],
+    "answer": "auth",
+    "explanation": "Everything else is redundant, but every request needs the auth service and it runs on one instance with no failover. When its VM rebooted, nothing could authenticate.",
+    "difficulty_rating": 1100
+  },
+  {
+    "id": "sd-reliability-007", "version": 1, "track": "system-design", "topic": "reliability", "format": "reorder",
+    "prompt": "Put the steps of handling a production incident in order.",
+    "options": [
+      { "id": "s1", "text": "An alert fires on the rising error rate" },
+      { "id": "s2", "text": "Mitigate: roll back or fail over to restore service" },
+      { "id": "s3", "text": "Investigate and confirm the root cause" },
+      { "id": "s4", "text": "Write a blameless postmortem with action items" }
+    ],
+    "answer": ["s1", "s2", "s3", "s4"],
+    "explanation": "Restore service first, then dig into the root cause once users are no longer affected, then capture lessons so it does not recur.",
+    "difficulty_rating": 1050
+  },
+  {
+    "id": "sd-reliability-008", "version": 1, "track": "system-design", "topic": "reliability", "format": "mcq",
+    "scenario": "The recommendation service is down. The product page normally shows a 'You might also like' row from it.",
+    "prompt": "What should the product page do?",
+    "options": [
+      { "id": "a", "text": "Return a 500 error" },
+      { "id": "b", "text": "Retry until the recommendation service answers" },
+      { "id": "c", "text": "Redirect to an error page" },
+      { "id": "d", "text": "Show the page without that row, or with a cached default list" }
+    ],
+    "answer": "d",
+    "explanation": "Graceful degradation: a non-essential feature failing should not take down the core experience. Customers can still view and buy the product.",
+    "difficulty_rating": 1000
+  },
+  {
+    "id": "sd-reliability-009", "version": 1, "track": "system-design", "topic": "reliability", "format": "mcq",
+    "scenario": "After you post, you see your own post immediately, but your friends only see it a few seconds later.",
+    "prompt": "Which consistency model describes this system?",
+    "options": [
+      { "id": "a", "text": "Eventual consistency with read-your-writes" },
+      { "id": "b", "text": "Strong (linearizable) consistency" },
+      { "id": "c", "text": "No consistency guarantees at all" },
+      { "id": "d", "text": "Two-phase commit" }
+    ],
+    "answer": "a",
+    "explanation": "Everyone converges on the same data after a delay (eventual), and the author is guaranteed to see their own write right away (read-your-writes). Strong consistency would show friends the post immediately too.",
+    "difficulty_rating": 1150
+  },
+  {
+    "id": "sd-reliability-010", "version": 1, "track": "system-design", "topic": "reliability", "format": "mcq",
+    "scenario": "Each API instance's health check endpoint runs a database query. During a 20-second database blip, the load balancer marks every API instance unhealthy and removes all of them.",
+    "prompt": "What is the best fix?",
+    "options": [
+      { "id": "a", "text": "Health-check every 1 second instead of every 10" },
+      { "id": "b", "text": "Keep the load balancer check shallow (is this process alive?), and alert on dependency health separately" },
+      { "id": "c", "text": "Remove health checks" },
+      { "id": "d", "text": "Add more API instances" }
+    ],
+    "answer": "b",
+    "explanation": "A shared dependency in the health check makes every instance fail at once, turning a brief database blip into a total outage. The load balancer should only remove instances that are themselves broken.",
+    "difficulty_rating": 1300
+  }
+]

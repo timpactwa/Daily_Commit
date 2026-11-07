@@ -1,0 +1,172 @@
+[
+  {
+    "id": "sd-scaling-001", "version": 1, "track": "system-design", "topic": "scaling", "format": "mcq",
+    "prompt": "Why should web servers behind a load balancer be stateless?",
+    "options": [
+      { "id": "a", "text": "Stateless servers use less CPU" },
+      { "id": "b", "text": "It removes the need for a database" },
+      { "id": "c", "text": "It makes the code shorter" },
+      { "id": "d", "text": "Any server can handle any request, so servers can be added or removed freely" }
+    ],
+    "answer": "d",
+    "explanation": "If no request depends on state stored on one machine, the load balancer can send it anywhere and autoscaling can add or kill servers without losing user data. State goes in a shared store instead.",
+    "difficulty_rating": 1000, "placement": true
+  },
+  {
+    "id": "sd-scaling-002", "version": 1, "track": "system-design", "topic": "scaling", "format": "mcq",
+    "scenario": "Your single Postgres primary is at 90% CPU, almost entirely from writes. Reads already go to three replicas.",
+    "prompt": "What gives the quickest short-term relief?",
+    "options": [
+      { "id": "a", "text": "Add two more read replicas" },
+      { "id": "b", "text": "Move the primary to a bigger machine (vertical scaling)" },
+      { "id": "c", "text": "Put a CDN in front of the API" },
+      { "id": "d", "text": "Add more API servers" }
+    ],
+    "answer": "b",
+    "explanation": "Writes only go to the primary, so replicas, a CDN and more API servers do not reduce its load. A bigger instance buys time quickly while you plan a longer-term fix like sharding or batching writes.",
+    "difficulty_rating": 1200, "placement": true, "tags": ["tradeoff"]
+  },
+  {
+    "id": "sd-scaling-003", "version": 1, "track": "system-design", "topic": "scaling", "format": "mcq",
+    "scenario": "You spread cache keys across N nodes with hash(key) % N. Adding one node to handle growth causes almost every key to move, and the hit rate collapses.",
+    "prompt": "What fixes this?",
+    "options": [
+      { "id": "a", "text": "Consistent hashing, so adding a node moves only about 1/N of the keys" },
+      { "id": "b", "text": "Use hash(key) % (N + 1) going forward" },
+      { "id": "c", "text": "Increase the TTL on all keys" },
+      { "id": "d", "text": "Replicate every key to every node" }
+    ],
+    "answer": "a",
+    "explanation": "With modulo hashing, changing N remaps nearly every key. Consistent hashing places nodes and keys on a ring, so a new node only takes over the keys between it and its neighbor.",
+    "difficulty_rating": 1400, "placement": true
+  },
+  {
+    "id": "sd-scaling-004", "version": 1, "track": "system-design", "topic": "scaling", "format": "tap_node",
+    "scenario": "Traffic doubled and p99 latency went from 80ms to 2s. The API tier autoscaled to 12 instances.",
+    "prompt": "Tap the bottleneck.",
+    "diagram": {
+      "nodes": [
+        { "id": "client", "label": "Mobile clients", "kind": "client" },
+        { "id": "lb", "label": "Load balancer", "kind": "lb" },
+        { "id": "api", "label": "API x12", "kind": "service", "note": "autoscaled" },
+        { "id": "session", "label": "Session store", "kind": "db", "note": "1 instance, 5k ops/s max" },
+        { "id": "db", "label": "Postgres", "kind": "db", "note": "3 read replicas" }
+      ],
+      "edges": [
+        { "from": "client", "to": "lb" },
+        { "from": "lb", "to": "api" },
+        { "from": "api", "to": "session", "label": "every request" },
+        { "from": "api", "to": "db" }
+      ]
+    },
+    "options": [
+      { "id": "client", "text": "Mobile clients" },
+      { "id": "lb", "text": "Load balancer" },
+      { "id": "api", "text": "API x12" },
+      { "id": "session", "text": "Session store" },
+      { "id": "db", "text": "Postgres" }
+    ],
+    "answer": "session",
+    "explanation": "Every request hits a single session store capped at 5k ops/s. Scaling the API tier just sends more load to it.",
+    "difficulty_rating": 1300
+  },
+  {
+    "id": "sd-scaling-005", "version": 1, "track": "system-design", "topic": "scaling", "format": "mcq",
+    "scenario": "Traffic triples every evening and drops to almost nothing overnight.",
+    "prompt": "What handles this most cost-effectively?",
+    "options": [
+      { "id": "a", "text": "Buy enough servers for the evening peak and run them all day" },
+      { "id": "b", "text": "One very large server" },
+      { "id": "c", "text": "An autoscaling group that adds and removes instances based on load" },
+      { "id": "d", "text": "Rate-limit users in the evening" }
+    ],
+    "answer": "c",
+    "explanation": "Autoscaling matches capacity to demand, so you pay for peak capacity only during the peak. Provisioning for peak all day wastes money, and one big server has no headroom or redundancy.",
+    "difficulty_rating": 850
+  },
+  {
+    "id": "sd-scaling-006", "version": 1, "track": "system-design", "topic": "scaling", "format": "mcq",
+    "scenario": "One of four servers behind a load balancer crashed. Now about 25% of requests fail.",
+    "prompt": "Which load balancer feature prevents this?",
+    "options": [
+      { "id": "a", "text": "Health checks that stop routing to unhealthy instances" },
+      { "id": "b", "text": "Sticky sessions" },
+      { "id": "c", "text": "TLS termination" },
+      { "id": "d", "text": "Round-robin routing" }
+    ],
+    "answer": "a",
+    "explanation": "Round-robin keeps sending a quarter of traffic to the dead server. Health checks detect the failure and take it out of rotation until it recovers.",
+    "difficulty_rating": 950
+  },
+  {
+    "id": "sd-scaling-007", "version": 1, "track": "system-design", "topic": "scaling", "format": "reorder",
+    "prompt": "Put the steps of adding a new server to a live pool, with zero downtime, in order.",
+    "options": [
+      { "id": "s1", "text": "Launch the instance from the current image" },
+      { "id": "s2", "text": "Wait until it passes the load balancer health check" },
+      { "id": "s3", "text": "Load balancer starts routing traffic to it" },
+      { "id": "s4", "text": "Watch error rate and latency for the new instance" }
+    ],
+    "answer": ["s1", "s2", "s3", "s4"],
+    "explanation": "An instance only receives traffic after it proves healthy, and you verify it under real load before calling the change done.",
+    "difficulty_rating": 1050
+  },
+  {
+    "id": "sd-scaling-008", "version": 1, "track": "system-design", "topic": "scaling", "format": "mcq",
+    "scenario": "Users in Europe see 400ms page loads. Your servers are in the US, and most of each page is images, CSS and JavaScript.",
+    "prompt": "What is the best fix?",
+    "options": [
+      { "id": "a", "text": "Add more US servers" },
+      { "id": "b", "text": "Serve static assets from a CDN with European edge locations" },
+      { "id": "c", "text": "Add a database index" },
+      { "id": "d", "text": "Increase server RAM" }
+    ],
+    "answer": "b",
+    "explanation": "The delay is distance, not capacity. A CDN serves the static files from servers near the user, cutting round trips across the Atlantic.",
+    "difficulty_rating": 1000
+  },
+  {
+    "id": "sd-scaling-009", "version": 1, "track": "system-design", "topic": "scaling", "format": "mcq",
+    "scenario": "To avoid a shared session store, you enabled sticky sessions so each user always lands on the same server.",
+    "prompt": "What problem does this cause as you scale?",
+    "options": [
+      { "id": "a", "text": "HTTPS stops working" },
+      { "id": "b", "text": "Database writes get slower" },
+      { "id": "c", "text": "Load becomes uneven, and users lose their session when their server dies" },
+      { "id": "d", "text": "Cached pages become invalid" }
+    ],
+    "answer": "c",
+    "explanation": "Sticky sessions pin users to machines, so heavy users can overload one server, new servers get little traffic, and a crash logs out everyone pinned to it.",
+    "difficulty_rating": 1150, "tags": ["tradeoff"]
+  },
+  {
+    "id": "sd-scaling-010", "version": 1, "track": "system-design", "topic": "scaling", "format": "tap_node",
+    "scenario": "Photo uploads have become very slow. The API autoscaled to 10 instances but each sits at 15% CPU.",
+    "prompt": "Tap the bottleneck.",
+    "diagram": {
+      "nodes": [
+        { "id": "client", "label": "Mobile clients", "kind": "client" },
+        { "id": "lb", "label": "Load balancer", "kind": "lb" },
+        { "id": "api", "label": "API x10", "kind": "service", "note": "CPU 15%" },
+        { "id": "nfs", "label": "Shared file server", "kind": "external", "note": "1 Gbps link, 100% used" },
+        { "id": "db", "label": "Postgres", "kind": "db", "note": "CPU 20%" }
+      ],
+      "edges": [
+        { "from": "client", "to": "lb" },
+        { "from": "lb", "to": "api" },
+        { "from": "api", "to": "nfs", "label": "writes each upload" },
+        { "from": "api", "to": "db", "label": "metadata" }
+      ]
+    },
+    "options": [
+      { "id": "client", "text": "Mobile clients" },
+      { "id": "lb", "text": "Load balancer" },
+      { "id": "api", "text": "API x10" },
+      { "id": "nfs", "text": "Shared file server" },
+      { "id": "db", "text": "Postgres" }
+    ],
+    "answer": "nfs",
+    "explanation": "Every upload funnels through one file server whose network link is saturated. Adding API instances cannot help; uploading directly to object storage (signed URLs) removes the choke point.",
+    "difficulty_rating": 1250
+  }
+]
