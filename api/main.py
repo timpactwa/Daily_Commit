@@ -1,14 +1,15 @@
 """Daily Commit API. Run from repo root: uvicorn api.main:app --reload --port 8000"""
 import logging
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from api import content_loader, db, errors
-from api.routes import answers, lessons, placement, users
+from api import content_loader, db, errors, seed_demo
+from api.routes import answers, demo, lessons, placement, progress, users
 
 ROOT = Path(__file__).resolve().parent.parent
 APP_DIST = ROOT / "app" / "dist"
@@ -17,10 +18,11 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(messag
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Boot: schema, then reload /content (keeps learned ratings). Demo reset is added in P3.
+    # Boot: schema, reload /content (keeps learned ratings), reset the demo user.
     db.init()
     with db.transaction() as conn:
         app.state.question_count = content_loader.load(conn)
+        seed_demo.reset(conn, datetime.now(timezone.utc).date().isoformat())
     yield
 
 
@@ -29,7 +31,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 errors.install(app)
 app.state.question_count = 0
 
-for r in (users.router, placement.router, lessons.router, answers.router):
+for r in (users.router, placement.router, lessons.router, answers.router, progress.router, demo.router):
     app.include_router(r)
 
 

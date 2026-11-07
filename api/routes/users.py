@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from api import db, repo
 from api.deps import client_date, current_user, today_for
+from engine import streak as streaks
 
 router = APIRouter(prefix="/v1")
 
@@ -15,12 +16,13 @@ class NewUser(BaseModel):
     display_name: str = Field(default="Student", max_length=40)
 
 
+def user_streak(user: sqlite3.Row) -> streaks.Streak:
+    return streaks.Streak(user["streak_current"], user["streak_best"], user["streak_last"])
+
+
 def streak_payload(user: sqlite3.Row, today: str) -> dict:
-    return {
-        "current": user["streak_current"],
-        "best": user["streak_best"],
-        "today_done": user["streak_last"] == today,
-    }
+    s = user_streak(user)
+    return {"current": streaks.visible(s, today), "best": s.best, "today_done": s.last == today}
 
 
 @router.get("/topics")

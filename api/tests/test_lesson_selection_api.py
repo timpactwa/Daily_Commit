@@ -92,11 +92,49 @@ def test_tomorrow_avoids_todays_questions(big):
 
 
 def test_demo_user_gets_three_items(big, monkeypatch):
-    from api import db
-
-    monkeypatch.setenv("DEMO_MODE", "1")
-    with db.transaction() as conn:
-        conn.execute("INSERT INTO users (id, display_name, placed) VALUES ('demo', 'Tim', 1)")
-        repo.create_user_topics(conn, "demo")
+    monkeypatch.setenv("DEMO_MODE", "1")  # demo user is seeded on boot
     lesson = big.get("/v1/lessons/today", headers={"X-User-Id": "demo", "X-Client-Date": "2026-11-08"}).json()
     assert len(lesson["items"]) == 3
+
+
+def test_complete_lesson_and_streak(big):
+    h = placed(big)
+    lesson = big.get("/v1/lessons/today", headers=h).json()
+    for item in lesson["items"][:3]:
+        q = item["question"]
+        big.post("/v1/answers", headers=h, json={"lesson_id": lesson["lesson_id"], "question_id": q["id"],
+                                                  "response": "a" if q["format"] == "mcq" else 2})
+    r = big.post(f"/v1/lessons/{lesson['lesson_id']}/complete", headers=h).json()
+    assert r["summary"] == {"correct": 3, "total": 3}
+    assert r["streak"] == {"current": 1, "best": 1, "today_done": True, "extended": True}
+    assert all(c["after"] > c["before"] for c in r["rating_changes"])
+    again = big.post(f"/v1/lessons/{lesson['lesson_id']}/complete", headers=h).json()
+    assert again["streak"]["extended"] is False and again["streak"]["current"] == 1
+    assert big.get("/v1/lessons/today", headers=h).json()["status"] == "completed"
+    assert big.get("/v1/me", headers=h).json()["streak"]["today_done"] is True
+
+    h2 = {**h, "X-Client-Date": "2026-11-09"}
+    l2 = big.get("/v1/lessons/today", headers=h2).json()
+    assert big.post(f"/v1/lessons/{l2['lesson_id']}/complete", headers=h2).json()["streak"]["current"] == 2
+    gone = big.get("/v1/me", headers={**h, "X-Client-Date": "2026-11-12"}).json()["streak"]
+    assert gone == {"current": 0, "best": 2, "today_done": False}
+
+
+def test_complete_unknown_lesson(big):
+    h = placed(big)
+    assert big.post("/v1/lessons/l_nope/complete", headers=h).status_code == 404
+
+
+def test_progress(big):
+    h = placed(big)
+    lesson = big.get("/v1/lessons/today", headers=h).json()
+    q = lesson["items"][0]["question"]
+    big.post("/v1/answers", headers=h, json={"lesson_id": lesson["lesson_id"], "question_id": q["id"],
+                                              "response": "a" if q["format"] == "mcq" else 2})
+    p = big.get("/v1/progress", headers=h).json()
+    assert set(p) == {"streak", "overall_readiness", "topics"}
+    assert len(p["topics"]) == 10 and 0 <= p["overall_readiness"] <= 100
+    t = next(t for t in p["topics"] if t["topic"] == q["topic"])
+    assert t["answered"] == 1 and t["accuracy"] == 1.0
+    assert len(t["history"]) == 2 and t["history"][-1] == t["rating"]  # placement + lesson answer
+    assert set(t) == {"topic", "track", "rating", "level", "readiness", "answered", "accuracy", "history"}
