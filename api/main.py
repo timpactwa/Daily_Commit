@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from api import content_loader, db, errors
-from api.routes import answers, lessons, users
+from api.routes import answers, lessons, placement, users
 
 ROOT = Path(__file__).resolve().parent.parent
 APP_DIST = ROOT / "app" / "dist"
@@ -29,7 +29,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 errors.install(app)
 app.state.question_count = 0
 
-for r in (users.router, lessons.router, answers.router):
+for r in (users.router, placement.router, lessons.router, answers.router):
     app.include_router(r)
 
 
