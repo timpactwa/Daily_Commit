@@ -6,7 +6,10 @@ Slots for a 6-item lesson:
   2 mix    other topics, guaranteeing both tracks appear
   1 review most recent earlier miss (else another focus item)
 Each slot targets Q* = R - 150 (~70% expected success) and picks randomly among the 3 closest,
-seeded by (user, date) so a lesson is stable for the day. A debugging source function appears at
+seeded by (user, date) so a lesson is stable for the day. If a topic has nothing within
+DIFFICULTY_TOLERANCE of its target (easy questions used up), the slot moves to the next topic
+in line before falling back to the closest question anywhere; simulation (engine/simulate.py)
+showed this lifts real success from ~49% to ~60% and stops it sliding over the weeks. A debugging source function appears at
 most once per lesson and not if shown in the last 3 days.
 """
 import random
@@ -17,6 +20,7 @@ from engine.elo import expected, target_difficulty
 LESSON_SIZE = 6
 MISS_PRESSURE = 100.0
 BEST_OF = 3
+DIFFICULTY_TOLERANCE = 150.0
 
 
 @dataclass(frozen=True)
@@ -82,19 +86,26 @@ def build_lesson(
             used_functions.add(c.source_function)
         picks.append(Pick(c.id, c.topic, c.track, c.rating, kind))
 
-    def fill(topic: str, kind: str) -> bool:
+    def fill(topic: str, kind: str, tolerance: float | None = None) -> bool:
         options = available(topic)
         if not options:
             return False
         target = target_difficulty(ratings.get(topic, 1200.0))
         options.sort(key=lambda c: (abs(c.rating - target), c.id))
-        take(rng.choice(options[:BEST_OF]), kind)
+        if history.misses_in_latest_lesson.get(topic) and all(p.topic != topic for p in picks):
+            tolerance = None  # just missed: guarantee one more try even if nothing fits perfectly
+        near = [c for c in options[:BEST_OF] if tolerance is None or abs(c.rating - target) <= tolerance]
+        if not near:
+            return False
+        take(rng.choice(near), kind)
         return True
 
     def fill_first(topics: list[str], kind: str) -> str | None:
-        for t in topics:
-            if fill(t, kind):
-                return t
+        # First pass: only questions near the target. Second pass: closest available.
+        for tolerance in (DIFFICULTY_TOLERANCE, None):
+            for t in topics:
+                if fill(t, kind, tolerance):
+                    return t
         return None
 
     if size < LESSON_SIZE:
@@ -108,7 +119,7 @@ def build_lesson(
     else:
         weakest = fill_first(order, "focus")
         if weakest:
-            fill(weakest, "focus")
+            fill(weakest, "focus", DIFFICULTY_TOLERANCE)
         second = fill_first([t for t in order if t != weakest], "focus")
         focus = {weakest, second} - {None}
 
