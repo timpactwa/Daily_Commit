@@ -1,4 +1,6 @@
 @import "tailwindcss";
+.source-link { color: #476329; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.explanation { overflow-wrap: anywhere; }
 :root {
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   color: #202820;

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { AnswerResult, PublicQuestion, ResponseValue } from "../api";
+import { Explanation } from "./Explanation";
 import { learningFor } from "../learning/feedback";
 
 function answerText(question: PublicQuestion, value: ResponseValue) {
@@ -61,7 +62,7 @@ export function FeedbackSheet({
         </div>
       )}
       <h3>Why this works</h3>
-      <p>{result.explanation}</p>
+      <Explanation text={result.explanation} />
       {guide && (
         <>
           <h3>{guide.concept}</h3>

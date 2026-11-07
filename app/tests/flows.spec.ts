@@ -242,3 +242,30 @@ test("reorder allows undo and requires every step", async ({ page }) => {
     page.getByRole("button", { name: "Next question" }),
   ).toBeEnabled();
 });
+
+test("source citations are usable HTTPS links and other markup stays plain text", async ({ page }) => {
+  await createAndPlace(page);
+  await page.evaluate(async () => {
+    const clientPath = "/src/api/client.ts";
+    const mockPath = "/src/api/mock.ts";
+    const { setTransport } = await import(clientPath);
+    const { mockTransport } = await import(mockPath);
+    setTransport(async (method: string, path: string, body: unknown, headers: Record<string, string>) => {
+      const response = await mockTransport(method, path, body, headers);
+      if (path === "/v1/answers") {
+        response.json = { ...response.json, explanation: 'Check the rule. Source: [RFC 9111](https://www.rfc-editor.org/rfc/rfc9111.html) <img src=x onerror=alert(1)> [unsafe](javascript:alert(1)) [invalid](https://[)' };
+      }
+      return response;
+    });
+  });
+  await page.getByRole("link", { name: "Make today’s commit" }).click();
+  await selectQuestion(page);
+  await page.getByRole("button", { name: "Check answer" }).click();
+  const feedback = page.getByRole("region", { name: "Answer feedback" });
+  const citation = feedback.getByRole("link", { name: "RFC 9111" });
+  await expect(citation).toHaveAttribute("href", "https://www.rfc-editor.org/rfc/rfc9111.html");
+  await expect(citation).toHaveAttribute("rel", "noopener noreferrer");
+  await expect(feedback.getByRole("link")).toHaveCount(1);
+  await expect(feedback.locator("img")).toHaveCount(0);
+  await expect(feedback).toContainText("[unsafe](javascript:alert(1))");
+});
