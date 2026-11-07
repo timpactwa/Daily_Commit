@@ -2,7 +2,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, 'app-*']
 permissions:
   contents: read
 jobs:
@@ -63,3 +63,4 @@ jobs:
         working-directory: app
       - run: npm test
         working-directory: app
+
