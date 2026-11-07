@@ -374,9 +374,26 @@ progress::-moz-progress-bar {
   margin: 0;
 }
 .feedback p {
-  font-size: 14px;
-  color: #58614e;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #3f4938;
+  overflow-wrap: anywhere;
 }
+.feedback h3 { font-size: 17px; margin: 24px 0 8px; }
+.feedback h4 { font-size: 15px; margin: 12px 0 6px; }
+.feedback h2:focus { outline-offset: 6px; }
+.feedback .answer-comparison p { margin: 8px 0; }
+.worked-example { border-left: 3px solid #81a547; padding-left: 16px; }
+.feedback-details { margin: 20px 0; }
+.feedback-details summary { cursor: pointer; font-weight: 650; padding: 8px 0; }
+.feedback-details pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.6; padding: 12px; background: #ffffffa6; border-radius: 8px; }
+.further-reading ul { padding-left: 20px; }
+.further-reading li { margin: 18px 0; }
+.further-reading a { color: #36551d; text-decoration: underline; text-underline-offset: 3px; font-weight: 650; }
+.reading-publisher { display: block; font-size: 12px; color: #596451; margin-top: 4px; }
+.further-reading li p { margin: 5px 0; }
+.feedback .feedback-rating { font-size: 13px; color: #596451; margin: 24px 0 16px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .delta {
   font: bold 13px monospace;
   white-space: nowrap;

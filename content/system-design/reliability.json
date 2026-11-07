@@ -10,7 +10,7 @@
       { "id": "d", "text": "A timeout on the call, with a fallback when it fires" }
     ],
     "answer": "d",
-    "explanation": "Without a timeout, one slow dependency holds every thread hostage. A short timeout plus a fallback (for example, no recommendations) keeps the core site up. More threads just take longer to all get stuck.",
+    "explanation": "Waiting without a deadline lets one stalled dependency occupy workers indefinitely. A timeout bounds that wait; a safe fallback, such as omitting recommendations, protects the core request. More threads only delays exhaustion if each new thread also gets stuck. Choose the deadline within the overall request budget, and cancel underlying work where supported so abandoned calls do not keep consuming resources.",
     "difficulty_rating": 1000, "placement": true
   },
   {
@@ -24,7 +24,7 @@
       { "id": "d", "text": "An unbounded queue for every user" }
     ],
     "answer": "a",
-    "explanation": "A token bucket enforces the average rate through its refill speed and allows bursts up to the bucket size. A 5-per-second fixed window would reject any burst.",
+    "explanation": "A token bucket separates sustained rate from burst size. Refill at 5 tokens per second and cap the bucket at 20; each request spends one token. An idle client can burst up to 20, then must wait for tokens to return. A simple five-per-second fixed window cannot express that same burst allowance. The bucket does not permit a sustained 20 requests per second: its refill rate still limits long-run usage.",
     "difficulty_rating": 1200, "placement": true
   },
   {
@@ -38,7 +38,7 @@
       { "id": "d", "text": "Durability; it must restore from backups" }
     ],
     "answer": "b",
-    "explanation": "Staying available on both sides of a partition means the two copies can diverge (an AP choice under CAP). When the link returns, the carts must be reconciled, for example by merging their items.",
+    "explanation": "During the partition, accepting writes in both data centers lets the copies diverge instead of making every operation wait for global agreement. That preserves availability at the cost of immediate single-copy consistency for these writes. When communication returns, reconcile conflicts using explicit application rules. Merging carts may be reasonable; blindly applying the same policy to account balances would be dangerous.",
     "difficulty_rating": 1400, "placement": true, "tags": ["tradeoff"]
   },
   {
@@ -51,7 +51,7 @@
       { "id": "d", "text": "Logs get smaller" }
     ],
     "answer": "a",
-    "explanation": "Availability zones fail independently (power, network). Spreading instances across them removes a single point of failure.",
+    "explanation": "Two instances in one zone can both fail when that zone loses power or connectivity. Spreading them across zones reduces that shared failure risk. Redundant instances still need traffic routing, health checks and enough surviving capacity. Shared databases or authentication can remain single points of failure. Multi-zone deployment improves resilience; it does not guarantee independence from regional or application-wide failures.",
     "difficulty_rating": 850
   },
   {
@@ -65,7 +65,7 @@
       { "id": "d", "text": "Cache the error responses forever" }
     ],
     "answer": "c",
-    "explanation": "After enough failures the breaker opens and calls fail instantly instead of waiting. After a cool-down it lets a few test calls through and closes again once they succeed.",
+    "explanation": "A timeout limits one failed call; a circuit breaker limits repeated calls to a failing dependency. After enough failures, it opens and fails fast, protecting caller capacity. Later, half-open probes test recovery before normal traffic resumes. A fallback may keep optional features usable. Configure thresholds and timeouts together: a breaker should not repeatedly flood a recovering service or hide persistent failures indefinitely.",
     "difficulty_rating": 950
   },
   {
@@ -95,7 +95,7 @@
       { "id": "db", "text": "User DB" }
     ],
     "answer": "auth",
-    "explanation": "Everything else is redundant, but every request needs the auth service and it runs on one instance with no failover. When its VM rebooted, nothing could authenticate.",
+    "explanation": "Follow the dependencies of a successful request, not just the number of API replicas. Every request needs authentication, and the diagram shows only one auth instance with no failover. Its reboot therefore blocks the entire request path. Add redundant authentication capacity with suitable routing and shared state handling. Reliability is limited by essential dependencies even when surrounding components are redundant.",
     "difficulty_rating": 1100
   },
   {
@@ -108,7 +108,7 @@
       { "id": "s4", "text": "Write a blameless postmortem with action items" }
     ],
     "answer": ["s1", "s2", "s3", "s4"],
-    "explanation": "Restore service first, then dig into the root cause once users are no longer affected, then capture lessons so it does not recur.",
+    "explanation": "During an incident, reducing user impact comes before a complete root-cause explanation. Detect and assess the failure, mitigate it with a safe rollback or workaround, then investigate and capture prevention work. This order restores service sooner without pretending the underlying issue is understood. Record observations while mitigating, and verify recovery with user-facing signals rather than assuming a successful deploy fixed everything.",
     "difficulty_rating": 1050
   },
   {
@@ -122,7 +122,7 @@
       { "id": "d", "text": "Show the page without that row, or with a cached default list" }
     ],
     "answer": "d",
-    "explanation": "Graceful degradation: a non-essential feature failing should not take down the core experience. Customers can still view and buy the product.",
+    "explanation": "Recommendations are optional to viewing and buying this product. A bounded fallback can omit that row while preserving the essential page. This is graceful degradation: lose a nonessential feature rather than the whole request. Do not fake success for essential operations such as payments. Pair the fallback with timeouts and monitoring so it protects users without concealing the dependency failure from operators.",
     "difficulty_rating": 1000
   },
   {
@@ -136,7 +136,7 @@
       { "id": "d", "text": "Two-phase commit" }
     ],
     "answer": "a",
-    "explanation": "Everyone converges on the same data after a delay (eventual), and the author is guaranteed to see their own write right away (read-your-writes). Strong consistency would show friends the post immediately too.",
+    "explanation": "The author has read-your-writes behavior: their own completed write is immediately visible to them. Other readers see the update later, which is consistent with eventual convergence. These guarantees can coexist; consistency is more specific than a single strong-versus-weak label. A globally linearizable view would require later reads to reflect the completed write, not merely the author's reads.",
     "difficulty_rating": 1150
   },
   {
@@ -150,7 +150,7 @@
       { "id": "d", "text": "Add more API instances" }
     ],
     "answer": "b",
-    "explanation": "A shared dependency in the health check makes every instance fail at once, turning a brief database blip into a total outage. The load balancer should only remove instances that are themselves broken.",
+    "explanation": "The database is a shared dependency, so querying it in every load-balancer health check can eject all API instances during one brief outage. Separate instance health from dependency status and design readiness policy for this failure mode. Keep dependency monitoring, but avoid making all otherwise healthy backends disappear unnecessarily. Removing an instance makes sense when routing to another instance can actually improve the outcome.",
     "difficulty_rating": 1300
   },
   {

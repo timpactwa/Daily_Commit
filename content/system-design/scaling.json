@@ -9,7 +9,7 @@
       { "id": "d", "text": "Any server can handle any request, so servers can be added or removed freely" }
     ],
     "answer": "d",
-    "explanation": "If no request depends on state stored on one machine, the load balancer can send it anywhere and autoscaling can add or kill servers without losing user data. State goes in a shared store instead.",
+    "explanation": "Stateless web servers do not keep essential user state only in local memory. Store sessions or durable data in a shared service so another instance can handle the next request. Then adding, replacing or losing a web server does not lose that state. Stateless does not mean the whole system has no state: it moves that responsibility to a store whose capacity and availability you must also design.",
     "difficulty_rating": 1000, "placement": true
   },
   {
@@ -23,7 +23,7 @@
       { "id": "d", "text": "Add more API servers" }
     ],
     "answer": "b",
-    "explanation": "Writes only go to the primary, so replicas, a CDN and more API servers do not reduce its load. A bigger instance buys time quickly while you plan a longer-term fix like sharding or batching writes.",
+    "explanation": "Measure the saturated resource before scaling. This primary is busy with writes, so read replicas, a CDN and more API servers do not remove its write work. A larger primary is the quickest short-term capacity increase among these options. It has a ceiling, though. Follow up by reducing unnecessary writes, batching compatible work, or planning partitioning if sustained growth will exceed one machine.",
     "difficulty_rating": 1200, "placement": true, "tags": ["tradeoff"]
   },
   {
@@ -37,7 +37,7 @@
       { "id": "d", "text": "Replicate every key to every node" }
     ],
     "answer": "a",
-    "explanation": "With modulo hashing, changing N remaps nearly every key. Consistent hashing places nodes and keys on a ring, so a new node only takes over the keys between it and its neighbor.",
+    "explanation": "Modulo placement depends on the node count: changing N changes many keys' destinations, causing cold-cache misses. Consistent hashing assigns keys and nodes positions on a ring, so adding a node moves only part of the keyspace. That limits disruption during growth. It does not automatically distribute hot keys evenly; virtual nodes can improve balance, while a single extremely popular key may need additional treatment.",
     "difficulty_rating": 1400, "placement": true
   },
   {
@@ -67,7 +67,7 @@
       { "id": "db", "text": "Postgres" }
     ],
     "answer": "session",
-    "explanation": "Every request hits a single session store capped at 5k ops/s. Scaling the API tier just sends more load to it.",
+    "explanation": "Trace the work each request must perform. All 12 API instances still depend on one session store capped at 5k operations per second. That shared store limits throughput regardless of spare API capacity. Scaling the API can increase the queue of work waiting there. Measure the store, then reduce accesses, distribute session data or increase its capacity. Scale the limiting tier rather than the tier easiest to duplicate.",
     "difficulty_rating": 1300
   },
   {
@@ -81,7 +81,7 @@
       { "id": "d", "text": "Rate-limit users in the evening" }
     ],
     "answer": "c",
-    "explanation": "Autoscaling matches capacity to demand, so you pay for peak capacity only during the peak. Provisioning for peak all day wastes money, and one big server has no headroom or redundancy.",
+    "explanation": "Autoscaling adjusts the number of instances as demand changes. It avoids paying for evening peak capacity all night, while allowing more capacity during the rush. The scaling signal must match the workload, and new instances take time to start. Predictable peaks may benefit from scheduled scale-out before traffic arrives. A fixed oversized fleet wastes capacity; one large instance also leaves a failure and growth limit.",
     "difficulty_rating": 850
   },
   {
@@ -95,7 +95,7 @@
       { "id": "d", "text": "Round-robin routing" }
     ],
     "answer": "a",
-    "explanation": "Round-robin keeps sending a quarter of traffic to the dead server. Health checks detect the failure and take it out of rotation until it recovers.",
+    "explanation": "A load balancer needs a current list of usable backends. With four equal backends and no failure detection, about one request in four still goes to the crashed server. Health checks remove that backend until it recovers. They reduce failures after detection, not necessarily the first failed request. Set thresholds carefully so a brief shared dependency failure does not incorrectly eject every otherwise healthy instance.",
     "difficulty_rating": 950
   },
   {
@@ -108,7 +108,7 @@
       { "id": "s4", "text": "Watch error rate and latency for the new instance" }
     ],
     "answer": ["s1", "s2", "s3", "s4"],
-    "explanation": "An instance only receives traffic after it proves healthy, and you verify it under real load before calling the change done.",
+    "explanation": "A running process is not necessarily ready for users. Start the server, let its initialization finish, verify readiness, then admit traffic and monitor real requests. This order prevents requests reaching an instance before it can serve them. Monitoring afterward matters because a shallow health check may miss failures under load. During replacement, also drain the old instance's in-flight requests before stopping it.",
     "difficulty_rating": 1050
   },
   {
@@ -122,7 +122,7 @@
       { "id": "d", "text": "Increase server RAM" }
     ],
     "answer": "b",
-    "explanation": "The delay is distance, not capacity. A CDN serves the static files from servers near the user, cutting round trips across the Atlantic.",
+    "explanation": "Most transferred bytes are reusable static assets, and users are far from the origin. A CDN caches those assets near European users, avoiding repeated transatlantic transfers. More US API servers would add processing capacity but would not remove the network distance. Keep origin handling for requests that need it, and use cache policies or versioned URLs so changed assets refresh correctly.",
     "difficulty_rating": 1000
   },
   {
@@ -136,7 +136,7 @@
       { "id": "d", "text": "Cached pages become invalid" }
     ],
     "answer": "c",
-    "explanation": "Sticky sessions pin users to machines, so heavy users can overload one server, new servers get little traffic, and a crash logs out everyone pinned to it.",
+    "explanation": "Sticky sessions bind each user to a particular backend. That makes local sessions convenient, but prevents free balancing: heavy users can overload one server while new servers sit idle. Losing a backend also loses sessions kept only there. Moving essential session state to a shared, reliable store lets any healthy backend serve a user. That shared store then needs its own capacity and availability plan.",
     "difficulty_rating": 1150, "tags": ["tradeoff"]
   },
   {
@@ -166,7 +166,7 @@
       { "id": "db", "text": "Postgres" }
     ],
     "answer": "nfs",
-    "explanation": "Every upload funnels through one file server whose network link is saturated. Adding API instances cannot help; uploading directly to object storage (signed URLs) removes the choke point.",
+    "explanation": "Low API CPU does not imply spare end-to-end capacity. Every upload still crosses the same file server's saturated network link, so ten APIs cannot make uploads faster. Direct uploads to object storage remove that shared data path from the API tier. Use narrowly scoped, short-lived signed URLs and validate completion before processing the file. Diagnose network and storage limits as well as CPU.",
     "difficulty_rating": 1250
   },
   {

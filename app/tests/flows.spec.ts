@@ -1,4 +1,32 @@
 import { expect, test, type Page } from "@playwright/test";
+import type { AnswerResult, PublicQuestion } from "../src/api";
+import { learningFor } from "../src/learning/feedback";
+
+test("teaching distinguishes exact search, insertion points and exponentiation", () => {
+  const note = (topic: string, name: string) =>
+    learningFor(
+      { topic } as PublicQuestion,
+      {
+        provenance: { source_function: `pipeline/corpus/${name}.py::fn` },
+      } as AnswerResult,
+    );
+  expect(note("binary-search", "binary_search")?.principle).toContain(
+    "both valid candidate indices",
+  );
+  expect(note("binary-search", "lower_bound")?.principle).toContain(
+    "half-open",
+  );
+  expect(note("binary-search", "lower_bound")?.example).toContain(
+    "insertion point is 4",
+  );
+  expect(note("recursion", "power")?.example).toContain("2^5");
+  expect(note("recursion", "power")?.reasoning).toContain("27");
+  // New functions can still receive topic guidance without guessing a repair.
+  expect(note("sorting", "future_function")?.concept).toBe(
+    "Preserving order and elements",
+  );
+  expect(note("future-topic", "future_function")).toBeUndefined();
+});
 async function selectQuestion(page: Page) {
   await expect(page.locator(".question h2")).toBeVisible();
   if (
@@ -63,10 +91,55 @@ test("placement, all four question formats, feedback, completion and progress", 
   await page.getByRole("link", { name: "Make today’s commit" }).click();
   for (let i = 0; i < 4; i++) {
     await selectQuestion(page);
+    await expect(
+      page.getByRole("heading", { name: "Why this works" }),
+    ).toHaveCount(0);
     await page.getByRole("button", { name: "Check answer" }).click();
     await expect(
       page.getByRole("region", { name: "Answer feedback" }),
     ).toContainText("Elo");
+    const feedback = page.getByRole("region", { name: "Answer feedback" });
+    await expect(
+      feedback.getByRole("heading", { name: "You got it. Here’s why." }),
+    ).toBeFocused();
+    await expect(
+      feedback.getByRole("heading", { name: "Why this works" }),
+    ).toBeVisible();
+    await expect(
+      feedback.getByRole("heading", { name: "A smaller example" }),
+    ).toBeVisible();
+    await feedback.getByText("Show the reasoning", { exact: true }).click();
+    await expect(
+      feedback.locator(".understanding-check details"),
+    ).toHaveAttribute("open", "");
+    await feedback
+      .getByText("Read more about this concept", { exact: true })
+      .click();
+    const readings = feedback.locator(".further-reading a");
+    await expect(readings).toHaveCount(2);
+    for (const link of await readings.all()) {
+      await expect(link).toBeVisible();
+      await expect(link).toHaveAttribute("href", /^https:\/\//);
+      await expect(link).toHaveAttribute("target", "_blank");
+      await expect(link).toHaveAttribute("rel", /noopener/);
+    }
+    if (i === 3) {
+      await feedback
+        .getByText("Trace the failing case and the fix", { exact: true })
+        .click();
+      await expect(
+        feedback.getByText("while lo < hi:", { exact: true }),
+      ).toBeVisible();
+      await expect(
+        feedback.getByText("while lo <= hi:", { exact: true }),
+      ).toBeVisible();
+      await expect(feedback).toContainText("lo = hi = mid = 0");
+    }
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBeTruthy();
     await page.getByRole("button", { name: "Continue" }).click();
   }
   await page.getByRole("button", { name: "Finish lesson" }).click();
@@ -83,6 +156,51 @@ test("placement, all four question formats, feedback, completion and progress", 
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBeTruthy();
+});
+
+test("wrong and partly ordered answers teach the reasoning and preserve the learner's answer", async ({
+  page,
+}) => {
+  await createAndPlace(page);
+  await page.getByRole("link", { name: "Make today’s commit" }).click();
+  await page
+    .getByRole("button", { name: "No cache; add read replicas" })
+    .click();
+  await page.getByRole("button", { name: "Check answer" }).click();
+  const feedback = page.getByRole("region", { name: "Answer feedback" });
+  await expect(
+    feedback.getByRole("heading", { name: "Let’s work through it." }),
+  ).toBeFocused();
+  await expect(feedback).toContainText(
+    "Your answer: No cache; add read replicas",
+  );
+  await expect(feedback).toContainText("Correct answer: Cache-aside");
+  await expect(feedback).toContainText("A price update makes that copy stale");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await selectQuestion(page);
+  await page.getByRole("button", { name: "Check answer" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  // Swap the first two steps, preserving the other pairwise relationships.
+  for (const text of [
+    /API records/,
+    /Client uploads/,
+    /Worker pulls/,
+    /Worker writes/,
+    /Client is notified/,
+  ]) {
+    await page.getByRole("button", { name: text }).click();
+  }
+  await page.getByRole("button", { name: "Check answer" }).click();
+  await expect(
+    feedback.getByRole("heading", {
+      name: "Partly there. Let’s connect the steps.",
+    }),
+  ).toBeVisible();
+  await expect(feedback).toContainText("Your answer: API records");
+  await expect(feedback).toContainText("Correct answer: Client uploads");
+  await expect(
+    feedback.getByRole("heading", { name: "Why this works" }),
+  ).toBeVisible();
 });
 test("long press switches to demo and completion extends streak from six to seven", async ({
   page,
