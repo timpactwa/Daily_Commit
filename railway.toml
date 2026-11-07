@@ -1,0 +1,12 @@
+# Attach a persistent volume at /data before deploying. Dockerfile sets
+# DB_PATH=/data/app.db. Set DEMO_MODE=1 for the hackathon demo environment.
+# A volume is provisioned in Railway, not created by this file.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
