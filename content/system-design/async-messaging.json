@@ -1,0 +1,154 @@
+[
+  {
+    "id": "sd-async-001", "version": 1, "track": "system-design", "topic": "async-messaging", "format": "mcq",
+    "scenario": "Sign-up sends a welcome email, which takes about 3 seconds. Sign-up requests sometimes time out.",
+    "prompt": "What is the best fix?",
+    "options": [
+      { "id": "a", "text": "Increase the request timeout" },
+      { "id": "b", "text": "Put a 'send welcome email' job on a queue and return right away" },
+      { "id": "c", "text": "Run the API on faster CPUs" },
+      { "id": "d", "text": "Send the email before creating the account" }
+    ],
+    "answer": "b",
+    "explanation": "The user does not need to wait for the email. Enqueue the job and respond; a background worker sends it, and retries if the email provider is slow.",
+    "difficulty_rating": 1000, "placement": true
+  },
+  {
+    "id": "sd-async-002", "version": 1, "track": "system-design", "topic": "async-messaging", "format": "reorder",
+    "prompt": "Put the steps of processing an uploaded video in order.",
+    "options": [
+      { "id": "s1", "text": "Client uploads the file to object storage via a signed URL" },
+      { "id": "s2", "text": "API records the upload and enqueues a transcode job" },
+      { "id": "s3", "text": "A worker pulls the job and transcodes the video" },
+      { "id": "s4", "text": "Worker writes the outputs and marks the job done" },
+      { "id": "s5", "text": "Client is notified that the video is ready" }
+    ],
+    "answer": ["s1", "s2", "s3", "s4", "s5"],
+    "explanation": "The upload bypasses the API, the API enqueues work, workers process it asynchronously, then completion is signaled.",
+    "difficulty_rating": 1000
+  },
+  {
+    "id": "sd-async-003", "version": 1, "track": "system-design", "topic": "async-messaging", "format": "mcq",
+    "scenario": "Your queue guarantees at-least-once delivery. A 'charge customer' message is occasionally processed twice and the customer is billed twice.",
+    "prompt": "What is the right fix?",
+    "options": [
+      { "id": "a", "text": "Switch to a queue that promises exactly-once delivery" },
+      { "id": "b", "text": "Process messages more slowly" },
+      { "id": "c", "text": "Make the consumer idempotent: record each payment ID and skip ones already processed" },
+      { "id": "d", "text": "Turn off retries" }
+    ],
+    "answer": "c",
+    "explanation": "Duplicates are expected with at-least-once delivery. An idempotency key checked before charging makes a duplicate harmless. Turning off retries trades double charges for lost charges.",
+    "difficulty_rating": 1200, "placement": true
+  },
+  {
+    "id": "sd-async-004", "version": 1, "track": "system-design", "topic": "async-messaging", "format": "mcq",
+    "scenario": "Events for an order (created, paid, shipped) must be processed in order, but you need many consumers working in parallel.",
+    "prompt": "How do you get both?",
+    "options": [
+      { "id": "a", "text": "Use one consumer for everything" },
+      { "id": "b", "text": "Partition by order_id so all events for an order land in the same partition, one consumer per partition" },
+      { "id": "c", "text": "Assign events to random partitions" },
+      { "id": "d", "text": "Let consumers sort events by their timestamps" }
+    ],
+    "answer": "b",
+    "explanation": "Ordering only needs to hold per order. Keying partitions by order_id keeps each order's events in sequence, while different orders are processed in parallel. Timestamps fail under clock skew and late arrivals.",
+    "difficulty_rating": 1400, "placement": true, "tags": ["tradeoff"]
+  },
+  {
+    "id": "sd-async-005", "version": 1, "track": "system-design", "topic": "async-messaging", "format": "mcq",
+    "prompt": "What is the main benefit of putting a message queue between two services?",
+    "options": [
+      { "id": "a", "text": "The producer does not wait for the consumer, and traffic bursts are absorbed" },
+      { "id": "b", "text": "Messages get smaller" },
+      { "id": "c", "text": "Every message is guaranteed to be delivered exactly once" },
+      { "id": "d", "text": "You no longer need a database" }
+    ],
+    "answer": "a",
+    "explanation": "A queue decouples the two sides: the producer hands off work and moves on, and the consumer works through a backlog at its own pace instead of being overwhelmed by spikes.",
+    "difficulty_rating": 850
+  },
+  {
+    "id": "sd-async-006", "version": 1, "track": "system-design", "topic": "async-messaging", "format": "mcq",
+    "scenario": "When an order is placed, the email, analytics and inventory services all need to react, and more services will be added later.",
+    "prompt": "Which pattern fits best?",
+    "options": [
+      { "id": "a", "text": "The order service calls each service's API in sequence" },
+      { "id": "b", "text": "One work queue where a single consumer takes each message" },
+      { "id": "c", "text": "Each service polls the orders table every few seconds" },
+      { "id": "d", "text": "Publish an 'order placed' event to a topic that each service subscribes to" }
+    ],
+    "answer": "d",
+    "explanation": "Pub/sub delivers each event to every subscriber, and new services subscribe without changing the order service. A work queue hands each message to only one consumer.",
+    "difficulty_rating": 950
+  },
+  {
+    "id": "sd-async-007", "version": 1, "track": "system-design", "topic": "async-messaging", "format": "tap_node",
+    "scenario": "Thumbnail jobs are piling up and users wait minutes for previews. The API tier looks healthy.",
+    "prompt": "Tap the bottleneck.",
+    "diagram": {
+      "nodes": [
+        { "id": "api", "label": "API x8", "kind": "service", "note": "CPU 20%" },
+        { "id": "queue", "label": "Job queue", "kind": "queue", "note": "depth +2k/min" },
+        { "id": "workers", "label": "Workers x2", "kind": "service", "note": "50 jobs/min each" },
+        { "id": "storage", "label": "Object storage", "kind": "external" }
+      ],
+      "edges": [
+        { "from": "api", "to": "queue", "label": "~2,100 jobs/min" },
+        { "from": "queue", "to": "workers" },
+        { "from": "workers", "to": "storage", "label": "thumbnails" }
+      ]
+    },
+    "options": [
+      { "id": "api", "text": "API x8" },
+      { "id": "queue", "text": "Job queue" },
+      { "id": "workers", "text": "Workers x2" },
+      { "id": "storage", "text": "Object storage" }
+    ],
+    "answer": "workers",
+    "explanation": "About 2,100 jobs/min arrive but two workers finish only 100/min, so the queue grows by about 2k/min. The queue is doing its job (buffering); add workers or autoscale on queue depth.",
+    "difficulty_rating": 1100
+  },
+  {
+    "id": "sd-async-008", "version": 1, "track": "system-design", "topic": "async-messaging", "format": "mcq",
+    "scenario": "One malformed message makes the consumer crash. The message is retried forever and blocks everything behind it.",
+    "prompt": "What should you add?",
+    "options": [
+      { "id": "a", "text": "A larger queue" },
+      { "id": "b", "text": "A retry limit, after which the message moves to a dead-letter queue" },
+      { "id": "c", "text": "More consumers" },
+      { "id": "d", "text": "A longer visibility timeout" }
+    ],
+    "answer": "b",
+    "explanation": "A poison message will never succeed. After a few attempts, park it in a dead-letter queue for inspection so the rest of the queue keeps flowing.",
+    "difficulty_rating": 1050
+  },
+  {
+    "id": "sd-async-009", "version": 1, "track": "system-design", "topic": "async-messaging", "format": "mcq",
+    "scenario": "During a payment provider outage, 500 workers retry failed calls immediately in a tight loop. When the provider comes back, the flood knocks it over again.",
+    "prompt": "What should the workers do instead?",
+    "options": [
+      { "id": "a", "text": "Retry with exponential backoff plus random jitter" },
+      { "id": "b", "text": "Retry every 100ms forever" },
+      { "id": "c", "text": "Never retry" },
+      { "id": "d", "text": "Retry all at once at the top of each minute" }
+    ],
+    "answer": "a",
+    "explanation": "Backoff spaces out retries as failures continue, and jitter spreads workers apart so they do not retry in sync. Retrying at a fixed time recreates the stampede.",
+    "difficulty_rating": 1150
+  },
+  {
+    "id": "sd-async-010", "version": 1, "track": "system-design", "topic": "async-messaging", "format": "reorder",
+    "prompt": "An order service must save an order and publish an 'order created' event without ever doing one but not the other. Put the transactional outbox steps in order.",
+    "options": [
+      { "id": "s1", "text": "In one database transaction, insert the order row and an outbox row" },
+      { "id": "s2", "text": "Commit the transaction" },
+      { "id": "s3", "text": "A relay process reads unsent outbox rows" },
+      { "id": "s4", "text": "The relay publishes each event to the message broker" },
+      { "id": "s5", "text": "The relay marks those outbox rows as sent" }
+    ],
+    "answer": ["s1", "s2", "s3", "s4", "s5"],
+    "explanation": "Writing the event in the same transaction as the order means both exist or neither does. The relay then publishes it, and marks it sent only after publishing, so a crash causes a retry rather than a lost event.",
+    "difficulty_rating": 1250
+  }
+]
