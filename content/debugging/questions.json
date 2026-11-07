@@ -471,6 +471,136 @@
     ]
   },
   {
+    "id": "dbg-count-pairs-with-sum-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Count index pairs i < j whose integer values sum to target, including duplicates. Tap the buggy line.",
+    "code": "def count_pairs_with_sum(nums, target):\n    seen = {}\n    pairs = 1\n    for value in nums:\n        pairs += seen.get(target - value, 0)\n        seen[value] = seen.get(value, 0) + 1\n    return pairs",
+    "language": "python",
+    "test_output": "count_pairs_with_sum([], 0): expected 0, got 1\ncount_pairs_with_sum([1], 2): expected 0, got 1\ncount_pairs_with_sum([1, 1], 2): expected 1, got 2",
+    "answer": 3,
+    "explanation": "Line 3 should be `pairs = 0`, but a number is off by one. That is why count_pairs_with_sum([], 0) fails.",
+    "difficulty_rating": 1165,
+    "provenance": {
+      "source_function": "pipeline/corpus/count_pairs_with_sum.py::count_pairs_with_sum",
+      "mutation_operator": "off_by_one",
+      "original_line": "    pairs = 0",
+      "mutated_line": "    pairs = 1",
+      "tests_failed": 12,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-count-pairs-with-sum-off-by-one-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Count index pairs i < j whose integer values sum to target, including duplicates. Tap the buggy line.",
+    "code": "def count_pairs_with_sum(nums, target):\n    seen = {}\n    pairs = 0\n    for value in nums:\n        pairs += seen.get(target - value, 1)\n        seen[value] = seen.get(value, 0) + 1\n    return pairs",
+    "language": "python",
+    "test_output": "count_pairs_with_sum([1], 2): expected 0, got 1\ncount_pairs_with_sum([1, 1], 2): expected 1, got 2\ncount_pairs_with_sum([1, 1, 1], 2): expected 3, got 4",
+    "answer": 5,
+    "explanation": "Line 5 should be `pairs += seen.get(target - value, 0)`, but a number is off by one. That is why count_pairs_with_sum([1], 2) fails.",
+    "difficulty_rating": 1165,
+    "provenance": {
+      "source_function": "pipeline/corpus/count_pairs_with_sum.py::count_pairs_with_sum",
+      "mutation_operator": "off_by_one",
+      "original_line": "        pairs += seen.get(target - value, 0)",
+      "mutated_line": "        pairs += seen.get(target - value, 1)",
+      "tests_failed": 11,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-count-pairs-with-sum-off-by-one-03",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Count index pairs i < j whose integer values sum to target, including duplicates. Tap the buggy line.",
+    "code": "def count_pairs_with_sum(nums, target):\n    seen = {}\n    pairs = 0\n    for value in nums:\n        pairs += seen.get(target - value, 0)\n        seen[value] = seen.get(value, 0) + 2\n    return pairs",
+    "language": "python",
+    "test_output": "count_pairs_with_sum([1, 1], 2): expected 1, got 2\ncount_pairs_with_sum([1, 1, 1], 2): expected 3, got 6\ncount_pairs_with_sum([1, 2, 3, 4], 5): expected 2, got 4",
+    "answer": 6,
+    "explanation": "Line 6 should be `seen[value] = seen.get(value, 0) + 1`, but a number is off by one. That is why count_pairs_with_sum([1, 1], 2) fails.",
+    "difficulty_rating": 1165,
+    "provenance": {
+      "source_function": "pipeline/corpus/count_pairs_with_sum.py::count_pairs_with_sum",
+      "mutation_operator": "off_by_one",
+      "original_line": "        seen[value] = seen.get(value, 0) + 1",
+      "mutated_line": "        seen[value] = seen.get(value, 0) + 2",
+      "tests_failed": 9,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-count-pairs-with-sum-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Count index pairs i < j whose integer values sum to target, including duplicates. Tap the buggy line.",
+    "code": "def count_pairs_with_sum(nums, target):\n    seen = {}\n    pairs = 0\n    for value in nums:\n        pairs -= seen.get(target - value, 0)\n        seen[value] = seen.get(value, 0) + 1\n    return pairs",
+    "language": "python",
+    "test_output": "count_pairs_with_sum([1, 1], 2): expected 1, got -1\ncount_pairs_with_sum([1, 1, 1], 2): expected 3, got -3\ncount_pairs_with_sum([1, 2, 3, 4], 5): expected 2, got -2",
+    "answer": 5,
+    "explanation": "Line 5 should be `pairs += seen.get(target - value, 0)`, but it uses the wrong operator. That is why count_pairs_with_sum([1, 1], 2) fails.",
+    "difficulty_rating": 1065,
+    "provenance": {
+      "source_function": "pipeline/corpus/count_pairs_with_sum.py::count_pairs_with_sum",
+      "mutation_operator": "wrong_operator",
+      "original_line": "        pairs += seen.get(target - value, 0)",
+      "mutated_line": "        pairs -= seen.get(target - value, 0)",
+      "tests_failed": 9,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-count-pairs-with-sum-wrong-operator-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Count index pairs i < j whose integer values sum to target, including duplicates. Tap the buggy line.",
+    "code": "def count_pairs_with_sum(nums, target):\n    seen = {}\n    pairs = 0\n    for value in nums:\n        pairs += seen.get(target + value, 0)\n        seen[value] = seen.get(value, 0) + 1\n    return pairs",
+    "language": "python",
+    "test_output": "count_pairs_with_sum([1, 1], 2): expected 1, got 0\ncount_pairs_with_sum([1, 1, 1], 2): expected 3, got 0\ncount_pairs_with_sum([1, 2, 3, 4], 5): expected 2, got 0",
+    "answer": 5,
+    "explanation": "Line 5 should be `pairs += seen.get(target - value, 0)`, but it uses the wrong operator. That is why count_pairs_with_sum([1, 1], 2) fails.",
+    "difficulty_rating": 1065,
+    "provenance": {
+      "source_function": "pipeline/corpus/count_pairs_with_sum.py::count_pairs_with_sum",
+      "mutation_operator": "wrong_operator",
+      "original_line": "        pairs += seen.get(target - value, 0)",
+      "mutated_line": "        pairs += seen.get(target + value, 0)",
+      "tests_failed": 8,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
     "id": "dbg-counting-sort-off-by-one-01",
     "version": 1,
     "track": "debugging",
@@ -1109,6 +1239,137 @@
       "verified-code"
     ],
     "placement": true
+  },
+  {
+    "id": "dbg-longest-balanced-binary-flip-comparison-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Return the longest contiguous subarray length with equal zeros and ones; input contains only 0 and 1. Tap the buggy line.",
+    "code": "def longest_balanced_binary(nums):\n    balance = 0\n    first = {0: -1}\n    best = 0\n    for i, value in enumerate(nums):\n        balance += 1 if value == 1 else -1\n        if balance not in first:\n            length = i - first[balance]\n            if length > best:\n                best = length\n        else:\n            first[balance] = i\n    return best",
+    "language": "python",
+    "test_output": "longest_balanced_binary([0]): raised KeyError\nlongest_balanced_binary([1]): raised KeyError\nlongest_balanced_binary([0, 1]): raised KeyError",
+    "answer": 7,
+    "explanation": "Line 7 should be `if balance in first:`, but the comparison was flipped. That is why longest_balanced_binary([0]) fails.",
+    "difficulty_rating": 1275,
+    "provenance": {
+      "source_function": "pipeline/corpus/longest_balanced_binary.py::longest_balanced_binary",
+      "mutation_operator": "flip_comparison",
+      "original_line": "        if balance in first:",
+      "mutated_line": "        if balance not in first:",
+      "tests_failed": 12,
+      "tests_total": 13
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-longest-balanced-binary-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Return the longest contiguous subarray length with equal zeros and ones; input contains only 0 and 1. Tap the buggy line.",
+    "code": "def longest_balanced_binary(nums):\n    balance = 1\n    first = {0: -1}\n    best = 0\n    for i, value in enumerate(nums):\n        balance += 1 if value == 1 else -1\n        if balance in first:\n            length = i - first[balance]\n            if length > best:\n                best = length\n        else:\n            first[balance] = i\n    return best",
+    "language": "python",
+    "test_output": "longest_balanced_binary([0]): expected 0, got 1\nlongest_balanced_binary([0, 1]): expected 2, got 1\nlongest_balanced_binary([1, 0]): expected 2, got 0",
+    "answer": 2,
+    "explanation": "Line 2 should be `balance = 0`, but a number is off by one. That is why longest_balanced_binary([0]) fails.",
+    "difficulty_rating": 1425,
+    "provenance": {
+      "source_function": "pipeline/corpus/longest_balanced_binary.py::longest_balanced_binary",
+      "mutation_operator": "off_by_one",
+      "original_line": "    balance = 0",
+      "mutated_line": "    balance = 1",
+      "tests_failed": 10,
+      "tests_total": 13
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-longest-balanced-binary-off-by-one-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Return the longest contiguous subarray length with equal zeros and ones; input contains only 0 and 1. Tap the buggy line.",
+    "code": "def longest_balanced_binary(nums):\n    balance = 0\n    first = {0: -1}\n    best = 1\n    for i, value in enumerate(nums):\n        balance += 1 if value == 1 else -1\n        if balance in first:\n            length = i - first[balance]\n            if length > best:\n                best = length\n        else:\n            first[balance] = i\n    return best",
+    "language": "python",
+    "test_output": "longest_balanced_binary([]): expected 0, got 1\nlongest_balanced_binary([0]): expected 0, got 1\nlongest_balanced_binary([1]): expected 0, got 1",
+    "answer": 4,
+    "explanation": "Line 4 should be `best = 0`, but a number is off by one. That is why longest_balanced_binary([]) fails.",
+    "difficulty_rating": 1425,
+    "provenance": {
+      "source_function": "pipeline/corpus/longest_balanced_binary.py::longest_balanced_binary",
+      "mutation_operator": "off_by_one",
+      "original_line": "    best = 0",
+      "mutated_line": "    best = 1",
+      "tests_failed": 5,
+      "tests_total": 13
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-longest-balanced-binary-off-by-one-03",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Return the longest contiguous subarray length with equal zeros and ones; input contains only 0 and 1. Tap the buggy line.",
+    "code": "def longest_balanced_binary(nums):\n    balance = 0\n    first = {1: -1}\n    best = 0\n    for i, value in enumerate(nums):\n        balance += 1 if value == 1 else -1\n        if balance in first:\n            length = i - first[balance]\n            if length > best:\n                best = length\n        else:\n            first[balance] = i\n    return best",
+    "language": "python",
+    "test_output": "longest_balanced_binary([1]): expected 0, got 1\nlongest_balanced_binary([0, 1]): expected 2, got 0\nlongest_balanced_binary([1, 0]): expected 2, got 1",
+    "answer": 3,
+    "explanation": "Line 3 should be `first = {0: -1}`, but a number is off by one. That is why longest_balanced_binary([1]) fails.",
+    "difficulty_rating": 1425,
+    "provenance": {
+      "source_function": "pipeline/corpus/longest_balanced_binary.py::longest_balanced_binary",
+      "mutation_operator": "off_by_one",
+      "original_line": "    first = {0: -1}",
+      "mutated_line": "    first = {1: -1}",
+      "tests_failed": 8,
+      "tests_total": 13
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-longest-balanced-binary-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Return the longest contiguous subarray length with equal zeros and ones; input contains only 0 and 1. Tap the buggy line.",
+    "code": "def longest_balanced_binary(nums):\n    balance = 0\n    first = {0: -1}\n    best = 0\n    for i, value in enumerate(nums):\n        balance += 1 if value == 1 else -1\n        if balance in first:\n            length = i + first[balance]\n            if length > best:\n                best = length\n        else:\n            first[balance] = i\n    return best",
+    "language": "python",
+    "test_output": "longest_balanced_binary([0, 1]): expected 2, got 0\nlongest_balanced_binary([1, 0]): expected 2, got 0\nlongest_balanced_binary([1, 1, 0, 0]): expected 4, got 2",
+    "answer": 8,
+    "explanation": "Line 8 should be `length = i - first[balance]`, but it uses the wrong operator. That is why longest_balanced_binary([0, 1]) fails.",
+    "difficulty_rating": 1325,
+    "provenance": {
+      "source_function": "pipeline/corpus/longest_balanced_binary.py::longest_balanced_binary",
+      "mutation_operator": "wrong_operator",
+      "original_line": "            length = i - first[balance]",
+      "mutated_line": "            length = i + first[balance]",
+      "tests_failed": 7,
+      "tests_total": 13
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
   },
   {
     "id": "dbg-longest-consecutive-flip-comparison-01",
@@ -3233,8 +3494,7 @@
     "tags": [
       "research-2026-11",
       "verified-code"
-    ],
-    "placement": true
+    ]
   },
   {
     "id": "dbg-subarray-sum-count-off-by-one-02",

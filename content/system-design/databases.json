@@ -830,5 +830,74 @@
     "batch-4",
     "source-backed"
   ]
+},
+{
+  "id": "sd-databases-continuation-029",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Does an advisory lock automatically stop code that updates the same logical resource without acquiring that lock?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "No; callers must follow the same locking protocol"
+    },
+    {
+      "id": "o1",
+      "text": "Yes; it behaves like an automatic foreign-key check"
+    },
+    {
+      "id": "o2",
+      "text": "Yes; PostgreSQL infers the resource from query text"
+    },
+    {
+      "id": "o3",
+      "text": "Only when the updater runs SELECT first"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Advisory locks carry application-defined meanings. PostgreSQL does not enforce a matching locking protocol on unrelated application code. Source: [PostgreSQL advisory locks](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS)",
+  "difficulty_rating": 1150,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-databases-continuation-030",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Which advisory-lock scope releases automatically when this transaction commits or rolls back?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Transaction-level"
+    },
+    {
+      "id": "o1",
+      "text": "Session-level"
+    },
+    {
+      "id": "o2",
+      "text": "A lock stored only in application memory"
+    },
+    {
+      "id": "o3",
+      "text": "A session-level lock with an explicit COMMIT"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Transaction-level advisory locks end with the transaction. Session-level advisory locks survive rollback until explicitly released or the session ends. Source: [PostgreSQL advisory locks](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS)",
+  "difficulty_rating": 1450,
+  "scenario": "A pooled connection coordinates a short database operation and must not retain its lock after the transaction ends.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
 }
 ]

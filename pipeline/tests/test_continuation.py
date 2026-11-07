@@ -100,6 +100,13 @@ def oracle(name, args):
         return sorted(args[0])
     if name == 'merge_sorted_unique':
         return sorted(set(args[0]) | set(args[1]))
+    if name == 'count_pairs_with_sum':
+        xs, target = args
+        return sum(xs[i] + xs[j] == target for i in range(len(xs)) for j in range(i + 1, len(xs)))
+    if name == 'longest_balanced_binary':
+        xs, = args
+        return max((j - i for i in range(len(xs) + 1) for j in range(i, len(xs) + 1)
+                    if sum(1 if value else -1 for value in xs[i:j]) == 0), default=0)
     raise AssertionError(f'Missing independent oracle: {name}')
 
 
@@ -170,3 +177,18 @@ def test_new_sorts_exhaustive_duplicates_negatives_and_empty_inputs():
         before = copy.deepcopy((a, b))
         assert functions['merge_sorted_unique'](a, b) == sorted(set(a) | set(b))
         assert (a, b) == before
+
+
+def test_pair_counts_and_balanced_subarrays_exhaustive_short_inputs():
+    functions = {name: fn for name, fn, _ in originals()}
+    if 'count_pairs_with_sum' not in functions:
+        return
+    for length in range(6):
+        for values in itertools.product((-1, 0, 2), repeat=length):
+            xs = list(values)
+            for target in range(-2, 5):
+                assert functions['count_pairs_with_sum'](xs, target) == oracle('count_pairs_with_sum', (xs, target))
+    for length in range(9):
+        for values in itertools.product((0, 1), repeat=length):
+            xs = list(values)
+            assert functions['longest_balanced_binary'](xs) == oracle('longest_balanced_binary', (xs,))

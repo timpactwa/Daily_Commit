@@ -832,5 +832,78 @@
     "batch-4",
     "source-backed"
   ]
+},
+{
+  "id": "sd-caching-continuation-029",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "What does Redis pipelining primarily save for many independent small commands?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Waiting for a network round trip after every command"
+    },
+    {
+      "id": "o1",
+      "text": "The need to execute the commands"
+    },
+    {
+      "id": "o2",
+      "text": "All server memory for replies"
+    },
+    {
+      "id": "o3",
+      "text": "The need to receive any results"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Pipelining sends commands before waiting for earlier replies, reducing repeated round-trip waiting. It does not remove command execution. Source: [Redis pipelining](https://redis.io/docs/latest/develop/using-commands/pipelining/)",
+  "difficulty_rating": 1100,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-caching-continuation-030",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "reorder",
+  "prompt": "Order a bounded pipelining loop for a large set of independent cache reads.",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Prepare a bounded batch"
+    },
+    {
+      "id": "o1",
+      "text": "Send its commands without waiting per command"
+    },
+    {
+      "id": "o2",
+      "text": "Read the batch’s replies"
+    },
+    {
+      "id": "o3",
+      "text": "Continue with the next batch"
+    }
+  ],
+  "answer": [
+    "o0",
+    "o1",
+    "o2",
+    "o3"
+  ],
+  "explanation": "The server buffers pipeline replies. Bounded batches and draining replies avoid an unbounded reply backlog. Source: [Redis pipelining](https://redis.io/docs/latest/develop/using-commands/pipelining/)",
+  "difficulty_rating": 1400,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
 }
 ]

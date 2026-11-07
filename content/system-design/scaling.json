@@ -890,5 +890,99 @@
     "batch-4",
     "source-backed"
   ]
+},
+{
+  "id": "sd-scaling-continuation-029",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "tap_node",
+  "prompt": "Tap the zone that can accept one matching Pod without exceeding skew 1.",
+  "options": [
+    {
+      "id": "scheduler",
+      "text": "Scheduler"
+    },
+    {
+      "id": "a",
+      "text": "Zone A: 3 matching Pods"
+    },
+    {
+      "id": "b",
+      "text": "Zone B: 1 matching Pod"
+    }
+  ],
+  "answer": "b",
+  "explanation": "Adding to B yields counts 3 and 2, with skew 1. Adding to A yields 4 and 1, exceeding the hard spread constraint. Source: [Kubernetes topology spread](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/)",
+  "difficulty_rating": 1250,
+  "scenario": "Exactly two zones are eligible. maxSkew is 1, whenUnsatisfiable is DoNotSchedule, and all other scheduling requirements are satisfied.",
+  "diagram": {
+    "nodes": [
+      {
+        "id": "scheduler",
+        "label": "Scheduler",
+        "kind": "service"
+      },
+      {
+        "id": "a",
+        "label": "Zone A: 3 matching Pods",
+        "kind": "service"
+      },
+      {
+        "id": "b",
+        "label": "Zone B: 1 matching Pod",
+        "kind": "service"
+      }
+    ],
+    "edges": [
+      {
+        "from": "scheduler",
+        "to": "a"
+      },
+      {
+        "from": "scheduler",
+        "to": "b"
+      }
+    ]
+  },
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-scaling-continuation-030",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "Which topology-spread mode prefers balance without making this spread rule a hard scheduling barrier?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "ScheduleAnyway"
+    },
+    {
+      "id": "o1",
+      "text": "DoNotSchedule"
+    },
+    {
+      "id": "o2",
+      "text": "AlwaysRestart"
+    },
+    {
+      "id": "o3",
+      "text": "NeverPull"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "ScheduleAnyway contributes a balancing preference. Other scheduling constraints can still prevent placement. Source: [Kubernetes topology spread](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/)",
+  "difficulty_rating": 1450,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
 }
 ]

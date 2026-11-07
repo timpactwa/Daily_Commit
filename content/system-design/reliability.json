@@ -871,5 +871,78 @@
     "batch-4",
     "source-backed"
   ]
+},
+{
+  "id": "sd-reliability-continuation-029",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "mcq",
+  "prompt": "Which evidence best validates that a recovery plan meets its recovery objectives?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "A recovery drill with measured restoration time and data loss"
+    },
+    {
+      "id": "o1",
+      "text": "A successful backup job alone"
+    },
+    {
+      "id": "o2",
+      "text": "An unexecuted recovery document"
+    },
+    {
+      "id": "o3",
+      "text": "The number of standby machines alone"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Exercises test whether the actual recovery path works and meets time and data-loss objectives; a backup-completion indicator alone does not establish this. Source: [AWS recovery testing](https://docs.aws.amazon.com/wellarchitected/latest/framework/rel_planning_for_recovery_dr_tested.html)",
+  "difficulty_rating": 1100,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-reliability-continuation-030",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "reorder",
+  "prompt": "Order a planned recovery exercise and its follow-up.",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Define recovery targets and drill boundaries"
+    },
+    {
+      "id": "o1",
+      "text": "Execute the recovery runbook"
+    },
+    {
+      "id": "o2",
+      "text": "Measure restoration time and recovered state against targets"
+    },
+    {
+      "id": "o3",
+      "text": "Record gaps and improve the next exercise"
+    }
+  ],
+  "answer": [
+    "o0",
+    "o1",
+    "o2",
+    "o3"
+  ],
+  "explanation": "Regularly exercise recovery paths and use runbooks to capture problems. Measured outcomes guide corrections before a real disaster. Source: [AWS recovery testing](https://docs.aws.amazon.com/wellarchitected/latest/framework/rel_planning_for_recovery_dr_tested.html)",
+  "difficulty_rating": 1400,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
 }
 ]

@@ -833,5 +833,73 @@
     "batch-4",
     "source-backed"
   ]
+},
+{
+  "id": "sd-async-messaging-continuation-029",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "Which SQS receive setting enables long polling with the maximum supported wait?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "WaitTimeSeconds = 20"
+    },
+    {
+      "id": "o1",
+      "text": "WaitTimeSeconds = 0"
+    },
+    {
+      "id": "o2",
+      "text": "VisibilityTimeout = 20 only"
+    },
+    {
+      "id": "o3",
+      "text": "MaxNumberOfMessages = 20"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A positive WaitTimeSeconds enables long polling; the supported maximum is 20 seconds. Visibility timeout controls a different lifecycle stage. Source: [SQS polling](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-short-and-long-polling.html)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-async-messaging-continuation-030",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "What can an empty SQS short-poll response mean even while messages exist?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "The sampled servers had no matching messages"
+    },
+    {
+      "id": "o1",
+      "text": "The entire queue is proven empty"
+    },
+    {
+      "id": "o2",
+      "text": "Every message has permanently expired"
+    },
+    {
+      "id": "o3",
+      "text": "All messages were acknowledged by this caller"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Short polling samples a subset of servers, so an empty result does not prove the whole queue is empty. Long polling reduces these false empty results. Source: [SQS polling](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-short-and-long-polling.html)",
+  "difficulty_rating": 1350,
+  "tags": [
+    "continuation-2026-11",
+    "batch-5",
+    "source-backed"
+  ]
 }
 ]

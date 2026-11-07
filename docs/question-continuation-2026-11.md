@@ -66,3 +66,23 @@ Checkpoint 4 passed: 284 practice-bank questions (288 with fixtures), 223 Python
 
 After integrating F2 from main: 478 Python tests, app build and 12 browser checks pass. Practice source selection_sort_copy is distinct from the ranked corpus. The 30 ranked questions and ten learning modules remain separate; original practice payloads remain protected by the baseline audit.
 
+
+## Batch 5
+
+Debugging functions: `count_pairs_with_sum`, `longest_balanced_binary`. Five variants each.
+
+| Primary source | Question IDs |
+| --- | --- |
+| [Redis pipelining](https://redis.io/docs/latest/develop/using-commands/pipelining/) | sd-caching-continuation-029, sd-caching-continuation-030 |
+| [Kubernetes topology spread](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/) | sd-scaling-continuation-029, sd-scaling-continuation-030 |
+| [PostgreSQL advisory locks](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS) | sd-databases-continuation-029, sd-databases-continuation-030 |
+| [SQS polling](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-short-and-long-polling.html) | sd-async-messaging-continuation-029, sd-async-messaging-continuation-030 |
+| [AWS recovery testing](https://docs.aws.amazon.com/wellarchitected/latest/framework/rel_planning_for_recovery_dr_tested.html) | sd-reliability-continuation-029, sd-reliability-continuation-030 |
+
+## Edition audit
+
+The edition contributes 100 practice questions: 50 per track, ten per topic. The practice bank grows from 204 to 304; the 30 ranked questions merged separately in F2 remain in their own pool (334 active questions total). All 204 previous practice IDs and payloads are retained apart from recomputed debugging placement flags. No practice question is moved into ranked tests.
+
+Provisional seed bands below 1150 / 1150–1299 / 1300 and above contain 36, 25, and 39 additions respectively. These are editorial estimates, not measured candidate ability levels.
+
+The source register maps all 50 system-design additions to 25 primary documentation pages. Every source-backed explanation links to its page after grading. The ten original debugging functions each contribute five distinct retained mutants. Independent references validate every new case table; exhaustive short-input checks cover all ten algorithms. All added mutants and their exact one-line repairs are executed in the Python suite.
