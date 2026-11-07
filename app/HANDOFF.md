@@ -1,6 +1,6 @@
 # Liam's implementation handoff
 
-Worktree: `../project-worktrees/app`. Integration branch: `app`.
+Worktree: `../project-worktrees/app`. Integration branch: `app`; publication worktree: `../project-worktrees/app-publish` (task branches `app-s3` through `app-p4`).
 Latest backend main was merged before integration verification. All authored changes are in Liam's owned paths; `app/src/api/`, contracts, backend and other owners' files were not edited.
 
 ## Task status
@@ -25,8 +25,8 @@ The GitHub issues remain open: repository rules close each task through its merg
 - `npm run build` passes, including TypeScript and PWA shell generation.
 - Six Playwright mock flows pass across Pixel 7 emulation and desktop: placement, all four formats, feedback, completion, progress, reorder undo and six-to-seven streak.
 - One production PWA test passes against the real FastAPI server: demo switching, server grading, Elo feedback, lesson completion, progress, offline shell reload and retry after reconnecting.
-- `pytest api engine`: 79 passed. Pipeline has not landed in the checked main; CI includes it as soon as that directory exists.
-- `python contracts/validate.py`: four contract-example questions, zero failures. The current checkout has no content bank yet; API fallback examples were used.
+- `pytest api engine`: 81 passed after merging the latest main. Pipeline has not landed in the checked main; CI includes it as soon as that directory exists.
+- `python contracts/validate.py`: 54 questions, zero failures (50 system-design questions plus four contract examples). Production UI integration also passes against the merged content bank. Debugging content remains a pipeline-owner dependency.
 - Production JS was checked for contract-example question IDs/text; mock answer fixtures are excluded by the Vite resolver unless mock mode is explicitly enabled.
 - Railway TOML and PowerShell tunnel script parse successfully. Docker executable is present but its Linux daemon is stopped. No container or public deployment has been claimed as tested.
 
@@ -49,14 +49,28 @@ Suggested PR titles and closing lines:
 
 For P4, use a draft PR until public URL, volume and phone verification pass; include the deployment URL and persistence evidence before closing #28.
 
-Publishing is awaiting explicit authorization after automatic approval review rejected saved-account enumeration. Do not work around that rejection with another credential source.
+The user explicitly authorized publishing PRs and Railway repository access/deployment. All task branches are pushed and these PRs are open:
 
-Railway is connected. Project [Daily Commit](https://railway.com/project/0d5c44e1-13ef-49af-b7d7-89873ddec369), production environment `48ffc7e6-a4b9-4c95-aca8-f30693da7a7e`, has six staged changes in patch `5049f0ac-9ca2-49c4-83c2-cf1fb44fd98f`: empty `daily-commit` service, `DEMO_MODE=1`, `DB_PATH=/data/app.db`, and a 500 MB volume at `/data`. None is deployed or provisioned yet. Service ID: `4efa730e-24f4-4838-8a62-019036a81346`; volume ID: `9684274c-06e9-42a9-b555-d16696c058f0`.
+| Task | PR | Status |
+| --- | --- | --- |
+| S3 | https://github.com/timpactwa/Daily_Commit/pull/50 | Open; GitHub reports no workflow runs |
+| S4 | https://github.com/timpactwa/Daily_Commit/pull/51 | Open; depends on S3 |
+| T3 | https://github.com/timpactwa/Daily_Commit/pull/52 | Open; depends on S4 |
+| C3 | https://github.com/timpactwa/Daily_Commit/pull/53 | Open; depends on T3 |
+| C4 | https://github.com/timpactwa/Daily_Commit/pull/54 | Open; depends on C3 |
+| C10 | https://github.com/timpactwa/Daily_Commit/pull/55 | Open; depends on C4 |
+| P5 | https://github.com/timpactwa/Daily_Commit/pull/56 | Open; depends on C10 |
+| P7 | https://github.com/timpactwa/Daily_Commit/pull/57 | Open; depends on P5 |
+| P4 | https://github.com/timpactwa/Daily_Commit/pull/58 | Draft; deployment/device verification pending |
 
-Automatic approval review also rejected staging `timpactwa/Daily_Commit` as the Railway source, because persistent private-repository access and automatic deploys need explicit user approval. The service source is still null. Do not bypass this rejection. After approval and PR merges, connect `main`, use the root Dockerfile/railway.toml settings, and confirm deployment before committing the staged changes. The settings-update tool returned `Service instance not found` for the staged-only service; the checked-in config already specifies the health check and restart policy and can be applied once the service exists.
+Workflow YAML passes actionlint. Every task branch's frontend builds locally. GitHub can read the CI file but Actions reports zero workflows/runs, including after a direct branch push trigger. The current account has push access but no repository administration access. A request is pending for the user to have Tim enable Actions or explicitly authorize merging only the CI bootstrap PR #50; the app PRs must still wait for passing checks. Do not substitute local tests for GitHub checks or manufacture commit statuses.
 
+Railway is connected. Project [Daily Commit](https://railway.com/project/0d5c44e1-13ef-49af-b7d7-89873ddec369), production environment `48ffc7e6-a4b9-4c95-aca8-f30693da7a7e`, has ten staged changes in patch `5049f0ac-9ca2-49c4-83c2-cf1fb44fd98f`: empty `daily-commit` service, `DEMO_MODE=1`, `DB_PATH=/data/app.db`, a 500 MB volume at `/data`, and source `timpactwa/Daily_Commit@main`. Nothing is deployed or provisioned yet. Service ID: `4efa730e-24f4-4838-8a62-019036a81346`; volume ID: `9684274c-06e9-42a9-b555-d16696c058f0`.
+
+After CI and task merges, deploy the checked code. The checked-in Dockerfile/railway.toml specify the persistent SQLite location, health check and restart policy. The settings-update tool returned `Service instance not found` for the staged-only service; apply any needed settings once it exists. Keep issue #28 open until public HTTPS, persistence across redeploy and the physical cellular check pass.
 ## Running locally
 
 See [README.md](README.md) for npm, mock, real API, phone, deployment and tunnel commands. In this environment npm and Python were supplied from the bundled runtime, with test dependencies in the worktree's ignored `.venv`.
 
 The real-API integration check resets only the demo user. Always point it at an isolated server/database. Keep the database outside Playwright's `test-results` directory because the runner clears that directory.
+
