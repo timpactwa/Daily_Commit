@@ -34,6 +34,8 @@ jobs:
           done
           pytest "${modules[@]}"
   app:
+    # Bootstrap: S3 precedes the app shell. Every PR builds once S4 lands.
+    if: hashFiles('app/package-lock.json') != ''
     name: App build
     runs-on: ubuntu-latest
     steps:
