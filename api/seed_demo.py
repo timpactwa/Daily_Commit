@@ -20,10 +20,14 @@ import sqlite3
 from datetime import date, timedelta
 from pathlib import Path
 
-from api import repo
+from api import clock, repo
 
 log = logging.getLogger("demo")
 DEMO_ID = "demo"
+DEMO_USERNAME = "demo_tim"        # reserved prefix: nobody can sign up as it; no password, so X-User-Id works
+# The demo user has already taken the Beginner ranked test (so a board shows "you"); the
+# other two tiers stay open to take live.
+DEMO_RANKED = {"tier": "beginner", "score": 8, "time_s": 372}
 SEED_FILE = Path(__file__).resolve().parent.parent / "content" / "demo" / "demo-user.json"
 
 DEFAULT = {
@@ -54,15 +58,19 @@ def reset(conn: sqlite3.Connection, today: str) -> None:
     conn.execute("DELETE FROM lesson_items WHERE lesson_id IN (SELECT id FROM lessons WHERE user_id = ?)", (DEMO_ID,))
     conn.execute("DELETE FROM lessons WHERE user_id = ?", (DEMO_ID,))
     conn.execute("DELETE FROM user_topics WHERE user_id = ?", (DEMO_ID,))
+    conn.execute("DELETE FROM ranked_attempts WHERE user_id = ?", (DEMO_ID,))
+    conn.execute("DELETE FROM learn_progress WHERE user_id = ?", (DEMO_ID,))
     conn.execute("DELETE FROM users WHERE id = ?", (DEMO_ID,))
 
     streak = seed.get("streak", {})
     current = int(streak.get("current", 6))
     conn.execute(
-        """INSERT INTO users (id, display_name, placed, day_offset, streak_current, streak_best, streak_last)
-           VALUES (?, ?, 1, 0, ?, ?, ?)""",
-        (DEMO_ID, seed.get("display_name", "Tim"), current, max(current, int(streak.get("best", current))), yesterday),
+        """INSERT INTO users (id, display_name, placed, day_offset, streak_current, streak_best, streak_last, username)
+           VALUES (?, ?, 1, 0, ?, ?, ?, ?)""",
+        (DEMO_ID, seed.get("display_name", "Tim"), current, max(current, int(streak.get("best", current))), yesterday,
+         DEMO_USERNAME),
     )
+    seed_ranked_attempt(conn)
     repo.create_user_topics(conn, DEMO_ID)
     for topic, rating in seed.get("ratings", {}).items():
         if topic in repo.TOPIC_TRACK:
@@ -86,3 +94,18 @@ def reset(conn: sqlite3.Connection, today: str) -> None:
             (int(correct), DEMO_ID, q["topic"]),
         )
     log.info("demo user reset for %s", today)
+
+
+def seed_ranked_attempt(conn: sqlite3.Connection) -> None:
+    row = conn.execute("SELECT data FROM ranked_tiers WHERE id = ?", (DEMO_RANKED["tier"],)).fetchone()
+    if row is None:
+        return
+    tier = json.loads(row["data"])
+    finished = clock.now() - 86400
+    started = finished - DEMO_RANKED["time_s"]
+    conn.execute(
+        """INSERT INTO ranked_attempts (user_id, tier, total, started_at, deadline, finished_at, score, time_ms)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        (DEMO_ID, tier["id"], len(tier["questions"]), started, started + tier["time_limit_s"], finished,
+         DEMO_RANKED["score"], DEMO_RANKED["time_s"] * 1000),
+    )

@@ -8,8 +8,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from api import content_loader, db, errors, seed_demo
-from api.routes import answers, demo, lessons, placement, progress, users
+from api import content_loader, db, errors, seed_demo, seed_ranked
+from api.deps import demo_mode
+from api.routes import answers, auth, demo, learn, lessons, placement, progress, ranked, users
 
 ROOT = Path(__file__).resolve().parent.parent
 APP_DIST = ROOT / "app" / "dist"
@@ -22,6 +23,8 @@ async def lifespan(app: FastAPI):
     db.init()
     with db.transaction() as conn:
         app.state.question_count = content_loader.load(conn)
+        if demo_mode():
+            seed_ranked.seed(conn)
         seed_demo.reset(conn, datetime.now(timezone.utc).date().isoformat())
     yield
 
@@ -31,7 +34,8 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 errors.install(app)
 app.state.question_count = 0
 
-for r in (users.router, placement.router, lessons.router, answers.router, progress.router, demo.router):
+for r in (users.router, auth.router, placement.router, lessons.router, answers.router, progress.router,
+          learn.router, ranked.router, demo.router):
     app.include_router(r)
 
 

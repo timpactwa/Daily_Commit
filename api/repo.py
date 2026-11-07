@@ -30,7 +30,7 @@ def question(conn: sqlite3.Connection, qid: str) -> sqlite3.Row | None:
 
 
 def candidates(conn: sqlite3.Connection, placement_only: bool = False) -> list[Candidate]:
-    sql = "SELECT id, topic, track, live_rating, source_function FROM questions WHERE active = 1"
+    sql = "SELECT id, topic, track, live_rating, source_function FROM questions WHERE active = 1 AND pool = 'lesson'"
     if placement_only:
         sql += " AND placement = 1"
     return [Candidate(r["id"], r["topic"], r["track"], r["live_rating"], r["source_function"]) for r in conn.execute(sql)]

@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "tiers": [
+    {
+      "id": "beginner",
+      "title": "Beginner",
+      "description": "Core ideas applied to simple scenarios and short functions.",
+      "time_limit_s": 600,
+      "min_rating": 600,
+      "max_rating": 1000,
+      "questions": [
+        "sd-ranked-beginner-01",
+        "dbg-ranked-contains-duplicate-flip-comparison-01",
+        "sd-ranked-beginner-02",
+        "dbg-ranked-sum-digits-wrong-base-case-01",
+        "sd-ranked-beginner-03",
+        "dbg-ranked-is-sorted-wrong-operator-01",
+        "sd-ranked-beginner-04",
+        "dbg-ranked-count-vowels-off-by-one-01",
+        "sd-ranked-beginner-05",
+        "dbg-ranked-max-of-list-off-by-one-01"
+      ]
+    },
+    {
+      "id": "intermediate",
+      "title": "Intermediate",
+      "description": "Tradeoffs, patterns and mid-size functions with subtle bugs.",
+      "time_limit_s": 720,
+      "min_rating": 1000,
+      "max_rating": 1300,
+      "questions": [
+        "sd-ranked-intermediate-01",
+        "dbg-ranked-remove-duplicates-flip-comparison-01",
+        "sd-ranked-intermediate-02",
+        "dbg-ranked-first-occurrence-flip-comparison-01",
+        "sd-ranked-intermediate-03",
+        "dbg-ranked-bubble-sort-wrong-operator-01",
+        "sd-ranked-intermediate-04",
+        "dbg-ranked-is-anagram-wrong-return-01",
+        "sd-ranked-intermediate-05",
+        "dbg-ranked-depth-sum-off-by-one-01"
+      ]
+    },
+    {
+      "id": "advanced",
+      "title": "Advanced",
+      "description": "Failure modes, capacity math and tricky multi-branch code.",
+      "time_limit_s": 900,
+      "min_rating": 1300,
+      "max_rating": 2201,
+      "questions": [
+        "sd-ranked-advanced-01",
+        "dbg-ranked-gen-parens-wrong-operator-02",
+        "sd-ranked-advanced-02",
+        "dbg-ranked-search-rotated-flip-comparison-02",
+        "sd-ranked-advanced-03",
+        "dbg-ranked-longest-unique-swap-and-or-01",
+        "sd-ranked-advanced-04",
+        "dbg-ranked-quick-sort-off-by-one-04",
+        "sd-ranked-advanced-05",
+        "dbg-ranked-spiral-order-swap-and-or-01"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-commit/contracts/ranked.schema.json",
+  "title": "RankedTests",
+  "description": "content/ranked/tests.json: the three standardized ranked tests. Every listed question lives in a question file under content/ranked/ (normal question.schema.json shape) and is never used in placement or daily lessons. Every user gets the same questions in the same order.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "tiers"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "tiers": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "description", "time_limit_s", "min_rating", "max_rating", "questions"],
+        "properties": {
+          "id":           { "enum": ["beginner", "intermediate", "advanced"] },
+          "title":        { "type": "string", "maxLength": 40 },
+          "description":  { "type": "string", "maxLength": 160 },
+          "time_limit_s": { "type": "integer", "minimum": 60, "maximum": 3600 },
+          "min_rating":   { "type": "integer", "description": "Inclusive lower bound of question difficulty_rating in this tier." },
+          "max_rating":   { "type": "integer", "description": "Exclusive upper bound." },
+          "questions": {
+            "type": "array", "minItems": 10, "maxItems": 10, "uniqueItems": true,
+            "description": "Question ids in the fixed order shown. 5 system design + 5 debugging.",
+            "items": { "type": "string", "pattern": "^(sd|dbg)-ranked-[a-z0-9-]+$" }
+          }
+        }
+      }
+    }
+  }
+}

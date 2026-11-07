@@ -1,0 +1,112 @@
+{
+  "topic": "reliability",
+  "version": 1,
+  "track": "system-design",
+  "title": "Reliability: Timeouts, Limits and Consistency",
+  "summary": "Learn how overload cascades, how deadlines and load shedding contain it, how circuit breakers and rate limits protect services, and what replication trades off.",
+  "minutes": 7,
+  "sections": [
+    {
+      "id": "cascading-failure",
+      "heading": "How overload cascades",
+      "body": [
+        "A **cascading failure** grows through positive feedback: when one part fails, the chance that other parts fail goes up. The most common cause is overload. If one cluster dies and its traffic shifts to a neighbor already near capacity, the neighbor can also crash or miss deadlines.",
+        "Overloaded servers slow down, requests pile up, queues lengthen and health checks fail. Servers that crash and restart get hit with traffic right away and crash again, so the load must fall well below the level that started the problem before they stabilize.",
+        "Two defenses help. **Load shedding** drops some traffic when a server nears overload, for example by returning HTTP 503, so it keeps doing useful work for the rest. **Graceful degradation** lowers the quality of each response, such as searching only a subset of data, so each request costs less. Servers should fail early and cheaply when overloaded."
+      ],
+      "example": {
+        "title": "One zone fails",
+        "text": "Three clusters each run at 70% capacity. Cluster A fails and its traffic splits between B and C, pushing each to 105%. They slow down, health checks fail, and they restart into even more traffic. With load shedding, B and C return 503 for the excess 5%, keep serving the rest and stay up until A returns.",
+        "code": "A down -> B,C at 105% -> shed excess with 503 -> stay up"
+      },
+      "check": {
+        "prompt": "What does load shedding do?",
+        "options": [
+          { "id": "a", "text": "Adds more retries so every request eventually succeeds" },
+          { "id": "b", "text": "Rejects some requests as a server nears overload so it can keep serving the rest" },
+          { "id": "c", "text": "Increases the timeout on every request" },
+          { "id": "d", "text": "Moves all traffic to one server" }
+        ],
+        "answer": "b",
+        "explanation": "Shedding drops a share of traffic early (for example with 503) so the server avoids exhausting resources and keeps useful throughput."
+      }
+    },
+    {
+      "id": "timeouts",
+      "heading": "Deadlines and timeouts",
+      "body": [
+        "Always set a timeout or deadline on remote calls. With none, or a very high one, stale work keeps using threads and memory long after the caller has given up.",
+        "A good deadline is short enough to limit wasted work but long enough for expensive requests to succeed. Services should also pass the remaining time downstream (**deadline propagation**), subtracting time spent at each hop, and skip work whose deadline has already passed.",
+        "Watch for slow failures. Google's SRE book describes a case where 5% of requests hang until a 100 second deadline: they tie up threads and push the overall error rate to about 80%. Failing fast when a backend is unavailable avoids this. Finally, retries should be limited and use backoff with jitter, because naive retries can push an already overloaded backend further over the edge."
+      ],
+      "example": {
+        "title": "A hung dependency",
+        "text": "An API calls a recommendations service with no timeout. The service hangs, each API thread waits indefinitely, and within a minute all 200 threads are stuck, so even unrelated endpoints stop responding. With a 300 ms timeout and a cached fallback, stuck calls free their threads quickly and the API keeps serving, with generic recommendations."
+      },
+      "check": {
+        "prompt": "Why is having no timeout on a remote call dangerous?",
+        "options": [
+          { "id": "a", "text": "Hung calls hold threads and memory, which can exhaust resources and fail unrelated requests" },
+          { "id": "b", "text": "It makes the remote service run faster" },
+          { "id": "c", "text": "It automatically enables retries" }
+        ],
+        "answer": "a",
+        "explanation": "Without a deadline, slow or hung calls pile up and consume resources, so a problem in one dependency can take down the caller."
+      }
+    },
+    {
+      "id": "breaker-and-limits",
+      "heading": "Circuit breakers and rate limiting",
+      "body": [
+        "A **circuit breaker** wraps calls to a remote service and counts recent failures. In the **closed** state calls go through. When failures pass a threshold it becomes **open**, and calls fail immediately instead of waiting. After a timeout it goes **half-open** and lets a few trial calls through. If they succeed it closes again, and if any fail it reopens. This protects a recovering service from a flood.",
+        "A breaker is different from a retry: retry hopes the next attempt works, while a breaker stops attempts that are likely to fail. When open, the app can degrade gracefully, for example by returning cached or default data.",
+        "**Rate limiting** controls how fast requests are sent or accepted. A throttled service returns HTTP 429, often with a `Retry-After` header. Clients should honor it and use a limited number of retries with small random delays, since blind retries create retry storms."
+      ],
+      "example": {
+        "title": "Payment provider outage",
+        "text": "A checkout service calls a payment provider that starts timing out. After 10 failures in 30 seconds the breaker opens. Checkout immediately tells users to try again shortly instead of letting each request wait. After 30 seconds the breaker lets two trial requests through. They succeed, the breaker closes and normal traffic resumes.",
+        "code": "closed --failures>threshold--> open --timeout--> half-open\nhalf-open --success--> closed   half-open --failure--> open"
+      },
+      "check": {
+        "prompt": "A circuit breaker is open. What happens to new calls to the protected service?",
+        "options": [
+          { "id": "a", "text": "They all go through and are retried three times" },
+          { "id": "b", "text": "They fail immediately without calling the service" },
+          { "id": "c", "text": "They are queued until the service responds" },
+          { "id": "d", "text": "Only calls from admins are blocked" }
+        ],
+        "answer": "b",
+        "explanation": "In the open state requests fail fast, giving the failing service room to recover. After the timeout the breaker becomes half-open and allows a few trial calls."
+      }
+    },
+    {
+      "id": "consistency-tradeoff",
+      "heading": "Consistency versus speed and safety",
+      "body": [
+        "When data is copied to several servers, you choose how strictly the copies must agree. With **synchronous** replication, a write is not committed until all servers have committed it. A failover then loses no data, and replicas return consistent results, but writes wait on the network and a fully synchronous setup over a slow link can cut performance by more than half.",
+        "With **asynchronous** replication, some delay is allowed between a commit and its arrival on other servers. Writes are faster, but a failover can lose recent transactions and replicas may serve slightly stale data. This is an **eventual consistency** style tradeoff.",
+        "In an interview, say which you pick and why. A bank ledger leans toward strong consistency. A like counter or a feed can accept stale reads in exchange for speed and availability. Always state what happens during a failover and what users see."
+      ],
+      "example": {
+        "title": "Two features, two choices",
+        "text": "A wallet app replicates the balance table synchronously, so a failover cannot lose a deposit, accepting slower writes. The same app replicates the activity feed asynchronously. If the primary fails, the last second of feed items may be missing for a moment, which is acceptable because feed speed matters more than perfect freshness."
+      },
+      "check": {
+        "prompt": "What is the main benefit of synchronous replication compared with asynchronous?",
+        "options": [
+          { "id": "a", "text": "Writes are always faster" },
+          { "id": "b", "text": "Failover loses no committed data, at the cost of slower writes" },
+          { "id": "c", "text": "Replicas can never be read" }
+        ],
+        "answer": "b",
+        "explanation": "Synchronous commit waits for the other servers, so committed data exists on them if the primary fails. The tradeoff is added write latency."
+      }
+    }
+  ],
+  "sources": [
+    { "title": "Addressing Cascading Failures", "url": "https://sre.google/sre-book/addressing-cascading-failures/", "publisher": "Google (Site Reliability Engineering book)" },
+    { "title": "Circuit Breaker Pattern", "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker", "publisher": "Microsoft (Azure Architecture Center)" },
+    { "title": "Rate Limiting Pattern", "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/rate-limiting-pattern", "publisher": "Microsoft (Azure Architecture Center)" },
+    { "title": "High availability, load balancing, and replication (PostgreSQL docs)", "url": "https://www.postgresql.org/docs/current/high-availability.html", "publisher": "PostgreSQL Global Development Group" }
+  ]
+}

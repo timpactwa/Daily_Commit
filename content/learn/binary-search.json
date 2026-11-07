@@ -1,0 +1,169 @@
+{
+  "topic": "binary-search",
+  "version": 1,
+  "track": "debugging",
+  "title": "Binary Search: Bounds, Midpoint, Loop Condition",
+  "summary": "Cut a sorted list in half each step, and learn the exact loop, bound and midpoint choices that make it correct.",
+  "minutes": 7,
+  "sections": [
+    {
+      "id": "the-idea",
+      "heading": "The idea and the standard loop",
+      "body": [
+        "Binary search finds a target in a **sorted** array by comparing it with the middle element and throwing away the half that cannot contain it. Repeat on what is left. If the range becomes empty, the target is not there. It takes O(log n) comparisons and O(1) extra space.",
+        "The common version keeps two inclusive bounds, `lo` and `hi`, and loops `while lo <= hi`. With `<=`, a range of exactly one element is still checked. If `nums[mid]` is too small, the answer must be to the right, so `lo = mid + 1`. Otherwise `hi = mid - 1`. The `+1` and `-1` matter because `mid` was already ruled out."
+      ],
+      "example": {
+        "title": "Trace a search",
+        "code": "def search(nums, target):\n    lo = 0\n    hi = len(nums) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1",
+        "text": "search([1,3,5,7,9], 7): lo=0, hi=4, mid=2 (5 < 7) so lo=3. Then mid=3, nums[3] is 7, return 3. Each step halved the range."
+      },
+      "check": {
+        "prompt": "What does search([1, 3, 5], 5) return?",
+        "options": [
+          {
+            "id": "a",
+            "text": "2"
+          },
+          {
+            "id": "b",
+            "text": "-1"
+          },
+          {
+            "id": "c",
+            "text": "0"
+          },
+          {
+            "id": "d",
+            "text": "1"
+          }
+        ],
+        "answer": "a",
+        "explanation": "lo=0, hi=2, mid=1 (3 < 5) so lo=2. Next mid=2 and nums[2] is 5, so it returns 2."
+      }
+    },
+    {
+      "id": "loop-condition",
+      "heading": "Loop condition: lo <= hi versus lo < hi",
+      "body": [
+        "Whether you write `<=` or `<` depends on what `hi` means. If `hi = len(nums) - 1`, it is an inclusive bound, so the loop must run while `lo <= hi`. If `hi = len(nums)`, it is an exclusive bound, and the loop runs while `lo < hi`.",
+        "Mixing the two styles is a classic bug. Take the inclusive version and change `<=` to `<`: the loop quits when one candidate is left, so it never examines it. That last candidate is often the answer.",
+        "Wikipedia notes that programmers who implement binary search incorrectly most often go wrong in the exit conditions, so pick one style and stay consistent."
+      ],
+      "example": {
+        "title": "The one-element miss",
+        "code": "def search_buggy(nums, target):\n    lo = 0\n    hi = len(nums) - 1\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1\n\nprint(search_buggy([4], 4))",
+        "text": "With one element, lo=0 and hi=0, so `lo < hi` is false and the loop body never runs. The function prints `-1` even though 4 is present."
+      },
+      "check": {
+        "prompt": "With the inclusive bounds above, what does `while lo < hi` do to search([4], 4)?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Returns 0"
+          },
+          {
+            "id": "b",
+            "text": "Raises IndexError"
+          },
+          {
+            "id": "c",
+            "text": "Loops forever"
+          },
+          {
+            "id": "d",
+            "text": "Returns -1 because the loop never runs"
+          }
+        ],
+        "answer": "d",
+        "explanation": "lo and hi are both 0, so lo < hi is false and the loop is skipped. The function falls through to return -1."
+      }
+    },
+    {
+      "id": "midpoint-bounds",
+      "heading": "Midpoint and bound updates",
+      "body": [
+        "The midpoint is `(lo + hi) // 2`. Some references write `lo + (hi - lo) // 2` instead, because in languages with fixed-size integers `lo + hi` can overflow on huge arrays. Python integers do not overflow, so both are fine here, but the safer form is a good habit.",
+        "The dangerous bug is updating a bound with `mid` when it should be `mid + 1` or `mid - 1`. In the inclusive version, `lo = mid` can leave the range unchanged. With two elements, `mid` equals `lo`, so setting `lo = mid` repeats the same state forever: an **infinite loop**.",
+        "Rule of thumb: in the inclusive style, both updates skip `mid`. Only the exclusive style (next section) is allowed to set `hi = mid`."
+      ],
+      "example": {
+        "title": "An infinite loop",
+        "code": "def hang(nums, target):\n    lo = 0\n    hi = len(nums) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] < target:\n            lo = mid\n        else:\n            hi = mid - 1\n    return lo",
+        "text": "Call hang([1, 3], 3): lo=0, hi=1, mid=0, 1 < 3 so lo=0 again. Nothing changed, so it repeats forever. The fix is `lo = mid + 1`."
+      },
+      "check": {
+        "prompt": "Which change fixes the infinite loop in hang([1, 3], 3)?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Change hi = mid - 1 to hi = mid"
+          },
+          {
+            "id": "b",
+            "text": "Change lo = mid to lo = mid + 1"
+          },
+          {
+            "id": "c",
+            "text": "Change // 2 to / 2"
+          },
+          {
+            "id": "d",
+            "text": "Change lo <= hi to lo < hi"
+          }
+        ],
+        "answer": "b",
+        "explanation": "mid was already tested, so the low bound must move past it. Using lo = mid + 1 guarantees the range shrinks every iteration."
+      }
+    },
+    {
+      "id": "insertion-point",
+      "heading": "Insertion points and duplicates",
+      "body": [
+        "Sometimes you want where a value would go, not just whether it exists. This is the **lower bound**: the first index whose value is at least the target. Python's `bisect_left` returns exactly this position, before any equal items, and `bisect_right` returns the position after them.",
+        "This version uses an exclusive `hi = len(nums)` and `while lo < hi`. If `nums[mid] < target`, move `lo = mid + 1`. Otherwise `hi = mid` (mid could still be the answer). It returns `lo`, which is also the count of items smaller than the target, and works when the target is missing.",
+        "Changing `<` to `<=` in the comparison turns it into the upper bound, landing after the duplicates."
+      ],
+      "example": {
+        "title": "First index at least target",
+        "code": "def first_at_least(nums, target):\n    lo = 0\n    hi = len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid\n    return lo\n\nprint(first_at_least([1, 2, 2, 2, 3], 2))",
+        "text": "It prints `1`, the first 2. With `<=` it would print `4`, the position after the last 2."
+      },
+      "check": {
+        "prompt": "What does first_at_least([1, 2, 4], 3) return?",
+        "options": [
+          {
+            "id": "a",
+            "text": "2"
+          },
+          {
+            "id": "b",
+            "text": "1"
+          },
+          {
+            "id": "c",
+            "text": "3"
+          },
+          {
+            "id": "d",
+            "text": "-1"
+          }
+        ],
+        "answer": "a",
+        "explanation": "lo=0, hi=3, mid=1 (2 < 3) so lo=2. Then mid=2 (4 is not < 3) so hi=2. The loop ends and returns 2, where 3 would be inserted."
+      }
+    }
+  ],
+  "sources": [
+    {
+      "title": "Binary search (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Binary_search",
+      "publisher": "Wikipedia"
+    },
+    {
+      "title": "bisect: Array bisection algorithm",
+      "url": "https://docs.python.org/3/library/bisect.html",
+      "publisher": "Python Software Foundation"
+    }
+  ]
+}

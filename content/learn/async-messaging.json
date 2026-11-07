@@ -1,0 +1,114 @@
+{
+  "topic": "async-messaging",
+  "version": 1,
+  "track": "system-design",
+  "title": "Queues and Async: Absorb Spikes Safely",
+  "summary": "Learn how queues level load, how competing consumers and dead-letter queues work, and how retries and idempotency keep async work safe.",
+  "minutes": 7,
+  "sections": [
+    {
+      "id": "load-leveling",
+      "heading": "Queues level the load",
+      "body": [
+        "A **message queue** sits between a producer and the service that does the work. The producer posts a message and moves on. The service pulls messages at its own pace. This is the queue-based load leveling pattern.",
+        "It protects a service from sudden spikes: requests pile up in the queue instead of overloading the service. Producers are not blocked if the service is briefly down, and you only need enough workers for average load, not the peak.",
+        "There are limits. If producers add work faster than consumers finish it on average, the queue keeps growing and latency rises, so monitor queue depth. Autoscaling workers without limits can just move the overload to the next dependency, such as the database. And a queue is a poor fit when the caller needs an immediate answer."
+      ],
+      "example": {
+        "title": "Flash sale order processing",
+        "text": "A shop expects 5,000 orders per minute for ten minutes during a sale, but its payment service handles 1,000 per minute. The web tier writes each order to a queue and answers 'order received'. Workers pull about 1,000 per minute. The queue grows during the sale and drains afterward, and no order is lost or times out.",
+        "code": "web (5000/min) -> queue -> workers (1000/min) -> payment service"
+      },
+      "check": {
+        "prompt": "What does a queue between a producer and a service mainly give you?",
+        "options": [
+          { "id": "a", "text": "A guaranteed immediate response to the caller" },
+          { "id": "b", "text": "A buffer so bursts do not overload the service, which processes at its own pace" },
+          { "id": "c", "text": "Strict ordering for any number of parallel consumers" },
+          { "id": "d", "text": "Removal of the need to monitor capacity" }
+        ],
+        "answer": "b",
+        "explanation": "The queue decouples arrival from processing so spikes are buffered. It does not make responses immediate, and you still need to watch queue depth."
+      }
+    },
+    {
+      "id": "competing-consumers",
+      "heading": "Competing consumers and poison messages",
+      "body": [
+        "To process a queue faster, run several consumers that all pull from the same queue. This is the **competing consumers** pattern: each message goes to one consumer, so adding consumers adds throughput, and if one consumer fails, the others keep going. This differs from **pub/sub**, where every subscriber receives every message.",
+        "Most queues deliver messages **at least once**. If a consumer crashes before acknowledging, the message becomes visible again and another consumer handles it, so the same message can arrive twice. Ordering is also not guaranteed with parallel consumers unless you use features such as sessions.",
+        "Some messages can never succeed, like malformed data. These **poison messages** would loop forever, so after a set number of delivery attempts they should be moved to a **dead-letter queue** where people can inspect them. Alert on dead-letter depth so failures are noticed."
+      ],
+      "example": {
+        "title": "Thumbnail workers",
+        "text": "A photo app queues one message per upload. Three workers compete for messages and each upload is resized once. One worker crashes mid-job, so its message reappears and another worker finishes it. A corrupt image fails five times in a row, so it is moved to the dead-letter queue and an alert fires, instead of blocking the line."
+      },
+      "check": {
+        "prompt": "Why should a message that fails repeatedly be sent to a dead-letter queue?",
+        "options": [
+          { "id": "a", "text": "So it stops being retried forever and someone can investigate it" },
+          { "id": "b", "text": "So it is processed twice as fast" },
+          { "id": "c", "text": "So every subscriber receives a copy" }
+        ],
+        "answer": "a",
+        "explanation": "A poison message would otherwise cycle indefinitely. A dead-letter queue holds it aside for analysis while normal messages continue."
+      }
+    },
+    {
+      "id": "retries",
+      "heading": "Retries, backoff and jitter",
+      "body": [
+        "Failures are normal, so clients retry. But retries are selfish: they spend more server time to improve one request's chance of success. When a dependency is struggling, retries add load and can keep it down.",
+        "Retries also multiply across layers. With three retries at each of five layers in a call stack, a failing database could see about 243 times the normal load. Retry at one point in the stack, cap the number of attempts, and do not retry errors that can never succeed.",
+        "Use **exponential backoff**, which waits longer after each failure, plus **jitter**, which adds randomness. Without jitter, clients that failed together retry together and overload the service again. Some systems also use a local token bucket to limit how many retries are allowed, so retries cannot flood a recovering service."
+      ],
+      "example": {
+        "title": "A thousand clients retry",
+        "text": "A service blips for one second and 1,000 clients fail. With a fixed 2 second retry, all 1,000 return at the same instant and fail again. With exponential backoff and jitter, retries land at random points between 1 and 3 seconds, then between 2 and 6, and so on, so load spreads out and the service recovers.",
+        "code": "delay = random(0, base * 2**attempt)   # capped, max 3-5 attempts"
+      },
+      "check": {
+        "prompt": "Why add jitter to exponential backoff?",
+        "options": [
+          { "id": "a", "text": "To make retries wait longer on every attempt" },
+          { "id": "b", "text": "To stop clients that failed together from retrying at the same moment" },
+          { "id": "c", "text": "To make retried requests idempotent" },
+          { "id": "d", "text": "To remove the need for a retry limit" }
+        ],
+        "answer": "b",
+        "explanation": "Randomness spreads retries over time. Without it, synchronized retries create repeated load spikes. Jitter does not make requests idempotent and a retry limit is still needed."
+      }
+    },
+    {
+      "id": "idempotency",
+      "heading": "Idempotency makes retries safe",
+      "body": [
+        "A retry is only safe if repeating the request has the same effect as doing it once. Such an operation is **idempotent**. Reads usually are. Creating a resource or charging a card usually is not, and a retry after a lost response could do it twice.",
+        "The standard fix is an **idempotency key** (AWS calls it a client token): a unique id the caller generates once and sends with every retry of the same request. The server records the key together with the result of the work, atomically, so the two cannot get out of sync.",
+        "If the same key arrives again, the server returns a response equivalent to the first one instead of doing the work again. If the same key arrives with different parameters, it returns an error. Consumers of at-least-once queues use the same trick: store processed message ids, or make the operation naturally repeatable."
+      ],
+      "example": {
+        "title": "Charging a card once",
+        "text": "A client sends POST /charges with Idempotency-Key `k-7f3a` for 20 dollars. The network drops the response, so the client retries with the same key. The server sees `k-7f3a` was already processed and returns the original success response. The card is charged once. If the client retried with `k-7f3a` and 25 dollars, the server would reject it as a mismatch.",
+        "code": "POST /charges  Idempotency-Key: k-7f3a  {\"amount\": 20}\nretry same key -> same response, no second charge"
+      },
+      "check": {
+        "prompt": "A client retries a payment request with the same idempotency key after a timeout. What should the server do?",
+        "options": [
+          { "id": "a", "text": "Charge again, because the first response never arrived" },
+          { "id": "b", "text": "Return an error saying the resource already exists" },
+          { "id": "c", "text": "Return a response equivalent to the original result without charging again" },
+          { "id": "d", "text": "Delete the stored key and start over" }
+        ],
+        "answer": "c",
+        "explanation": "A duplicate key means a retry of the same request, so the server replays the original outcome. Charging again would double charge, and an error would change the caller's flow."
+      }
+    }
+  ],
+  "sources": [
+    { "title": "Queue-Based Load Leveling Pattern", "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/queue-based-load-leveling", "publisher": "Microsoft (Azure Architecture Center)" },
+    { "title": "Competing Consumers Pattern", "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/competing-consumers", "publisher": "Microsoft (Azure Architecture Center)" },
+    { "title": "Timeouts, retries and backoff with jitter", "url": "https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter", "publisher": "Amazon Web Services (Builders' Library)" },
+    { "title": "Making retries safe with idempotent APIs", "url": "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/", "publisher": "Amazon Web Services (Builders' Library)" }
+  ]
+}

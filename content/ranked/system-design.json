@@ -1,0 +1,589 @@
+[
+  {
+    "id": "sd-ranked-beginner-01",
+    "version": 1,
+    "track": "system-design",
+    "topic": "caching",
+    "format": "mcq",
+    "prompt": "How many of those 1,000 requests reached the database?",
+    "scenario": "A cache sits in front of a database. Out of 1,000 requests, 900 were answered from the cache.",
+    "options": [
+      {
+        "id": "a",
+        "text": "900, because hits still touch the database"
+      },
+      {
+        "id": "b",
+        "text": "1,000, because the cache only copies data"
+      },
+      {
+        "id": "c",
+        "text": "100, because the cache hit ratio was 90%"
+      },
+      {
+        "id": "d",
+        "text": "0, because a cache always absorbs every read"
+      }
+    ],
+    "answer": "c",
+    "explanation": "A hit is served by the cache alone. 900 hits leave 100 misses, and only misses go to the database. The hit ratio is 90%.",
+    "difficulty_rating": 880
+  },
+  {
+    "id": "sd-ranked-beginner-02",
+    "version": 1,
+    "track": "system-design",
+    "topic": "scaling",
+    "format": "mcq",
+    "prompt": "What is this called?",
+    "scenario": "A single database server is running out of memory. The team moves it to one machine with 4x the RAM and CPU.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Vertical scaling (scaling up)"
+      },
+      {
+        "id": "b",
+        "text": "Horizontal scaling (scaling out)"
+      },
+      {
+        "id": "c",
+        "text": "Sharding"
+      },
+      {
+        "id": "d",
+        "text": "Load balancing"
+      }
+    ],
+    "answer": "a",
+    "explanation": "Making one machine bigger is vertical scaling. Horizontal scaling adds more machines. Vertical has a hard ceiling and still leaves one machine as a single point of failure.",
+    "difficulty_rating": 900
+  },
+  {
+    "id": "sd-ranked-beginner-03",
+    "version": 1,
+    "track": "system-design",
+    "topic": "databases",
+    "format": "mcq",
+    "prompt": "Which database property guarantees the debit is undone?",
+    "scenario": "A bank transfer debits account A and then credits account B. The server crashes after the debit but before the credit.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Durability: committed data survives restarts"
+      },
+      {
+        "id": "b",
+        "text": "Isolation: transactions do not see each other"
+      },
+      {
+        "id": "c",
+        "text": "Consistency: foreign keys are valid"
+      },
+      {
+        "id": "d",
+        "text": "Atomicity: the transaction is all or nothing"
+      }
+    ],
+    "answer": "d",
+    "explanation": "Atomicity means a transaction fully applies or not at all, so a crash midway rolls back the partial debit. Durability only protects data that was already committed.",
+    "difficulty_rating": 920
+  },
+  {
+    "id": "sd-ranked-beginner-04",
+    "version": 1,
+    "track": "system-design",
+    "topic": "async-messaging",
+    "format": "reorder",
+    "prompt": "Put the life of one message in order.",
+    "scenario": "A queue should not lose a message if a consumer crashes while processing it.",
+    "options": [
+      {
+        "id": "s1",
+        "text": "Producer sends the message to the queue"
+      },
+      {
+        "id": "s2",
+        "text": "Broker stores the message"
+      },
+      {
+        "id": "s3",
+        "text": "Consumer receives the message"
+      },
+      {
+        "id": "s4",
+        "text": "Consumer finishes processing"
+      },
+      {
+        "id": "s5",
+        "text": "Consumer acknowledges the message"
+      },
+      {
+        "id": "s6",
+        "text": "Broker removes the message"
+      }
+    ],
+    "answer": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "explanation": "The broker deletes a message only after the consumer acks it. If the consumer crashes before acking, the message is redelivered, so work is not lost.",
+    "difficulty_rating": 900
+  },
+  {
+    "id": "sd-ranked-beginner-05",
+    "version": 1,
+    "track": "system-design",
+    "topic": "reliability",
+    "format": "mcq",
+    "prompt": "What happens to Service A?",
+    "scenario": "Service A calls Service B over HTTP with no timeout. Service B hangs and never replies.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Nothing, A just retries instantly forever for free"
+      },
+      {
+        "id": "b",
+        "text": "Its threads pile up waiting on B and A runs out of capacity too"
+      },
+      {
+        "id": "c",
+        "text": "A automatically returns an error after 1 second"
+      },
+      {
+        "id": "d",
+        "text": "B recovers faster because A keeps waiting"
+      }
+    ],
+    "answer": "b",
+    "explanation": "Without a timeout each stuck call holds a thread or connection. They accumulate until A cannot serve anything, so B's failure spreads to A. Always set timeouts.",
+    "difficulty_rating": 940
+  },
+  {
+    "id": "sd-ranked-intermediate-01",
+    "version": 1,
+    "track": "system-design",
+    "topic": "caching",
+    "format": "mcq",
+    "prompt": "What is the best fix?",
+    "scenario": "A site ships new JavaScript every week. Its files are served by a CDN with Cache-Control max-age of one year, and users keep running old code after each deploy.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Set max-age to 0 on every file"
+      },
+      {
+        "id": "b",
+        "text": "Put a content hash in each file name (app.3f9a1c.js) and keep the long max-age"
+      },
+      {
+        "id": "c",
+        "text": "Ask users to hard refresh after each deploy"
+      },
+      {
+        "id": "d",
+        "text": "Purge the whole CDN by hand every week"
+      }
+    ],
+    "answer": "b",
+    "explanation": "A new hash gives a new URL, so there is nothing stale to purge and old files stay cacheable forever. Max-age 0 throws away the CDN benefit for unchanged files.",
+    "difficulty_rating": 1100
+  },
+  {
+    "id": "sd-ranked-intermediate-02",
+    "version": 1,
+    "track": "system-design",
+    "topic": "scaling",
+    "format": "mcq",
+    "prompt": "Which approach avoids this when adding nodes?",
+    "scenario": "A cache cluster picks a node with hash(key) % N. The team adds one node (N goes from 4 to 5) and the database is hit by a wave of misses.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Modulo hashing with a larger prime N"
+      },
+      {
+        "id": "b",
+        "text": "Random node choice per request"
+      },
+      {
+        "id": "c",
+        "text": "Sticky sessions on the load balancer"
+      },
+      {
+        "id": "d",
+        "text": "Consistent hashing, which remaps only about 1/N of keys"
+      }
+    ],
+    "answer": "d",
+    "explanation": "With modulo, changing N moves most keys to a different node, so most lookups miss. Consistent hashing moves only the keys that belong to the new node's share of the ring.",
+    "difficulty_rating": 1180
+  },
+  {
+    "id": "sd-ranked-intermediate-03",
+    "version": 1,
+    "track": "system-design",
+    "topic": "databases",
+    "format": "mcq",
+    "prompt": "Which index serves it best?",
+    "scenario": "A table holds billions of rows. The hot query is: WHERE user_id = ? AND created_at > ? ORDER BY created_at DESC LIMIT 20.",
+    "options": [
+      {
+        "id": "a",
+        "text": "A composite index on (user_id, created_at)"
+      },
+      {
+        "id": "b",
+        "text": "Two separate indexes on user_id and on created_at"
+      },
+      {
+        "id": "c",
+        "text": "A composite index on (created_at, user_id)"
+      },
+      {
+        "id": "d",
+        "text": "An index on user_id only"
+      }
+    ],
+    "answer": "a",
+    "explanation": "Equality column first, range and sort column second lets the database jump to one user and read 20 rows already ordered. Reversing the order would scan every user's recent rows.",
+    "difficulty_rating": 1150
+  },
+  {
+    "id": "sd-ranked-intermediate-04",
+    "version": 1,
+    "track": "system-design",
+    "topic": "async-messaging",
+    "format": "mcq",
+    "prompt": "How should messages be routed?",
+    "scenario": "Events for one order (created, paid, shipped) must be handled in order. The system needs 10 parallel consumers for throughput.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Round-robin all messages across consumers"
+      },
+      {
+        "id": "b",
+        "text": "One global queue with a single consumer"
+      },
+      {
+        "id": "c",
+        "text": "Partition by order id so each order always goes to the same consumer"
+      },
+      {
+        "id": "d",
+        "text": "Random partition and sort in the database later"
+      }
+    ],
+    "answer": "c",
+    "explanation": "Ordering is only needed per order, so key the partition by order id. One consumer owns each partition, giving order within an order and parallelism across orders.",
+    "difficulty_rating": 1220
+  },
+  {
+    "id": "sd-ranked-intermediate-05",
+    "version": 1,
+    "track": "system-design",
+    "topic": "reliability",
+    "format": "reorder",
+    "prompt": "Put the failover steps in order.",
+    "scenario": "The primary database of a replicated pair has died. Writes must resume without two nodes accepting writes at once.",
+    "options": [
+      {
+        "id": "s1",
+        "text": "Health checks fail several times in a row"
+      },
+      {
+        "id": "s2",
+        "text": "Fence the old primary so it cannot accept writes"
+      },
+      {
+        "id": "s3",
+        "text": "Promote the most up-to-date replica to primary"
+      },
+      {
+        "id": "s4",
+        "text": "Point application writes at the new primary"
+      },
+      {
+        "id": "s5",
+        "text": "Rebuild the old primary as a replica"
+      }
+    ],
+    "answer": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5"
+    ],
+    "explanation": "Fence before promoting: otherwise a half-alive old primary and the new one both take writes (split brain). Repointing clients comes after the new primary is ready.",
+    "difficulty_rating": 1250
+  },
+  {
+    "id": "sd-ranked-advanced-01",
+    "version": 1,
+    "track": "system-design",
+    "topic": "caching",
+    "format": "tap_node",
+    "prompt": "Tap the node that will overload.",
+    "scenario": "A flash sale on one item sends 80% of reads to a single product. Cache keys are spread across shards by hash. Overall cache traffic is modest.",
+    "diagram": {
+      "nodes": [
+        {
+          "id": "client",
+          "label": "Shoppers",
+          "kind": "client"
+        },
+        {
+          "id": "api",
+          "label": "API tier",
+          "kind": "service",
+          "note": "20 instances"
+        },
+        {
+          "id": "c1",
+          "label": "Cache shard 1",
+          "kind": "cache",
+          "note": "8% CPU"
+        },
+        {
+          "id": "c2",
+          "label": "Cache shard 2",
+          "kind": "cache",
+          "note": "holds flash-sale key"
+        },
+        {
+          "id": "c3",
+          "label": "Cache shard 3",
+          "kind": "cache",
+          "note": "6% CPU"
+        },
+        {
+          "id": "db",
+          "label": "Product DB",
+          "kind": "db"
+        }
+      ],
+      "edges": [
+        {
+          "from": "client",
+          "to": "api"
+        },
+        {
+          "from": "api",
+          "to": "c1"
+        },
+        {
+          "from": "api",
+          "to": "c2",
+          "label": "80% of reads"
+        },
+        {
+          "from": "api",
+          "to": "c3"
+        },
+        {
+          "from": "api",
+          "to": "db",
+          "label": "on miss"
+        }
+      ]
+    },
+    "options": [
+      {
+        "id": "client",
+        "text": "Shoppers"
+      },
+      {
+        "id": "api",
+        "text": "API tier"
+      },
+      {
+        "id": "c1",
+        "text": "Cache shard 1"
+      },
+      {
+        "id": "c2",
+        "text": "Cache shard 2"
+      },
+      {
+        "id": "c3",
+        "text": "Cache shard 3"
+      },
+      {
+        "id": "db",
+        "text": "Product DB"
+      }
+    ],
+    "answer": "c2",
+    "explanation": "A hot key lives on exactly one shard, so adding shards does not help. Shard 2 takes nearly all the load. Fix with a local in-process cache or replicas of the hot key.",
+    "difficulty_rating": 1340
+  },
+  {
+    "id": "sd-ranked-advanced-02",
+    "version": 1,
+    "track": "system-design",
+    "topic": "scaling",
+    "format": "tap_node",
+    "prompt": "Tap the bottleneck.",
+    "scenario": "After autoscaling the API from 5 to 20 instances, requests fail with 'too many connections' and the database CPU is only 15%.",
+    "diagram": {
+      "nodes": [
+        {
+          "id": "lb",
+          "label": "Load balancer",
+          "kind": "lb"
+        },
+        {
+          "id": "api",
+          "label": "API x20",
+          "kind": "service",
+          "note": "10 DB connections each"
+        },
+        {
+          "id": "pool",
+          "label": "Connection limit",
+          "kind": "db",
+          "note": "max 100 total"
+        },
+        {
+          "id": "db",
+          "label": "Postgres",
+          "kind": "db",
+          "note": "15% CPU"
+        }
+      ],
+      "edges": [
+        {
+          "from": "lb",
+          "to": "api"
+        },
+        {
+          "from": "api",
+          "to": "pool",
+          "label": "200 connections"
+        },
+        {
+          "from": "pool",
+          "to": "db"
+        }
+      ]
+    },
+    "options": [
+      {
+        "id": "lb",
+        "text": "Load balancer"
+      },
+      {
+        "id": "api",
+        "text": "API x20"
+      },
+      {
+        "id": "pool",
+        "text": "Connection limit"
+      },
+      {
+        "id": "db",
+        "text": "Postgres"
+      }
+    ],
+    "answer": "pool",
+    "explanation": "20 instances x 10 connections wants 200, but the database accepts 100. CPU is idle, so the limit is connections. Use a pooler such as PgBouncer or smaller per-instance pools.",
+    "difficulty_rating": 1400
+  },
+  {
+    "id": "sd-ranked-advanced-03",
+    "version": 1,
+    "track": "system-design",
+    "topic": "databases",
+    "format": "mcq",
+    "prompt": "Which quorum settings satisfy this?",
+    "scenario": "A store keeps N=5 replicas per record. Reads must always see the latest committed write, and both reads and writes must keep working with any 2 replicas down.",
+    "options": [
+      {
+        "id": "a",
+        "text": "R=1 and W=5"
+      },
+      {
+        "id": "b",
+        "text": "R=2 and W=2"
+      },
+      {
+        "id": "c",
+        "text": "R=3 and W=3"
+      },
+      {
+        "id": "d",
+        "text": "R=5 and W=1"
+      }
+    ],
+    "answer": "c",
+    "explanation": "R+W > N (6 > 5) guarantees every read quorum overlaps the latest write quorum. Both need only 3 nodes, so 2 failures are fine. R=2, W=2 can miss the write; the extremes fail with one node down.",
+    "difficulty_rating": 1420
+  },
+  {
+    "id": "sd-ranked-advanced-04",
+    "version": 1,
+    "track": "system-design",
+    "topic": "async-messaging",
+    "format": "mcq",
+    "prompt": "What is the correct fix?",
+    "scenario": "A queue uses a 30 second visibility timeout. A video job takes about 90 seconds. The same video is being transcoded by several workers at once.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Make the timeout longer than the job (or heartbeat to extend it) and make the job idempotent"
+      },
+      {
+        "id": "b",
+        "text": "Lower the timeout to 5 seconds so jobs retry faster"
+      },
+      {
+        "id": "c",
+        "text": "Add more workers so one finishes in time"
+      },
+      {
+        "id": "d",
+        "text": "Delete the message when a worker starts it"
+      }
+    ],
+    "answer": "a",
+    "explanation": "After 30s the message reappears and another worker takes it while the first is still running. Extend the timeout or heartbeat, and keep the job idempotent for leftover duplicates. Deleting at start loses work on a crash.",
+    "difficulty_rating": 1460
+  },
+  {
+    "id": "sd-ranked-advanced-05",
+    "version": 1,
+    "track": "system-design",
+    "topic": "reliability",
+    "format": "mcq",
+    "prompt": "How many attempts can one user action send to the database?",
+    "scenario": "A client calls a gateway, which calls a service, which calls a database. Each caller makes up to 3 attempts in total per call (1 try + 2 retries). The database is down.",
+    "options": [
+      {
+        "id": "a",
+        "text": "9, because retries add up per layer"
+      },
+      {
+        "id": "b",
+        "text": "6, because only the last layer retries"
+      },
+      {
+        "id": "c",
+        "text": "3, because the client retry covers the rest"
+      },
+      {
+        "id": "d",
+        "text": "27, because retries multiply at each of the 3 layers"
+      }
+    ],
+    "answer": "d",
+    "explanation": "Each layer multiplies: 3 x 3 x 3 = 27. This retry amplification can keep a recovering database down. Retry at one layer, use backoff with jitter, and cap retry budgets.",
+    "difficulty_rating": 1490
+  }
+]
