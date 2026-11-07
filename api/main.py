@@ -1,19 +1,36 @@
 """Daily Commit API. Run from repo root: uvicorn api.main:app --reload --port 8000"""
+import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from api import errors
+from api import content_loader, db, errors
+from api.routes import answers, lessons, users
 
 ROOT = Path(__file__).resolve().parent.parent
 APP_DIST = ROOT / "app" / "dist"
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
-app = FastAPI(title="Daily Commit API", version="1")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Boot: schema, then reload /content (keeps learned ratings). Demo reset is added in P3.
+    db.init()
+    with db.transaction() as conn:
+        app.state.question_count = content_loader.load(conn)
+    yield
+
+
+app = FastAPI(title="Daily Commit API", version="1", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 errors.install(app)
-app.state.question_count = 0  # set by the content loader (T2)
+app.state.question_count = 0
+
+for r in (users.router, lessons.router, answers.router):
+    app.include_router(r)
 
 
 @app.get("/health")
