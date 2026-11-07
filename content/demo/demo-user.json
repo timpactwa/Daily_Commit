@@ -1,0 +1,111 @@
+{
+  "display_name": "Tim",
+  "streak": {
+    "current": 6,
+    "best": 6
+  },
+  "ratings": {
+    "caching": 1340,
+    "scaling": 1270,
+    "databases": 1190,
+    "async-messaging": 1140,
+    "reliability": 1230,
+    "arrays-strings": 1250,
+    "binary-search": 1180,
+    "recursion": 1060,
+    "sorting": 1280,
+    "hash-maps": 1300
+  },
+  "history": [
+    {
+      "question_id": "sd-caching-005",
+      "correct": true,
+      "days_ago": 6
+    },
+    {
+      "question_id": "sd-scaling-005",
+      "correct": true,
+      "days_ago": 6
+    },
+    {
+      "question_id": "sd-databases-004",
+      "correct": true,
+      "days_ago": 6
+    },
+    {
+      "question_id": "sd-caching-006",
+      "correct": true,
+      "days_ago": 5
+    },
+    {
+      "question_id": "sd-async-005",
+      "correct": false,
+      "days_ago": 5
+    },
+    {
+      "question_id": "sd-reliability-004",
+      "correct": true,
+      "days_ago": 5
+    },
+    {
+      "question_id": "sd-scaling-006",
+      "correct": true,
+      "days_ago": 4
+    },
+    {
+      "question_id": "sd-databases-005",
+      "correct": true,
+      "days_ago": 4
+    },
+    {
+      "question_id": "sd-async-006",
+      "correct": false,
+      "days_ago": 4
+    },
+    {
+      "question_id": "sd-caching-008",
+      "correct": true,
+      "days_ago": 3
+    },
+    {
+      "question_id": "sd-reliability-005",
+      "correct": true,
+      "days_ago": 3
+    },
+    {
+      "question_id": "sd-databases-008",
+      "correct": false,
+      "days_ago": 3
+    },
+    {
+      "question_id": "sd-scaling-008",
+      "correct": true,
+      "days_ago": 2
+    },
+    {
+      "question_id": "sd-caching-002",
+      "correct": true,
+      "days_ago": 2
+    },
+    {
+      "question_id": "sd-async-002",
+      "correct": true,
+      "days_ago": 2
+    },
+    {
+      "question_id": "sd-reliability-008",
+      "correct": true,
+      "days_ago": 1
+    },
+    {
+      "question_id": "sd-scaling-007",
+      "correct": true,
+      "days_ago": 1
+    },
+    {
+      "question_id": "sd-databases-006",
+      "correct": true,
+      "days_ago": 1
+    }
+  ]
+}
