@@ -1,0 +1,133 @@
+{
+  "topic": "arrays-strings",
+  "version": 1,
+  "track": "debugging",
+  "title": "Arrays & Strings: Indexing, Pointers, Loops",
+  "summary": "Get indexing and slicing right, walk a sequence with two pointers, and avoid the loop-bound bugs interviewers love.",
+  "minutes": 5,
+  "sections": [
+    {
+      "id": "indexing-slicing",
+      "heading": "Indexing and slicing",
+      "body": [
+        "Python sequences (lists and strings) start at index `0`. Negative indices count from the right, so `word[-1]` is the last item. Reading an index past the end raises `IndexError`, but a negative index quietly wraps around, which is why bad loop bounds often give wrong answers instead of crashes.",
+        "A slice `s[a:b]` includes the item at `a` and excludes the item at `b`. Its length is `b - a` when both are in range. Omitted ends default to the start and end of the sequence, and out-of-range slice ends are clamped instead of raising an error.",
+        "Strings are **immutable**: you cannot assign to `s[0]`. To change one, build a new string from slices. Slicing a list gives you a new (shallow) copy."
+      ],
+      "example": {
+        "title": "Slices and negative indices",
+        "code": "word = \"Python\"\nprint(word[0], word[-1])\nprint(word[1:3])\nprint(word[4:42])\nprint(word[:2] + \"py\")",
+        "text": "Output: `P n`, then `yt` (index 3 is excluded), then `on` (the end is clamped), then `Pypy`. The last line builds a new string because the original cannot be edited."
+      },
+      "check": {
+        "prompt": "What does \"Python\"[2:5] evaluate to?",
+        "options": [
+          {
+            "id": "a",
+            "text": "yth"
+          },
+          {
+            "id": "b",
+            "text": "tho"
+          },
+          {
+            "id": "c",
+            "text": "thon"
+          },
+          {
+            "id": "d",
+            "text": "ytho"
+          }
+        ],
+        "answer": "b",
+        "explanation": "The slice starts at index 2 (t) and stops before index 5, so it takes indices 2, 3 and 4: t, h, o."
+      }
+    },
+    {
+      "id": "two-pointers",
+      "heading": "Two pointers",
+      "body": [
+        "Two pointers means keeping two indices into the same sequence and moving them toward each other (or in the same direction) until they meet. It turns many nested-loop problems into a single pass.",
+        "The classic form: `left` starts at `0`, `right` starts at `len(s) - 1`, and you loop while `left < right`. Each iteration inspects the pair, then moves at least one pointer inward. Checking a palindrome, or finding two numbers in a sorted list that add to a target, both work this way.",
+        "The bugs here are mechanical. Start `right` at `len(s)` and you read out of range. Forget to move one pointer and the pair never lines up again. Use `<=` instead of `<` and the middle element gets compared with itself."
+      ],
+      "example": {
+        "title": "Palindrome check",
+        "code": "def is_palindrome(s):\n    left = 0\n    right = len(s) - 1\n    while left < right:\n        if s[left] != s[right]:\n            return False\n        left += 1\n        right -= 1\n    return True",
+        "text": "For `\"level\"`: compare `l`/`l`, then `e`/`e`, then left and right meet at index 2 and the loop stops. Returns `True`. For `\"abca\"`: `a`/`a` match, then `b`/`c` differ, so it returns `False`."
+      },
+      "check": {
+        "prompt": "Suppose the line `right -= 1` is deleted. What happens for the palindrome \"aba\"?",
+        "options": [
+          {
+            "id": "a",
+            "text": "It raises IndexError"
+          },
+          {
+            "id": "b",
+            "text": "It loops forever"
+          },
+          {
+            "id": "c",
+            "text": "It wrongly returns False"
+          },
+          {
+            "id": "d",
+            "text": "It still returns True"
+          }
+        ],
+        "answer": "c",
+        "explanation": "After the first match, left is 1 but right stays 2, so it compares `b` with `a` and returns False. The loop still ends because left keeps growing."
+      }
+    },
+    {
+      "id": "loop-bounds",
+      "heading": "Loop bounds and off-by-one errors",
+      "body": [
+        "Most array bugs are off-by-one errors. `range(n)` produces `0` to `n - 1`, and `range(1, n)` skips index 0. When a loop looks at `nums[i - 1]`, starting at `0` would read index `-1`, which in Python is the last element. No error appears, the answer is just wrong.",
+        "Before you trust a loop, test the smallest inputs: an empty list, one item, two items. Ask what the first and last iteration touch. Pick the start so every index you read exists, and the stop so the final item is not skipped.",
+        "Building strings has a similar trap. Because strings are immutable, each `+=` creates a new string. Collecting pieces in a list and calling `\"\".join(pieces)` at the end is the usual habit."
+      ],
+      "example": {
+        "title": "Count increases",
+        "code": "def count_increases(nums):\n    count = 0\n    for i in range(1, len(nums)):\n        if nums[i] > nums[i - 1]:\n            count += 1\n    return count\n\nprint(count_increases([1, 3, 2, 5]))",
+        "text": "The loop starts at 1 so `nums[i - 1]` is always a real neighbor. Pairs: 1<3 yes, 3<2 no, 2<5 yes. Output: `2`."
+      },
+      "check": {
+        "prompt": "If the loop were `range(len(nums))` instead, what happens at i = 0?",
+        "options": [
+          {
+            "id": "a",
+            "text": "It compares nums[0] with nums[-1], the last item, and raises no error"
+          },
+          {
+            "id": "b",
+            "text": "It raises IndexError"
+          },
+          {
+            "id": "c",
+            "text": "It skips the first item"
+          },
+          {
+            "id": "d",
+            "text": "It compares nums[0] with itself"
+          }
+        ],
+        "answer": "a",
+        "explanation": "Index -1 wraps to the last element, so the code silently compares the first and last values and can return a wrong count."
+      }
+    }
+  ],
+  "sources": [
+    {
+      "title": "An Informal Introduction to Python (strings, lists, slicing)",
+      "url": "https://docs.python.org/3/tutorial/introduction.html",
+      "publisher": "Python Software Foundation"
+    },
+    {
+      "title": "Data Structures: looping techniques",
+      "url": "https://docs.python.org/3/tutorial/datastructures.html",
+      "publisher": "Python Software Foundation"
+    }
+  ]
+}

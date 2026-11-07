@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-commit/contracts/learn.schema.json",
+  "title": "LearningModule",
+  "description": "One learning module per topic: content/learn/<topic>.json (a single object, not an array). Sections are read in order; each ends with one checkpoint question the reader must answer correctly to unlock the next section. Text is written in our own words; facts come from the cited sources.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topic", "version", "track", "title", "summary", "minutes", "sections", "sources"],
+  "properties": {
+    "topic":   { "type": "string", "description": "A topic id from contracts/topics.json. Must equal the file name stem." },
+    "version": { "type": "integer", "const": 1 },
+    "track":   { "enum": ["system-design", "debugging"] },
+    "title":   { "type": "string", "minLength": 1, "maxLength": 60 },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 200, "description": "One sentence shown on the module card." },
+    "minutes": { "type": "integer", "minimum": 1, "maximum": 20, "description": "Estimated reading time." },
+    "sections": {
+      "type": "array", "minItems": 3, "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "heading", "body", "example", "check"],
+        "properties": {
+          "id":      { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Unique within the module." },
+          "heading": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "body": {
+            "type": "array", "minItems": 1, "maxItems": 5,
+            "description": "Paragraphs, about 150 words total. Inline markup allowed: `code` and **bold** only.",
+            "items": { "type": "string", "minLength": 1, "maxLength": 700 }
+          },
+          "example": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title"],
+            "description": "A worked example. Debugging topics: Python code (ast-parsable, no tabs). System design: a short scenario walkthrough in `text`, optionally with `code` for a snippet or pseudo-flow.",
+            "properties": {
+              "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+              "code":  { "type": "string", "maxLength": 1200 },
+              "text":  { "type": "string", "maxLength": 700 }
+            },
+            "anyOf": [ { "required": ["code"] }, { "required": ["text"] } ]
+          },
+          "check": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["prompt", "options", "answer", "explanation"],
+            "properties": {
+              "prompt":      { "type": "string", "minLength": 1, "maxLength": 300 },
+              "options": {
+                "type": "array", "minItems": 3, "maxItems": 4,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["id", "text"],
+                  "properties": {
+                    "id":   { "type": "string", "pattern": "^[a-d]$" },
+                    "text": { "type": "string", "minLength": 1, "maxLength": 200 }
+                  }
+                }
+              },
+              "answer":      { "type": "string", "pattern": "^[a-d]$" },
+              "explanation": { "type": "string", "minLength": 1, "maxLength": 400 }
+            }
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "array", "minItems": 2, "maxItems": 5,
+      "description": "Free, publicly readable references that support the facts in this module. Cited at the bottom of the page.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "url", "publisher"],
+        "properties": {
+          "title":     { "type": "string", "minLength": 1, "maxLength": 160 },
+          "url":       { "type": "string", "pattern": "^https://" },
+          "publisher": { "type": "string", "minLength": 1, "maxLength": 80, "description": "e.g. 'Python Software Foundation', 'Google (Site Reliability Engineering book)'" }
+        }
+      }
+    }
+  }
+}

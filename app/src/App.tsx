@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   Link,
   Navigate,
@@ -8,13 +8,26 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { api } from "./api";
+import { api, getToken, type Features } from "./api";
 import { Lesson } from "./screens/Lesson";
 import { Placement, PlacementResult } from "./screens/Placement";
 import { ErrorNotice } from "./ui";
 import { Logo } from "./Logo";
 import { InstallPrompt } from "./InstallPrompt";
 import { Home, Progress, LessonDone, Tomorrow } from "./screens/Dashboard";
+import { LearnList, LearnModuleScreen } from "./screens/Learn";
+import { LeaderboardScreen, RankedHome, RankedPlay, RankedResultScreen } from "./screens/Ranked";
+import { Account } from "./screens/Account";
+
+const ALL_OFF: Features = { learn: false, ranked: false, accounts: false };
+
+function useFeatures() {
+  const [features, setFeatures] = useState<Features>(ALL_OFF);
+  useEffect(() => {
+    void api.getConfig().then(setFeatures);
+  }, []);
+  return features;
+}
 function Onboarding() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -65,17 +78,27 @@ function Onboarding() {
           </button>
         </form>
         {!!error && <ErrorNotice error={error} retry={submit} />}
+        <Link to="/account" className="text-button">
+          Already have an account? Sign in
+        </Link>
       </div>
     </div>
   );
 }
 export function App() {
   const location = useLocation();
+  const features = useFeatures();
   return (
     <div className="app">
       <header>
         <Logo />
-        <span className="eyebrow">A LITTLE, EVERY DAY</span>
+        {features.accounts ? (
+          <Link to="/account" className="account-link" aria-label="Account">
+            {getToken() ? "◉ Account" : "○ Sign in"}
+          </Link>
+        ) : (
+          <span className="eyebrow">A LITTLE, EVERY DAY</span>
+        )}
       </header>
       <InstallPrompt />
       <main>
@@ -88,6 +111,13 @@ export function App() {
           <Route path="/lesson/done" element={<LessonDone />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="/tomorrow" element={<Tomorrow />} />
+          {features.learn && <Route path="/learn" element={<LearnList />} />}
+          {features.learn && <Route path="/learn/:topic" element={<LearnModuleScreen />} />}
+          {features.ranked && <Route path="/ranked" element={<RankedHome />} />}
+          {features.ranked && <Route path="/ranked/:tier/play" element={<RankedPlay />} />}
+          {features.ranked && <Route path="/ranked/:tier/result" element={<RankedResultScreen />} />}
+          {features.ranked && <Route path="/ranked/:tier/board" element={<LeaderboardScreen />} />}
+          {features.accounts && <Route path="/account" element={<Account />} />}
           <Route
             path="*"
             element={
@@ -103,6 +133,16 @@ export function App() {
         <NavLink to="/" end>
           ⌂ <span>Today</span>
         </NavLink>
+        {features.learn && (
+          <NavLink to="/learn">
+            ❏ <span>Learn</span>
+          </NavLink>
+        )}
+        {features.ranked && (
+          <NavLink to="/ranked">
+            ◆ <span>Ranked</span>
+          </NavLink>
+        )}
         <NavLink to="/progress">
           ↗ <span>Progress</span>
         </NavLink>

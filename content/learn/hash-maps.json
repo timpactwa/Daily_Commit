@@ -1,0 +1,138 @@
+{
+  "topic": "hash-maps",
+  "version": 1,
+  "track": "debugging",
+  "title": "Hash Maps: Counting and Lookups",
+  "summary": "Use dicts for counting and instant lookups, and avoid the default-value and ordering bugs that trip people up.",
+  "minutes": 6,
+  "sections": [
+    {
+      "id": "counting",
+      "heading": "Counting with a dict",
+      "body": [
+        "A hash table maps keys to values. Lookups, inserts and deletes take O(1) time on average (O(n) in the worst case, when many keys collide). That makes it the first tool to reach for when you need to count things or find them fast.",
+        "The counting pattern is `counts[x] = counts.get(x, 0) + 1`. The `get` call supplies `0` when the key is missing, whereas `counts[x]` alone would raise `KeyError`. The default must be the identity of the operation: `0` for a sum or count.",
+        "Python also offers `collections.Counter` and `defaultdict(int)`, which do this for you. Counter returns `0` for missing keys instead of raising an error."
+      ],
+      "example": {
+        "title": "Counting letters",
+        "code": "def count_letters(s):\n    counts = {}\n    for ch in s:\n        counts[ch] = counts.get(ch, 0) + 1\n    return counts\n\nprint(count_letters(\"aab\"))",
+        "text": "Output: `{'a': 2, 'b': 1}`. The first `a` starts from 0 and becomes 1, the second becomes 2. If the default were `1`, the first `a` would count as 2, and everything would be inflated."
+      },
+      "check": {
+        "prompt": "If the default were `counts.get(ch, 1) + 1`, what would count_letters(\"aab\") return?",
+        "options": [
+          {
+            "id": "a",
+            "text": "{'a': 2, 'b': 1}"
+          },
+          {
+            "id": "b",
+            "text": "{'a': 3, 'b': 2}"
+          },
+          {
+            "id": "c",
+            "text": "{'a': 2, 'b': 2}"
+          },
+          {
+            "id": "d",
+            "text": "It raises KeyError"
+          }
+        ],
+        "answer": "b",
+        "explanation": "The first a becomes 1 + 1 = 2, the second a becomes 3, and b becomes 2. Every count is one too high."
+      }
+    },
+    {
+      "id": "complement-lookup",
+      "heading": "Instant lookups: the complement pattern",
+      "body": [
+        "Checking `x in some_dict` tests for a **key** and is fast on average. Scanning a list for the same thing takes O(n). So a dict lets you replace an inner loop with a single lookup.",
+        "Two Sum is the classic case: for each number, compute `need = target - nums[i]` and check whether `need` was seen earlier. Remember the indices you have visited, keyed by value.",
+        "Order matters. Check for the complement first, then store the current number. If you store first, a number can match itself. For `[3, 5]` with target 6, storing 3 first and then looking up 3 would pair index 0 with index 0."
+      ],
+      "example": {
+        "title": "Two Sum",
+        "code": "def two_sum(nums, target):\n    seen = {}\n    for i in range(len(nums)):\n        need = target - nums[i]\n        if need in seen:\n            return [seen[need], i]\n        seen[nums[i]] = i\n    return []\n\nprint(two_sum([3, 3], 6))",
+        "text": "i=0: need 3 is not in seen, so store {3: 0}. i=1: need 3 is in seen, so return `[0, 1]`. Two different positions, as required."
+      },
+      "check": {
+        "prompt": "If `seen[nums[i]] = i` ran before the `if need in seen` check, what would two_sum([3, 5], 6) return?",
+        "options": [
+          {
+            "id": "a",
+            "text": "[]"
+          },
+          {
+            "id": "b",
+            "text": "[0, 1]"
+          },
+          {
+            "id": "c",
+            "text": "[0, 0]"
+          },
+          {
+            "id": "d",
+            "text": "It raises KeyError"
+          }
+        ],
+        "answer": "c",
+        "explanation": "At i=0 the code stores 3 and then finds need=3 already present, returning the same index twice."
+      }
+    },
+    {
+      "id": "keys-and-ties",
+      "heading": "Key choice, defaults and ties",
+      "body": [
+        "Dict keys must be hashable: strings, numbers and tuples of immutables work, but lists do not. Choose the key that matches the question. To find the first unique character you key by character; to group by length you key by length.",
+        "Two follow-up bugs are common. A second pass that reads `counts[ch]` is safe only because every key was inserted first. And in a most-frequent search, `>` versus `>=` decides ties. With `>`, the value that reached the top count first wins; with `>=`, the latest one does.",
+        "When a hash-map function returns the wrong item, check the default, the key, and the comparison used for ties."
+      ],
+      "example": {
+        "title": "Most common value",
+        "code": "def most_common(nums):\n    counts = {}\n    best = None\n    best_count = 0\n    for x in nums:\n        counts[x] = counts.get(x, 0) + 1\n        if counts[x] > best_count:\n            best = x\n            best_count = counts[x]\n    return best\n\nprint(most_common([1, 2, 2, 1]))",
+        "text": "Both 1 and 2 appear twice. 2 reaches count 2 first (at the third item), and 1 only ties it, so `>` keeps 2. Output: `2`. Switching to `>=` would give `1`."
+      },
+      "check": {
+        "prompt": "What does most_common([1, 2, 2, 1]) return as written, with `>`?",
+        "options": [
+          {
+            "id": "a",
+            "text": "2"
+          },
+          {
+            "id": "b",
+            "text": "1"
+          },
+          {
+            "id": "c",
+            "text": "None"
+          },
+          {
+            "id": "d",
+            "text": "[1, 2]"
+          }
+        ],
+        "answer": "a",
+        "explanation": "2 gets to count 2 first. When 1 later reaches count 2 it does not beat best_count, so 2 stays."
+      }
+    }
+  ],
+  "sources": [
+    {
+      "title": "Hash table (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Hash_table",
+      "publisher": "Wikipedia"
+    },
+    {
+      "title": "collections: Counter and defaultdict",
+      "url": "https://docs.python.org/3/library/collections.html#collections.Counter",
+      "publisher": "Python Software Foundation"
+    },
+    {
+      "title": "Data Structures: Dictionaries",
+      "url": "https://docs.python.org/3/tutorial/datastructures.html",
+      "publisher": "Python Software Foundation"
+    }
+  ]
+}
