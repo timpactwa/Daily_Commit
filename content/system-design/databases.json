@@ -624,5 +624,75 @@
     "batch-1",
     "source-backed"
   ]
+},
+{
+  "id": "sd-databases-continuation-023",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Which index targets a small active subset without indexing every archived row?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "CREATE INDEX ON jobs (created_at) WHERE state = 'ready'"
+    },
+    {
+      "id": "o1",
+      "text": "CREATE INDEX ON jobs (created_at)"
+    },
+    {
+      "id": "o2",
+      "text": "CREATE INDEX ON jobs (state)"
+    },
+    {
+      "id": "o3",
+      "text": "CREATE INDEX ON jobs (id)"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A partial index stores entries only for rows satisfying its predicate, reducing index size for this workload. Source: [PostgreSQL partial indexes](https://www.postgresql.org/docs/18/indexes-partial.html)",
+  "difficulty_rating": 1150,
+  "scenario": "The query uses WHERE state = 'ready' ORDER BY created_at; almost all jobs are archived.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-databases-continuation-024",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Can this generic prepared plan assume x < $1 implies the partial-index predicate x < 10?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "No; it must hold for every possible parameter value"
+    },
+    {
+      "id": "o1",
+      "text": "Yes; the first execution makes it permanent"
+    },
+    {
+      "id": "o2",
+      "text": "Yes; predicates are checked only after index selection"
+    },
+    {
+      "id": "o3",
+      "text": "Yes; every inequality implies every narrower inequality"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Partial-index eligibility requires a provable predicate implication at planning time. An unknown bound cannot establish this implication. Source: [PostgreSQL partial indexes](https://www.postgresql.org/docs/18/indexes-partial.html)",
+  "difficulty_rating": 1500,
+  "scenario": "A PostgreSQL generic plan does not know the future value of $1.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
 }
 ]

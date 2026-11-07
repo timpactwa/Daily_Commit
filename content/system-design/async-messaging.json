@@ -627,5 +627,73 @@
     "batch-1",
     "source-backed"
   ]
+},
+{
+  "id": "sd-async-messaging-continuation-023",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "A queue TTL is 8 seconds and a message TTL is 3 seconds. Which lifetime applies in that queue?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "3 seconds"
+    },
+    {
+      "id": "o1",
+      "text": "8 seconds"
+    },
+    {
+      "id": "o2",
+      "text": "11 seconds"
+    },
+    {
+      "id": "o3",
+      "text": "24 seconds"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "When both queue-level message TTL and per-message TTL apply, RabbitMQ uses the smaller value. Source: [RabbitMQ TTL](https://www.rabbitmq.com/docs/ttl)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-async-messaging-continuation-024",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "The same message enters queues with different TTL policies. Does expiry in one expire it in the other?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "No; expiry is independent per queue"
+    },
+    {
+      "id": "o1",
+      "text": "Yes; the shortest TTL globally deletes all copies"
+    },
+    {
+      "id": "o2",
+      "text": "Yes; publishing replaces all queue policies"
+    },
+    {
+      "id": "o3",
+      "text": "Only if both consumers use manual acknowledgements"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A message may expire in one queue and remain deliverable in another; each queue applies its own expiry rules. Source: [RabbitMQ TTL](https://www.rabbitmq.com/docs/ttl)",
+  "difficulty_rating": 1350,
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
 }
 ]

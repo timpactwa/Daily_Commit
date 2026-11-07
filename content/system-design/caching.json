@@ -626,5 +626,73 @@
     "batch-1",
     "source-backed"
   ]
+},
+{
+  "id": "sd-caching-continuation-023",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "What happens to a Redis key’s TTL after INCR changes its numeric value?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "The existing expiry remains"
+    },
+    {
+      "id": "o1",
+      "text": "The expiry is cleared"
+    },
+    {
+      "id": "o2",
+      "text": "The expiry always doubles"
+    },
+    {
+      "id": "o3",
+      "text": "The key expires immediately"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Commands that alter a value without replacing the key, such as INCR, preserve its existing timeout. Source: [Redis EXPIRE](https://redis.io/docs/latest/commands/expire/)",
+  "difficulty_rating": 1000,
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-caching-continuation-024",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "Which EXPIRE option extends a finite TTL only when the proposed TTL is longer?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "GT"
+    },
+    {
+      "id": "o1",
+      "text": "LT"
+    },
+    {
+      "id": "o2",
+      "text": "NX"
+    },
+    {
+      "id": "o3",
+      "text": "XX"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "GT applies expiry only when the new timeout exceeds the current one. A persistent key counts as having infinite TTL. Source: [Redis EXPIRE](https://redis.io/docs/latest/commands/expire/)",
+  "difficulty_rating": 1350,
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
 }
 ]

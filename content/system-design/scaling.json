@@ -643,5 +643,74 @@
     "batch-1",
     "source-backed"
   ]
+},
+{
+  "id": "sd-scaling-continuation-023",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "Which controller fits replicas that need stable ordinal names and per-replica storage?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "StatefulSet"
+    },
+    {
+      "id": "o1",
+      "text": "Deployment alone"
+    },
+    {
+      "id": "o2",
+      "text": "DaemonSet"
+    },
+    {
+      "id": "o3",
+      "text": "CronJob"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "StatefulSets associate stable identities and storage with replicas; replacement Pods can retain those identities. Source: [Kubernetes StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-scaling-continuation-024",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "What happens to a scaled-down replica’s PVC when whenScaled is explicitly Retain?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "It is retained for later use"
+    },
+    {
+      "id": "o1",
+      "text": "It is deleted with the Pod"
+    },
+    {
+      "id": "o2",
+      "text": "It becomes a shared emptyDir"
+    },
+    {
+      "id": "o3",
+      "text": "It is copied into every remaining Pod"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Retain leaves the claim in place after scale-down. Storage retention is separate from the replica count. Source: [Kubernetes StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)",
+  "difficulty_rating": 1400,
+  "scenario": "A StatefulSet uses volumeClaimTemplates and persistentVolumeClaimRetentionPolicy.whenScaled: Retain.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
 }
 ]

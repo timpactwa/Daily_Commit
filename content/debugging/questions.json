@@ -210,6 +210,136 @@
     ]
   },
   {
+    "id": "dbg-count-occurrences-flip-comparison-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "Count occurrences of target in a sorted integer list using two boundaries. Tap the buggy line.",
+    "code": "def count_occurrences(nums, target):\n    lo = 0\n    hi = len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] <= target:\n            lo = mid + 1\n        else:\n            hi = mid\n    first = lo\n    hi = len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] <= target:\n            lo = mid + 1\n        else:\n            hi = mid\n    return lo - first",
+    "language": "python",
+    "test_output": "count_occurrences([1], 1): expected 1, got 0\ncount_occurrences([1, 2, 2, 2, 4], 2): expected 3, got 0\ncount_occurrences([2, 2, 2], 2): expected 3, got 0",
+    "answer": 6,
+    "explanation": "Line 6 should be `if nums[mid] < target:`, but the comparison was flipped. That is why count_occurrences([1], 1) fails.",
+    "difficulty_rating": 1225,
+    "provenance": {
+      "source_function": "pipeline/corpus/count_occurrences.py::count_occurrences",
+      "mutation_operator": "flip_comparison",
+      "original_line": "        if nums[mid] < target:",
+      "mutated_line": "        if nums[mid] <= target:",
+      "tests_failed": 8,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-count-occurrences-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "Count occurrences of target in a sorted integer list using two boundaries. Tap the buggy line.",
+    "code": "def count_occurrences(nums, target):\n    lo = 1\n    hi = len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid\n    first = lo\n    hi = len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] <= target:\n            lo = mid + 1\n        else:\n            hi = mid\n    return lo - first",
+    "language": "python",
+    "test_output": "count_occurrences([1], 1): expected 1, got 0\ncount_occurrences([2, 2, 2], 2): expected 3, got 2\ncount_occurrences([0, 0, 1, 2, 2], 0): expected 2, got 1",
+    "answer": 2,
+    "explanation": "Line 2 should be `lo = 0`, but a number is off by one. That is why count_occurrences([1], 1) fails.",
+    "difficulty_rating": 1375,
+    "provenance": {
+      "source_function": "pipeline/corpus/count_occurrences.py::count_occurrences",
+      "mutation_operator": "off_by_one",
+      "original_line": "    lo = 0",
+      "mutated_line": "    lo = 1",
+      "tests_failed": 4,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-count-occurrences-off-by-one-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "Count occurrences of target in a sorted integer list using two boundaries. Tap the buggy line.",
+    "code": "def count_occurrences(nums, target):\n    lo = 0\n    hi = len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] < target:\n            lo = mid + 2\n        else:\n            hi = mid\n    first = lo\n    hi = len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] <= target:\n            lo = mid + 1\n        else:\n            hi = mid\n    return lo - first",
+    "language": "python",
+    "test_output": "count_occurrences([1, 2, 2, 2, 4], 2): expected 3, got 2\ncount_occurrences([-3, -1, -1, 0], -1): expected 2, got 1\ncount_occurrences([0, 0, 1, 2, 2], 2): expected 2, got 1",
+    "answer": 7,
+    "explanation": "Line 7 should be `lo = mid + 1`, but a number is off by one. That is why count_occurrences([1, 2, 2, 2, 4], 2) fails.",
+    "difficulty_rating": 1375,
+    "provenance": {
+      "source_function": "pipeline/corpus/count_occurrences.py::count_occurrences",
+      "mutation_operator": "off_by_one",
+      "original_line": "            lo = mid + 1",
+      "mutated_line": "            lo = mid + 2",
+      "tests_failed": 4,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-count-occurrences-off-by-one-03",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "Count occurrences of target in a sorted integer list using two boundaries. Tap the buggy line.",
+    "code": "def count_occurrences(nums, target):\n    lo = 0\n    hi = len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid\n    first = lo\n    hi = len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] <= target:\n            lo = mid + 2\n        else:\n            hi = mid\n    return lo - first",
+    "language": "python",
+    "test_output": "count_occurrences([1], 1): expected 1, got 2\ncount_occurrences([1, 2, 2, 2, 4], 2): expected 3, got 4\ncount_occurrences([-3, -1, -1, 0], -1): expected 2, got 3",
+    "answer": 15,
+    "explanation": "Line 15 should be `lo = mid + 1`, but a number is off by one. That is why count_occurrences([1], 1) fails.",
+    "difficulty_rating": 1375,
+    "provenance": {
+      "source_function": "pipeline/corpus/count_occurrences.py::count_occurrences",
+      "mutation_operator": "off_by_one",
+      "original_line": "            lo = mid + 1",
+      "mutated_line": "            lo = mid + 2",
+      "tests_failed": 7,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-count-occurrences-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "Count occurrences of target in a sorted integer list using two boundaries. Tap the buggy line.",
+    "code": "def count_occurrences(nums, target):\n    lo = 0\n    hi = len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid\n    first = lo\n    hi = len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] <= target:\n            lo = mid + 1\n        else:\n            hi = mid\n    return lo + first",
+    "language": "python",
+    "test_output": "count_occurrences([1], 2): expected 0, got 2\ncount_occurrences([1, 2, 2, 2, 4], 2): expected 3, got 5\ncount_occurrences([-3, -1, -1, 0], -1): expected 2, got 4",
+    "answer": 18,
+    "explanation": "Line 18 should be `return lo - first`, but it uses the wrong operator. That is why count_occurrences([1], 2) fails.",
+    "difficulty_rating": 1275,
+    "provenance": {
+      "source_function": "pipeline/corpus/count_occurrences.py::count_occurrences",
+      "mutation_operator": "wrong_operator",
+      "original_line": "    return lo - first",
+      "mutated_line": "    return lo + first",
+      "tests_failed": 6,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
     "id": "dbg-counting-sort-off-by-one-01",
     "version": 1,
     "track": "debugging",
@@ -1339,6 +1469,137 @@
     }
   },
   {
+    "id": "dbg-minimum-rotated-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "Find the minimum in a nonempty rotation of a strictly increasing integer list. Tap the buggy line.",
+    "code": "def minimum_rotated(nums):\n    if nums[0] <= nums[-1]:\n        return nums[0]\n    lo = 0\n    hi = len(nums) - 2\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] > nums[hi]:\n            lo = mid + 1\n        else:\n            hi = mid\n    return nums[lo]",
+    "language": "python",
+    "test_output": "minimum_rotated([2, 1]): expected 1, got 2\nminimum_rotated([2, 3, 1]): expected 1, got 2\nminimum_rotated([-1, 0, 4, -3]): expected -3, got -1",
+    "answer": 5,
+    "explanation": "Line 5 should be `hi = len(nums) - 1`, but a number is off by one. That is why minimum_rotated([2, 1]) fails.",
+    "difficulty_rating": 1390,
+    "provenance": {
+      "source_function": "pipeline/corpus/minimum_rotated.py::minimum_rotated",
+      "mutation_operator": "off_by_one",
+      "original_line": "    hi = len(nums) - 1",
+      "mutated_line": "    hi = len(nums) - 2",
+      "tests_failed": 3,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-minimum-rotated-off-by-one-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "Find the minimum in a nonempty rotation of a strictly increasing integer list. Tap the buggy line.",
+    "code": "def minimum_rotated(nums):\n    if nums[1] <= nums[-1]:\n        return nums[0]\n    lo = 0\n    hi = len(nums) - 1\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] > nums[hi]:\n            lo = mid + 1\n        else:\n            hi = mid\n    return nums[lo]",
+    "language": "python",
+    "test_output": "minimum_rotated([4]): raised IndexError\nminimum_rotated([2, 1]): expected 1, got 2\nminimum_rotated([3, 1, 2]): expected 1, got 3",
+    "answer": 2,
+    "explanation": "Line 2 should be `if nums[0] <= nums[-1]:`, but a number is off by one. That is why minimum_rotated([4]) fails.",
+    "difficulty_rating": 1390,
+    "provenance": {
+      "source_function": "pipeline/corpus/minimum_rotated.py::minimum_rotated",
+      "mutation_operator": "off_by_one",
+      "original_line": "    if nums[0] <= nums[-1]:",
+      "mutated_line": "    if nums[1] <= nums[-1]:",
+      "tests_failed": 6,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-minimum-rotated-off-by-one-03",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "Find the minimum in a nonempty rotation of a strictly increasing integer list. Tap the buggy line.",
+    "code": "def minimum_rotated(nums):\n    if nums[0] <= nums[-2]:\n        return nums[0]\n    lo = 0\n    hi = len(nums) - 1\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] > nums[hi]:\n            lo = mid + 1\n        else:\n            hi = mid\n    return nums[lo]",
+    "language": "python",
+    "test_output": "minimum_rotated([4]): raised IndexError\nminimum_rotated([2, 1]): expected 1, got 2\nminimum_rotated([2, 3, 1]): expected 1, got 2",
+    "answer": 2,
+    "explanation": "Line 2 should be `if nums[0] <= nums[-1]:`, but a number is off by one. That is why minimum_rotated([4]) fails.",
+    "difficulty_rating": 1390,
+    "provenance": {
+      "source_function": "pipeline/corpus/minimum_rotated.py::minimum_rotated",
+      "mutation_operator": "off_by_one",
+      "original_line": "    if nums[0] <= nums[-1]:",
+      "mutated_line": "    if nums[0] <= nums[-2]:",
+      "tests_failed": 4,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-minimum-rotated-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "Find the minimum in a nonempty rotation of a strictly increasing integer list. Tap the buggy line.",
+    "code": "def minimum_rotated(nums):\n    if nums[0] <= nums[-1]:\n        return nums[0]\n    lo = 0\n    hi = len(nums) + 1\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] > nums[hi]:\n            lo = mid + 1\n        else:\n            hi = mid\n    return nums[lo]",
+    "language": "python",
+    "test_output": "minimum_rotated([2, 1]): raised IndexError\nminimum_rotated([3, 1, 2]): raised IndexError\nminimum_rotated([2, 3, 1]): raised IndexError",
+    "answer": 5,
+    "explanation": "Line 5 should be `hi = len(nums) - 1`, but it uses the wrong operator. That is why minimum_rotated([2, 1]) fails.",
+    "difficulty_rating": 1290,
+    "provenance": {
+      "source_function": "pipeline/corpus/minimum_rotated.py::minimum_rotated",
+      "mutation_operator": "wrong_operator",
+      "original_line": "    hi = len(nums) - 1",
+      "mutated_line": "    hi = len(nums) + 1",
+      "tests_failed": 8,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-minimum-rotated-wrong-return-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "Find the minimum in a nonempty rotation of a strictly increasing integer list. Tap the buggy line.",
+    "code": "def minimum_rotated(nums):\n    if nums[0] <= nums[-1]:\n        return nums[1]\n    lo = 0\n    hi = len(nums) - 1\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] > nums[hi]:\n            lo = mid + 1\n        else:\n            hi = mid\n    return nums[lo]",
+    "language": "python",
+    "test_output": "minimum_rotated([4]): raised IndexError\nminimum_rotated([1, 2]): expected 1, got 2\nminimum_rotated([1, 2, 3]): expected 1, got 2",
+    "answer": 3,
+    "explanation": "Line 3 should be `return nums[0]`, but it returns the wrong value. That is why minimum_rotated([4]) fails.",
+    "difficulty_rating": 1290,
+    "provenance": {
+      "source_function": "pipeline/corpus/minimum_rotated.py::minimum_rotated",
+      "mutation_operator": "wrong_return",
+      "original_line": "        return nums[0]",
+      "mutated_line": "        return nums[1]",
+      "tests_failed": 4,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
     "id": "dbg-most-common-flip-comparison-01",
     "version": 1,
     "track": "debugging",
@@ -2321,8 +2582,7 @@
     "tags": [
       "research-2026-11",
       "verified-code"
-    ],
-    "placement": true
+    ]
   },
   {
     "id": "dbg-shell-sort-flip-comparison-01",

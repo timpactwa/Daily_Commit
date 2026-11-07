@@ -628,5 +628,73 @@
     "batch-1",
     "source-backed"
   ]
+},
+{
+  "id": "sd-reliability-continuation-023",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "mcq",
+  "prompt": "Which monitor catches a health response whose HTTP status is 200 but whose body reports failure?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "One that checks status and the expected health payload"
+    },
+    {
+      "id": "o1",
+      "text": "One that checks TCP connectivity only"
+    },
+    {
+      "id": "o2",
+      "text": "One that checks certificate validity only"
+    },
+    {
+      "id": "o3",
+      "text": "One that accepts every HTTP 200"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Monitoring must evaluate the endpoint’s defined success criteria, which can include response content as well as status. Source: [Azure health monitoring](https://learn.microsoft.com/en-us/azure/architecture/patterns/health-endpoint-monitoring)",
+  "difficulty_rating": 1100,
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-reliability-continuation-024",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "mcq",
+  "prompt": "How should a health endpoint expose detailed internal diagnostics?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Restrict access and return only necessary health details"
+    },
+    {
+      "id": "o1",
+      "text": "Publish credentials for easier debugging"
+    },
+    {
+      "id": "o2",
+      "text": "Return all environment variables to every caller"
+    },
+    {
+      "id": "o3",
+      "text": "Disable authentication on every application endpoint"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Health checks can expose sensitive information. Authenticate authorized monitors or restrict network access, and minimize returned details. Source: [Azure health monitoring](https://learn.microsoft.com/en-us/azure/architecture/patterns/health-endpoint-monitoring)",
+  "difficulty_rating": 1300,
+  "tags": [
+    "continuation-2026-11",
+    "batch-2",
+    "source-backed"
+  ]
 }
 ]

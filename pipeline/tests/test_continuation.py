@@ -82,6 +82,11 @@ def oracle(name, args):
             return list(xs)
         shift = k % len(xs)
         return xs[-shift:] + xs[:-shift]
+    if name == 'count_occurrences':
+        xs, target = args
+        return xs.count(target)
+    if name == 'minimum_rotated':
+        return min(args[0])
     raise AssertionError(f'Missing independent oracle: {name}')
 
 
@@ -103,3 +108,20 @@ def test_array_functions_exhaustive_short_inputs():
             assert functions['running_max'](xs) == oracle('running_max', (xs,))
             for k in range(8):
                 assert functions['rotate_right'](xs, k) == oracle('rotate_right', (xs, k))
+
+
+def test_binary_boundaries_and_rotated_minimum_exhaustive_short_inputs():
+    functions = {name: fn for name, fn, _ in originals()}
+    if 'count_occurrences' not in functions:
+        return
+    for length in range(6):
+        for values in itertools.combinations_with_replacement((-2, 0, 3), length):
+            xs = list(values)
+            for target in range(-3, 5):
+                assert functions['count_occurrences'](xs, target) == xs.count(target)
+    for length in range(1, 6):
+        for values in itertools.combinations(range(-3, 5), length):
+            xs = list(values)
+            for k in range(length):
+                rotated = xs[k:] + xs[:k]
+                assert functions['minimum_rotated'](rotated) == min(xs)

@@ -18,3 +18,18 @@ Debugging functions: `running_max`, `rotate_right`. Five variants each.
 
 Checkpoint 1 passed: 224 bank questions (228 including contract fixtures), 208 Python tests, app build and 12 phone/desktop checks. All 204 previous payloads retained apart from placement flags.
 
+
+## Batch 2
+
+Debugging functions: `count_occurrences`, `minimum_rotated`. Five variants each.
+
+| Primary source | Question IDs |
+| --- | --- |
+| [Redis EXPIRE](https://redis.io/docs/latest/commands/expire/) | sd-caching-continuation-023, sd-caching-continuation-024 |
+| [Kubernetes StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/) | sd-scaling-continuation-023, sd-scaling-continuation-024 |
+| [PostgreSQL partial indexes](https://www.postgresql.org/docs/18/indexes-partial.html) | sd-databases-continuation-023, sd-databases-continuation-024 |
+| [RabbitMQ TTL](https://www.rabbitmq.com/docs/ttl) | sd-async-messaging-continuation-023, sd-async-messaging-continuation-024 |
+| [Azure health monitoring](https://learn.microsoft.com/en-us/azure/architecture/patterns/health-endpoint-monitoring) | sd-reliability-continuation-023, sd-reliability-continuation-024 |
+
+Checkpoint 2 passed: 244 bank questions (248 with fixtures), 213 Python tests, app build and 12 phone/desktop checks.
+
