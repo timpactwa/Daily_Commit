@@ -14,6 +14,7 @@ import { Placement, PlacementResult } from "./screens/Placement";
 import { ErrorNotice } from "./ui";
 import { Logo } from "./Logo";
 import { InstallPrompt } from "./InstallPrompt";
+import { Backdrop } from "./Backdrop";
 import { Home, Progress, LessonDone, Tomorrow } from "./screens/Dashboard";
 import { LearnList, LearnModuleScreen } from "./screens/Learn";
 import { LeaderboardScreen, RankedHome, RankedPlay, RankedResultScreen } from "./screens/Ranked";
@@ -89,6 +90,8 @@ export function App() {
   const location = useLocation();
   const features = useFeatures();
   return (
+    <>
+    <Backdrop />
     <div className="app">
       <header>
         <Logo />
@@ -148,5 +151,6 @@ export function App() {
         </NavLink>
       </nav>
     </div>
+    </>
   );
 }

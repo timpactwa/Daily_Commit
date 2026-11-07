@@ -7,6 +7,7 @@ import {
   type User,
 } from "../api";
 import { Resource, topicName, useResource } from "../ui";
+import { Flame } from "../Flame";
 export function Home() {
   const resource = useResource(api.getMe);
   if (!getUserId()) return <Navigate to="/onboarding" replace />;
@@ -102,7 +103,7 @@ function Today({ user }: { user: User }) {
         <aside>
           <div className="card streak-card">
             <div className="flame" aria-hidden="true">
-              ♨
+              <Flame size={64} animated />
             </div>
             <strong className="streak-number">
               {user.streak?.current ?? 0}
@@ -168,30 +169,60 @@ function Sparkline({ history }: { history: number[] }) {
     </svg>
   );
 }
+/** Where a topic's rating came from: nothing yet, placement only, or real answers. */
+function ratingState(topic: TopicProgress): "unrated" | "placement" | "rated" {
+  if (topic.answered > 0) return "rated";
+  return Math.round(topic.rating) === 1200 && topic.history.length === 0 ? "unrated" : "placement";
+}
 function TopicCard({ topic }: { topic: TopicProgress }) {
+  const state = ratingState(topic);
   return (
-    <article className="topic-progress">
+    <article className={`topic-progress ${state}`}>
       <div className="split">
         <strong>{topicName(topic.topic)}</strong>
-        <span className={`level ${topic.level}`}>{topic.level}</span>
+        {state === "unrated" ? (
+          <span className="level new">New</span>
+        ) : (
+          <span className={`level ${topic.level}`}>{topic.level}</span>
+        )}
       </div>
       <div className="split">
-        <p>
-          <b>{topic.readiness}%</b> readiness
-        </p>
-        <Sparkline history={topic.history} />
+        {state === "unrated" ? (
+          <p className="unrated-note">Not rated yet</p>
+        ) : (
+          <p>
+            <b>{topic.readiness}%</b> readiness
+          </p>
+        )}
+        {state === "rated" && <Sparkline history={topic.history} />}
       </div>
       <progress
         max={100}
-        value={topic.readiness}
+        value={state === "unrated" ? 0 : topic.readiness}
         aria-label={`${topicName(topic.topic)} readiness`}
       />
-      <div className="split small muted">
-        <span>{Math.round(topic.rating)} Elo</span>
-        <span>
-          {topic.answered} answers · {Math.round(topic.accuracy * 100)}%
-          accuracy
-        </span>
+      <div className="rating-row">
+        {state === "unrated" && (
+          <span className="rating-hint">Answer a question in this topic to get your first rating.</span>
+        )}
+        {state === "placement" && (
+          <>
+            <span className="rating-chip">
+              <b>{Math.round(topic.rating)}</b> rating
+            </span>
+            <span className="rating-hint">Estimate from your placement test</span>
+          </>
+        )}
+        {state === "rated" && (
+          <>
+            <span className="rating-chip">
+              <b>{Math.round(topic.rating)}</b> rating
+            </span>
+            <span className="rating-hint">
+              {topic.answered} {topic.answered === 1 ? "answer" : "answers"} · {Math.round(topic.accuracy * 100)}% correct
+            </span>
+          </>
+        )}
       </div>
     </article>
   );
@@ -256,7 +287,7 @@ export function LessonDone() {
         className={`flame celebration ${result.streak.extended ? "extended" : ""}`}
         aria-hidden="true"
       >
-        ♨
+        <Flame size={88} animated />
       </div>
       <h1>
         You showed up.

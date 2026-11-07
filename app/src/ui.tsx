@@ -103,3 +103,44 @@ export function clockText(ms: number) {
   const s = Math.max(0, Math.round(ms / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
+/** 12-piece burst for a correct answer. Decorative; CSS hides it under reduced motion. */
+export function Confetti() {
+  const pieces = [0, -40, 40, -20, 24, -60, 60, -10, 14, -30, 30, 8];
+  return (
+    <div className="confetti" aria-hidden="true">
+      {pieces.map((left, i) => (
+        <span key={i} style={{ left, animationDelay: `${(i * 0.017).toFixed(2)}s` }} />
+      ))}
+    </div>
+  );
+}
+export function prefersReducedMotion() {
+  try {
+    return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+  } catch {
+    return false;
+  }
+}
+/** Counts from `from` to `to`, one step per 45 ms, with a small bump on each tick. */
+export function CountUp({ from = 0, to, format = (n: number) => String(n) }: { from?: number; to: number; format?: (n: number) => string }) {
+  const [value, setValue] = useState(prefersReducedMotion() ? to : from);
+  useEffect(() => {
+    if (prefersReducedMotion() || from === to) {
+      setValue(to);
+      return;
+    }
+    let v = from;
+    const step = to > from ? 1 : -1;
+    const id = setInterval(() => {
+      v += step;
+      setValue(v);
+      if (v === to) clearInterval(id);
+    }, 45);
+    return () => clearInterval(id);
+  }, [from, to]);
+  return (
+    <span className={`count-up ${value !== to ? "ticking" : ""}`} key={value % 2}>
+      {format(value)}
+    </span>
+  );
+}

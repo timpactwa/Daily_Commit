@@ -56,9 +56,8 @@ export function Logo() {
           held.current = false;
         }}
       >
-        [d<span>c</span>]{" "}
-        <strong>
-          daily commit<span className="brand-dot">.</span>
+        <strong className="wordmark">
+          daily<span>commit</span>
         </strong>
       </button>
       {!!error && (

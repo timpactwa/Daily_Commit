@@ -104,6 +104,7 @@ function Player({ initial }: { initial: LessonData }) {
               value={value}
               onChange={setValue}
               disabled={busy || !!feedback}
+              outcome={feedback ? (feedback.correct ? "correct" : "incorrect") : undefined}
             />
             {!feedback && (
               <button

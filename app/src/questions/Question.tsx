@@ -1,5 +1,5 @@
 import type { PublicQuestion, ResponseValue } from "../api";
-import { buzz, topicName } from "../ui";
+import { buzz, Confetti, topicName } from "../ui";
 import { Reorder } from "./Reorder";
 import { TapNode } from "./TapNode";
 export function Question({
@@ -7,12 +7,16 @@ export function Question({
   value,
   onChange,
   disabled = false,
+  outcome,
 }: {
   question: PublicQuestion;
   value?: ResponseValue;
   onChange: (v: ResponseValue) => void;
   disabled?: boolean;
+  /** Set after grading: animates the chosen answer (pop + confetti, or shake). Display only. */
+  outcome?: "correct" | "incorrect";
 }) {
+  const mark = outcome === "correct" ? " ok" : outcome === "incorrect" ? " bad" : "";
   const select = (v: ResponseValue) => {
     buzz();
     onChange(v);
@@ -20,7 +24,7 @@ export function Question({
   return (
     <div className="question">
       <div className="question-meta">
-        <span className="tag">
+        <span className={`tag ${q.track === "debugging" ? "tag-debug" : "tag-sd"}`}>
           {q.track === "debugging" ? "⌘ DEBUGGING" : "◇ SYSTEM DESIGN"}
         </span>
         <span>{topicName(q.topic)}</span>
@@ -29,27 +33,37 @@ export function Question({
       <h2>{q.prompt}</h2>
       {q.code &&
         (q.format === "tap_line" ? (
-          <div className="code" aria-label="Select the buggy line">
-            {q.code.split("\n").map((line, i) => (
-              <button
-                disabled={disabled}
-                aria-pressed={value === i + 1}
-                className={value === i + 1 ? "code-line selected" : "code-line"}
-                onClick={() => select(i + 1)}
-                key={i}
-                aria-label={`Line ${i + 1}: ${line}`}
-              >
-                <span>{i + 1}</span>
-                <code>{line || " "}</code>
-              </button>
-            ))}
+          <div className="term">
+            <TermBar title={fileName(q.code)} />
+            <div className="code" aria-label="Select the buggy line">
+              {q.code.split("\n").map((line, i) => (
+                <button
+                  disabled={disabled}
+                  aria-pressed={value === i + 1}
+                  className={value === i + 1 ? `code-line selected${mark}` : "code-line"}
+                  onClick={() => select(i + 1)}
+                  key={i}
+                  aria-label={`Line ${i + 1}: ${line}`}
+                >
+                  <span>{i + 1}</span>
+                  <code>{line || " "}</code>
+                </button>
+              ))}
+            </div>
+            {outcome === "correct" && <Confetti />}
           </div>
         ) : (
-          <pre className="code">{q.code}</pre>
+          <div className="term">
+            <TermBar title={fileName(q.code)} />
+            <pre className="code">{q.code}</pre>
+          </div>
         ))}
       {q.test_output && (
-        <div className="test-output">
-          <p className="eyebrow">FAILING TESTS</p>
+        <div className="test-output term">
+          <div className="term-bar">
+            <span className="fail-dot" aria-hidden="true">●</span>
+            <p className="eyebrow">FAILING TESTS</p>
+          </div>
           <pre>{q.test_output}</pre>
         </div>
       )}
@@ -72,16 +86,18 @@ export function Question({
       {q.format !== "tap_line" && q.format !== "reorder" && (
         <div className="options">
           {q.options?.map((option, i) => (
-            <button
-              disabled={disabled}
-              className={value === option.id ? "option selected" : "option"}
-              aria-pressed={value === option.id}
-              onClick={() => select(option.id)}
-              key={option.id}
-            >
-              <span className="option-key">{String.fromCharCode(65 + i)}</span>
-              {option.text}
-            </button>
+            <div className="option-wrap" key={option.id}>
+              <button
+                disabled={disabled}
+                className={value === option.id ? `option selected${mark}` : "option"}
+                aria-pressed={value === option.id}
+                onClick={() => select(option.id)}
+              >
+                <span className="option-key">{String.fromCharCode(65 + i)}</span>
+                {option.text}
+              </button>
+              {value === option.id && outcome === "correct" && <Confetti />}
+            </div>
           ))}
         </div>
       )}
@@ -92,5 +108,20 @@ export function isComplete(q: PublicQuestion, value?: ResponseValue): boolean {
   return (
     value !== undefined &&
     (!Array.isArray(value) || value.length === q.options?.length)
+  );
+}
+function fileName(code: string) {
+  const m = code.match(/def\s+([A-Za-z_]\w*)/);
+  return m ? `${m[1]}.py` : "snippet.py";
+}
+function TermBar({ title }: { title: string }) {
+  return (
+    <div className="term-bar" aria-hidden="true">
+      <span className="tdot red" />
+      <span className="tdot amber" />
+      <span className="tdot green" />
+      <span className="term-title">{title}</span>
+      <span className="term-lang">python</span>
+    </div>
   );
 }
