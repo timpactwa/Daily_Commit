@@ -63,4 +63,21 @@ jobs:
         working-directory: app
       - run: npm test
         working-directory: app
+  container:
+    name: Container build and startup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t daily-commit:ci .
+      - name: Start the production image
+        run: docker run --detach --name daily-commit-ci -p 127.0.0.1:8000:8000 -e DEMO_MODE=1 -v daily-commit-ci-data:/data daily-commit:ci
+      - name: Check API and built app
+        run: |
+          curl --fail --retry 30 --retry-all-errors --retry-delay 1 http://127.0.0.1:8000/health
+          curl --fail http://127.0.0.1:8000/ --output /tmp/daily-commit.html
+          test -s /tmp/daily-commit.html
+      - if: always()
+        run: docker logs daily-commit-ci || true
+      - if: always()
+        run: docker rm -f daily-commit-ci || true
 

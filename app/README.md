@@ -14,7 +14,7 @@ Hold the logo for one second (pointer or keyboard) to switch to the demo user. T
 
 ## Deployment
 
-The root `Dockerfile` builds the app and serves it through FastAPI in one service. On Railway, deploy from the repository root, attach a volume at `/data`, and set `DEMO_MODE=1` for the demo environment. `DB_PATH=/data/app.db` is set by the image. The service listens on Railway's `PORT` and uses `/health` for readiness. Generate a public domain in the Railway service's networking settings.
+The root `Dockerfile` builds the app and serves it through FastAPI in one service. On Railway, deploy from the repository root, attach a volume at `/data`, and set `DEMO_MODE=1` for the demo environment. `DB_PATH=/data/app.db` is set by the image. The service listens on Railway's `PORT` and uses `/health` for readiness. The public deployment is https://daily-commit-production.up.railway.app. Service settings are configured directly because Railway reports config-as-code settings updates deprecated; `railway.toml` also records the intended settings.
 
 Local container check: `docker build -t daily-commit .`, then `docker run --rm -p 8000:8000 -v daily-commit-data:/data -e DEMO_MODE=1 daily-commit`. Run these from the repository root.
 
@@ -23,3 +23,4 @@ Backup tunnel on Windows: `./scripts/tunnel.ps1`; macOS/Linux: `bash scripts/tun
 Before marking P4 complete: verify the public URL over cellular, answer a question, redeploy and confirm that user data survives. D2 tagging and feature freeze are a coordinated Tim + Liam task scheduled for Sunday at 10 AM; do not tag an unverified build.
 
 Railway references: [Dockerfiles](https://docs.railway.com/builds/dockerfiles), [health checks](https://docs.railway.com/deployments/healthchecks), [volumes](https://docs.railway.com/volumes).
+
