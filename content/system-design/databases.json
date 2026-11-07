@@ -1,0 +1,155 @@
+[
+  {
+    "id": "sd-databases-001", "version": 1, "track": "system-design", "topic": "databases", "format": "mcq",
+    "scenario": "SELECT * FROM orders WHERE user_id = ? takes 4 seconds on a table with 50 million rows.",
+    "prompt": "What should you try first?",
+    "options": [
+      { "id": "a", "text": "Switch to a NoSQL database" },
+      { "id": "b", "text": "Add an index on orders.user_id" },
+      { "id": "c", "text": "Cache the whole orders table in memory" },
+      { "id": "d", "text": "Add RAM to the API servers" }
+    ],
+    "answer": "b",
+    "explanation": "Without an index the database scans all 50M rows. An index on user_id turns it into a fast lookup. Changing databases or caching the whole table is far more work for the same win.",
+    "difficulty_rating": 1000, "placement": true
+  },
+  {
+    "id": "sd-databases-002", "version": 1, "track": "system-design", "topic": "databases", "format": "mcq",
+    "scenario": "Writes go to the primary and reads go to asynchronous replicas. Users sometimes post a comment, refresh, and their comment is missing.",
+    "prompt": "What is the best fix?",
+    "options": [
+      { "id": "a", "text": "Add more replicas" },
+      { "id": "b", "text": "Shard comments by comment ID" },
+      { "id": "c", "text": "For a short time after a user writes, serve that user's reads from the primary" },
+      { "id": "d", "text": "Increase the replicas' cache size" }
+    ],
+    "answer": "c",
+    "explanation": "Replica lag means a fresh write may not have reached the replica yet. Routing a user's reads to the primary right after their own write gives read-your-writes consistency without sending all reads there.",
+    "difficulty_rating": 1200, "placement": true
+  },
+  {
+    "id": "sd-databases-003", "version": 1, "track": "system-design", "topic": "databases", "format": "mcq",
+    "scenario": "A multi-tenant SaaS app needs to shard its database. 95% of queries filter by tenant_id, and a few tenants are 100x larger than the rest.",
+    "prompt": "Which sharding strategy fits best?",
+    "options": [
+      { "id": "a", "text": "Shard by created_at month" },
+      { "id": "b", "text": "Shard by a random row ID" },
+      { "id": "c", "text": "Do not shard; add read replicas" },
+      { "id": "d", "text": "Shard by tenant_id, and give the largest tenants their own shards" }
+    ],
+    "answer": "d",
+    "explanation": "tenant_id keeps nearly every query on one shard. The giant tenants would overload a shared shard, so they get dedicated ones. Sharding by month makes the newest shard hot; random IDs force every query to hit every shard.",
+    "difficulty_rating": 1400, "placement": true, "tags": ["tradeoff"]
+  },
+  {
+    "id": "sd-databases-004", "version": 1, "track": "system-design", "topic": "databases", "format": "mcq",
+    "prompt": "What does adding a database index trade off?",
+    "options": [
+      { "id": "a", "text": "Faster reads in exchange for slower writes and more storage" },
+      { "id": "b", "text": "Faster writes in exchange for slower reads" },
+      { "id": "c", "text": "Less storage in exchange for slower reads" },
+      { "id": "d", "text": "Nothing; indexes are free" }
+    ],
+    "answer": "a",
+    "explanation": "An index is an extra data structure the database must update on every insert, update and delete, and it takes disk space. In return, lookups on the indexed column are much faster.",
+    "difficulty_rating": 850, "tags": ["tradeoff"]
+  },
+  {
+    "id": "sd-databases-005", "version": 1, "track": "system-design", "topic": "databases", "format": "mcq",
+    "prompt": "What is the main reason to add a read replica?",
+    "options": [
+      { "id": "a", "text": "To make writes faster" },
+      { "id": "b", "text": "To spread read traffic and keep a standby copy of the data" },
+      { "id": "c", "text": "To use less storage" },
+      { "id": "d", "text": "To enforce the schema" }
+    ],
+    "answer": "b",
+    "explanation": "Replicas copy the primary's data so they can serve reads and take over if the primary fails. Every write still goes to the primary, so they do not speed up writes.",
+    "difficulty_rating": 950
+  },
+  {
+    "id": "sd-databases-006", "version": 1, "track": "system-design", "topic": "databases", "format": "tap_node",
+    "scenario": "Every night at 2 AM, checkout latency spikes for about an hour. A reporting job also starts at 2 AM.",
+    "prompt": "Tap the bottleneck.",
+    "diagram": {
+      "nodes": [
+        { "id": "client", "label": "Shoppers", "kind": "client" },
+        { "id": "api", "label": "Checkout API", "kind": "service", "note": "CPU 25%" },
+        { "id": "job", "label": "Nightly report job", "kind": "service" },
+        { "id": "primary", "label": "Postgres primary", "kind": "db", "note": "CPU 98% at 2 AM" },
+        { "id": "replica", "label": "Read replica", "kind": "db", "note": "CPU 5%" }
+      ],
+      "edges": [
+        { "from": "client", "to": "api" },
+        { "from": "api", "to": "primary" },
+        { "from": "job", "to": "primary", "label": "full table scans" },
+        { "from": "primary", "to": "replica", "label": "replication" }
+      ]
+    },
+    "options": [
+      { "id": "client", "text": "Shoppers" },
+      { "id": "api", "text": "Checkout API" },
+      { "id": "job", "text": "Nightly report job" },
+      { "id": "primary", "text": "Postgres primary" },
+      { "id": "replica", "text": "Read replica" }
+    ],
+    "answer": "primary",
+    "explanation": "The primary is pegged at 98% because the report runs heavy scans on it while checkout needs it too. Point the report at the idle replica.",
+    "difficulty_rating": 1050
+  },
+  {
+    "id": "sd-databases-007", "version": 1, "track": "system-design", "topic": "databases", "format": "reorder",
+    "prompt": "Put the steps of adding a required (NOT NULL) column to a large live table, without downtime, in order.",
+    "options": [
+      { "id": "s1", "text": "Add the column as nullable" },
+      { "id": "s2", "text": "Deploy code that writes the new column on every insert and update" },
+      { "id": "s3", "text": "Backfill existing rows in small batches" },
+      { "id": "s4", "text": "Add the NOT NULL constraint" }
+    ],
+    "answer": ["s1", "s2", "s3", "s4"],
+    "explanation": "Adding a NOT NULL column directly fails or locks the table. Add it nullable, make new writes fill it, backfill the old rows, and only then enforce the constraint.",
+    "difficulty_rating": 1150
+  },
+  {
+    "id": "sd-databases-008", "version": 1, "track": "system-design", "topic": "databases", "format": "mcq",
+    "scenario": "Loading a page of 50 posts runs 51 database queries: one for the posts, then one per post to load its author.",
+    "prompt": "What is the fix?",
+    "options": [
+      { "id": "a", "text": "Load all 50 authors in one query (a JOIN or WHERE id IN ...)" },
+      { "id": "b", "text": "Add a read replica" },
+      { "id": "c", "text": "Cache each author for 1 second" },
+      { "id": "d", "text": "Paginate to 10 posts per page" }
+    ],
+    "answer": "a",
+    "explanation": "This is the N+1 query problem. One batched query replaces 50 round trips. Smaller pages only shrink N; they do not remove the pattern.",
+    "difficulty_rating": 1000
+  },
+  {
+    "id": "sd-databases-009", "version": 1, "track": "system-design", "topic": "databases", "format": "mcq",
+    "scenario": "200 app instances each open a pool of 50 database connections. Postgres allows 1,000 connections, and 'too many connections' errors appear during deploys.",
+    "prompt": "What is the best fix?",
+    "options": [
+      { "id": "a", "text": "Raise max_connections to 10,000" },
+      { "id": "b", "text": "Add a read replica" },
+      { "id": "c", "text": "Restart the database during deploys" },
+      { "id": "d", "text": "Put a connection pooler (like PgBouncer) in front and shrink per-instance pools" }
+    ],
+    "answer": "d",
+    "explanation": "200 x 50 = 10,000 possible connections against a limit of 1,000. Each Postgres connection costs memory, so raising the limit that far hurts. A pooler multiplexes many client connections onto a small set of real ones.",
+    "difficulty_rating": 1250
+  },
+  {
+    "id": "sd-databases-010", "version": 1, "track": "system-design", "topic": "databases", "format": "mcq",
+    "scenario": "The home feed query joins 6 tables and takes 900ms. Feeds are read about 100 times more often than they change.",
+    "prompt": "Which change fits best?",
+    "options": [
+      { "id": "a", "text": "Normalize the schema further" },
+      { "id": "b", "text": "Precompute each user's feed into a denormalized table, updated when the data changes" },
+      { "id": "c", "text": "Move the feed tables to a separate database" },
+      { "id": "d", "text": "Run the 6 joins in the application instead" }
+    ],
+    "answer": "b",
+    "explanation": "With reads dominating, doing the expensive work once at write time and reading a ready-made row is a good trade. The cost is extra storage and keeping the copy in sync on writes.",
+    "difficulty_rating": 1300, "tags": ["tradeoff"]
+  }
+]
