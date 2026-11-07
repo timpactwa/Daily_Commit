@@ -92,12 +92,7 @@ def test_tomorrow_avoids_todays_questions(big):
 
 
 def test_demo_user_gets_three_items(big, monkeypatch):
-    from api import db
-
-    monkeypatch.setenv("DEMO_MODE", "1")
-    with db.transaction() as conn:
-        conn.execute("INSERT INTO users (id, display_name, placed) VALUES ('demo', 'Tim', 1)")
-        repo.create_user_topics(conn, "demo")
+    monkeypatch.setenv("DEMO_MODE", "1")  # demo user is seeded on boot
     lesson = big.get("/v1/lessons/today", headers={"X-User-Id": "demo", "X-Client-Date": "2026-11-08"}).json()
     assert len(lesson["items"]) == 3
 
