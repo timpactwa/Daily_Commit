@@ -73,7 +73,7 @@ jobs:
         run: docker run --detach --name daily-commit-ci -p 127.0.0.1:8000:8000 -e DEMO_MODE=1 -v daily-commit-ci-data:/data daily-commit:ci
       - name: Check API and built app
         run: |
-          curl --fail --retry 30 --retry-connrefused --retry-delay 1 http://127.0.0.1:8000/health
+          curl --fail --retry 30 --retry-all-errors --retry-delay 1 http://127.0.0.1:8000/health
           curl --fail http://127.0.0.1:8000/ --output /tmp/daily-commit.html
           test -s /tmp/daily-commit.html
       - if: always()
