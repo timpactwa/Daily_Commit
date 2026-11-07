@@ -33,10 +33,12 @@ def choose(
         rng.shuffle(topics)
         per_track[track] = [(t, band) for t, band in zip(topics, mix) if by_topic.get(t)]
 
-    if limit is not None:
-        tracks = list(per_track)
+    tracks = [tr for tr in per_track if per_track[tr]]  # only tracks that have questions
+    if limit is not None and tracks:
         keep = {tr: limit // len(tracks) + (1 if i < limit % len(tracks) else 0) for i, tr in enumerate(tracks)}
-        for tr in tracks:
+        for tr in list(per_track):
+            if tr not in keep:
+                continue
             # keep a spread of bands: take every k-th entry sorted by band
             entries = sorted(per_track[tr], key=lambda e: TARGETS[e[1]])
             n = min(keep[tr], len(entries))

@@ -55,3 +55,9 @@ def test_spillover_vector():
     out = placement.spillover(ratings, "caching", 182.34, TOPIC_TRACK)
     assert set(out) == {"scaling", "databases", "async-messaging", "reliability"}
     assert all(round(v, 2) == 1254.70 for v in out.values())
+
+
+def test_limit_uses_other_track_when_one_is_empty():
+    pool = [c for c in full_pool() if c.track == "system-design"]
+    qs = placement.choose(pool, TOPIC_TRACK, seed="demo", limit=4)
+    assert len(qs) == 4 and {q.track for q in qs} == {"system-design"}
