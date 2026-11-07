@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from datetime import date
 
@@ -31,6 +32,24 @@ def topic_levels(ratings: dict[str, float]) -> list[dict]:
     ]
 
 
+DEFAULT_DEMO_PLACEMENT_LIMIT = 4
+
+
+def effective_limit(requested: int | None) -> int | None:
+    """Placement size. Outside DEMO_MODE always the full test. In DEMO_MODE an explicit
+    ?limit wins; otherwise DEMO_PLACEMENT_LIMIT (default 4; 0 = full test) keeps the
+    live demo short without the app having to know it is a demo."""
+    if not demo_mode():
+        return None
+    if requested is not None:
+        return requested
+    try:
+        configured = int(os.environ.get("DEMO_PLACEMENT_LIMIT", DEFAULT_DEMO_PLACEMENT_LIMIT))
+    except ValueError:
+        configured = DEFAULT_DEMO_PLACEMENT_LIMIT
+    return configured if 2 <= configured <= 10 else None
+
+
 @router.get("/placement")
 def get_placement(
     limit: int | None = Query(default=None, ge=2, le=10),
@@ -41,7 +60,7 @@ def get_placement(
     flagged_topics = {c.topic for c in flagged}
     # Prefer flagged questions; topics with none fall back to any active question.
     pool = flagged + [c for c in repo.candidates(conn) if c.topic not in flagged_topics]
-    chosen = placement.choose(pool, repo.TOPIC_TRACK, seed=user["id"], limit=limit if demo_mode() else None)
+    chosen = placement.choose(pool, repo.TOPIC_TRACK, seed=user["id"], limit=effective_limit(limit))
     rows = {r["id"]: r for r in conn.execute(
         f"SELECT * FROM questions WHERE id IN ({','.join('?' * len(chosen))})", [c.id for c in chosen]
     )} if chosen else {}

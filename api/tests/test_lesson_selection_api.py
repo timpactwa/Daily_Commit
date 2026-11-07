@@ -138,3 +138,17 @@ def test_progress(big):
     assert t["answered"] == 1 and t["accuracy"] == 1.0
     assert len(t["history"]) == 2 and t["history"][-1] == t["rating"]  # placement + lesson answer
     assert set(t) == {"topic", "track", "rating", "level", "readiness", "answered", "accuracy", "history"}
+
+
+def test_demo_placement_defaults_to_four(big, monkeypatch):
+    uid = big.post("/v1/users", json={}).json()["user_id"]
+    h = {"X-User-Id": uid}
+    assert len(big.get("/v1/placement", headers=h).json()["questions"]) == 10  # not demo: full test
+    monkeypatch.setenv("DEMO_MODE", "1")
+    qs = big.get("/v1/placement", headers=h).json()["questions"]
+    assert len(qs) == 4 and {q["track"] for q in qs} == {"system-design", "debugging"}
+    assert len(big.get("/v1/placement?limit=6", headers=h).json()["questions"]) == 6  # explicit wins
+    monkeypatch.setenv("DEMO_PLACEMENT_LIMIT", "0")
+    assert len(big.get("/v1/placement", headers=h).json()["questions"]) == 10  # 0 = full test
+    monkeypatch.setenv("DEMO_PLACEMENT_LIMIT", "5")
+    assert len(big.get("/v1/placement", headers=h).json()["questions"]) == 5
