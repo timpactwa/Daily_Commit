@@ -59,7 +59,8 @@ def corpus_names() -> list[str]:
 
 
 def load(name: str) -> tuple[str, object]:
-    source = (CORPUS / f"{name}.py").read_text(encoding="utf-8")
+    # Normalize line endings: Windows checkouts may convert corpus files to CRLF.
+    source = (CORPUS / f"{name}.py").read_text(encoding="utf-8").replace("\r\n", "\n")
     cases = importlib.import_module(f"pipeline.corpus.{name}_cases")
     return source, cases
 
