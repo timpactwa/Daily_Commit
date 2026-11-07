@@ -294,6 +294,7 @@ function ResultView({ result: r }: { result: RankedResult }) {
               <span className="eyebrow">QUESTION {i + 1}</span>
               <span className="pill">{item.correct ? "✓ CORRECT" : "✗ MISSED"}</span>
             </div>
+            {item.question.scenario && <p className="review-scenario">{item.question.scenario}</p>}
             <p className="review-prompt">
               <Rich text={item.question.prompt} />
             </p>

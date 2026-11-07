@@ -154,3 +154,49 @@ What tomorrow's lesson would contain with current ratings. Used for the "lesson 
 In `DEMO_MODE=1`, lessons for the `demo` user have 3 items (1 SD focus, 1 debugging focus, 1 mix) so the whole lesson fits the live demo.
 
 The server rebuilds starting data on every boot: all `/content` questions are upserted (seed `difficulty_rating` only applies to new questions; learned live ratings are kept) and the demo user is reset from `content/demo/demo-user.json`. Other users' data is never touched.
+
+---
+
+## Accounts, learning modules, ranked tests
+
+Feature flags: `GET /v1/config` returns `{"features": {"learn": true, "ranked": true, "accounts": true}}`. Each feature's routes return 404 when its env flag (`FEATURE_LEARN`, `FEATURE_RANKED`, `FEATURE_ACCOUNTS`) is `0`; the app hides it.
+
+### Identity with accounts
+- Guests (no password) keep using `X-User-Id`.
+- Accounts send `Authorization: Bearer <token>`. An account's `X-User-Id` alone is rejected with `401 session_expired`, which also covers an expired or unknown token.
+- `GET /v1/me` adds `"username": "alice" | null, "has_account": bool`.
+
+| HTTP | code | When |
+|---|---|---|
+| 401 | `session_expired` | Bad or expired token, or an account used without a token |
+| 401 | `bad_credentials` | Wrong username or password |
+| 409 | `username_taken` | Signup with a taken username |
+| 429 | `too_many_attempts` | 10 failed sign-ins for one username in 15 minutes |
+| 403 | `account_required` | Ranked test started by a guest |
+| 409 | `locked` | Learning checkpoint answered before earlier sections pass |
+| 409 | `already_taken` | Ranked tier already attempted (one attempt per account per tier, ever) |
+| 409 | `time_up` | Ranked answer after the deadline |
+| 409 | `not_finished` | Ranked result requested while the attempt is still running |
+
+### `POST /v1/auth/signup`
+`{ "username": "alice_1", "password": "at least 8 chars" }` returns `201 { "token": "...", "claimed_guest": true, "user": { /* /v1/me shape */ } }`. Usernames are 3 to 20 characters from `[a-z0-9_]`, stored lowercase. Prefixes `sample_` and `demo` are reserved. If `X-User-Id` names a guest, that guest becomes the account: same id, with all progress kept. The shared demo user is never claimed.
+
+### `POST /v1/auth/login`, `POST /v1/auth/logout`
+Login: `{ "username", "password" }` returns `{ "token", "user" }`. Sessions last 30 days. Logout deletes the bearer session.
+
+### Learning modules (`contracts/learn.schema.json`, `content/learn/<topic>.json`)
+- `GET /v1/learn` returns `{ "modules": [ { "topic", "track", "title", "summary", "minutes", "sections": 4, "passed": 1, "completed": false } ] }`, in topics.json order.
+- `GET /v1/learn/{topic}` returns the module with each `check` stripped of `answer` and `explanation`, plus `"progress": { "passed": ["s1"], "sections": 4, "completed": false }`.
+- `POST /v1/learn/{topic}/check` takes `{ "section_id", "response": "b" }` and returns `{ "correct", "explanation"? , "passed", "sections", "completed" }`. The explanation is returned only when the answer is correct, and wrong answers can retry. Checkpoints never change Elo.
+
+### Ranked tests (`contracts/ranked.schema.json`, `content/ranked/tests.json`)
+Three tiers (`beginner`, `intermediate`, `advanced`). Each has 10 fixed questions (5 system design, 5 debugging), in the same order for everyone. These questions live only in `content/ranked/` and are never used in placement or lessons. The server clock is the only clock.
+- `GET /v1/ranked` returns `{ "has_account", "tiers": [ { "id", "title", "description", "time_limit_s", "question_count", "suggested", "takers", "attempt": null | {"status": "in_progress", "answered", "total", "remaining_ms"} | {"status": "finished", "score", "total", "time_ms", "rank", "takers", "top_percent"} } ] }`.
+- `POST /v1/ranked/{tier}/start` creates the single attempt, or resumes it if it is still running. It returns `{ "tier", "title", "status": "in_progress", "time_limit_s", "remaining_ms", "total", "questions": [public questions], "answered": {"<qid>": response} }`.
+- `GET /v1/ranked/{tier}/attempt` returns the same shape (resume only).
+- `POST /v1/ranked/{tier}/answer` takes `{ "question_id", "response" }` and returns `{ "saved": true, "answered", "total", "remaining_ms" }`. There is no correctness feedback, and answers are final. It updates the student's topic Elo; question ratings are frozen.
+- `POST /v1/ranked/{tier}/submit` finishes the attempt and returns the result below.
+- `GET /v1/ranked/{tier}/result` returns `{ "tier", "title", "status": "finished", "score", "total", "time_ms", "rank", "takers", "top_percent", "review": [ { "question", "response" | null, "correct", "correct_answer", "explanation" } ] }`. Unanswered questions count as wrong. `time_ms` is `min(finish, deadline) - start`.
+- `GET /v1/ranked/{tier}/leaderboard` returns `{ "tier", "title", "takers", "top": [ { "rank", "username", "score", "total", "time_ms", "sample", "you" } ] (top 50), "you": entry + "top_percent" | null }`. Ordering is score descending, then time ascending, then earliest finish.
+
+In `DEMO_MODE=1`, the server seeds 24 labeled sample players (`sample_user_NN`, `"sample": true`, unable to sign in) on every boot. The demo user (`demo_tim`, no password) has one seeded Beginner result; the Intermediate and Advanced tiers stay open to take live.

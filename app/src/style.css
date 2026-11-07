@@ -1296,3 +1296,15 @@ nav {
     font-size: 15px;
   }
 }
+.module-section > p,
+.module .intro,
+.review-item p,
+.example p {
+  margin: 0 0 12px;
+}
+.review-scenario {
+  font-size: 14px;
+  background: #f5f7ef;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
