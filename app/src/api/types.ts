@@ -76,7 +76,134 @@ export interface User {
   user_id: string;
   display_name: string;
   placed: boolean;
+  /** null for guests (no account). */
+  username?: string | null;
+  has_account?: boolean;
   streak?: Streak;
+}
+
+export interface AuthResult {
+  token: string;
+  claimed_guest?: boolean;
+  user: User;
+}
+
+export interface Features {
+  learn: boolean;
+  ranked: boolean;
+  accounts: boolean;
+}
+
+// ---- learning modules (contracts/learn.schema.json) --------------------------
+
+export interface LearnSummary {
+  topic: string;
+  track: Track;
+  title: string;
+  summary: string;
+  minutes: number;
+  sections: number;
+  passed: number;
+  completed: boolean;
+}
+
+export interface LearnSection {
+  id: string;
+  heading: string;
+  body: string[];
+  example: { title: string; code?: string; text?: string };
+  /** answer + explanation are withheld until checked. */
+  check: { prompt: string; options: Option[] };
+}
+
+export interface LearnModule {
+  topic: string;
+  track: Track;
+  title: string;
+  summary: string;
+  minutes: number;
+  sections: LearnSection[];
+  sources: { title: string; url: string; publisher: string }[];
+  progress: { passed: string[]; sections: number; completed: boolean };
+}
+
+export interface LearnCheckResult {
+  correct: boolean;
+  explanation?: string;
+  passed: string[];
+  sections: number;
+  completed: boolean;
+}
+
+// ---- ranked tests --------------------------------------------------------------
+
+export type TierId = "beginner" | "intermediate" | "advanced";
+
+export interface Standing {
+  rank: number;
+  takers: number;
+  top_percent: number;
+}
+
+export type AttemptSummary =
+  | { status: "in_progress"; answered: number; total: number; remaining_ms: number }
+  | ({ status: "finished"; score: number; total: number; time_ms: number } & Standing);
+
+export interface RankedTier {
+  id: TierId;
+  title: string;
+  description: string;
+  time_limit_s: number;
+  question_count: number;
+  suggested: boolean;
+  takers: number;
+  attempt: AttemptSummary | null;
+}
+
+export interface RankedSession {
+  tier: TierId;
+  title: string;
+  status: "in_progress";
+  time_limit_s: number;
+  remaining_ms: number;
+  total: number;
+  questions: PublicQuestion[];
+  answered: Record<string, ResponseValue>;
+}
+
+export interface RankedResult extends Standing {
+  tier: TierId;
+  title: string;
+  status: "finished";
+  score: number;
+  total: number;
+  time_ms: number;
+  review: {
+    question: PublicQuestion;
+    response: ResponseValue | null;
+    correct: boolean;
+    correct_answer: ResponseValue;
+    explanation: string;
+  }[];
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  username: string;
+  score: number;
+  total: number;
+  time_ms: number;
+  sample: boolean;
+  you: boolean;
+  top_percent?: number;
+}
+
+export interface Leaderboard {
+  tier: TierId;
+  title: string;
+  takers: number;
+  top: LeaderboardEntry[];
+  you: LeaderboardEntry | null;
 }
 
 export interface TopicLevel {
@@ -166,5 +293,14 @@ export type ErrorCode =
   | "not_placed"
   | "already_answered"
   | "invalid_response"
+  | "session_expired"
+  | "username_taken"
+  | "bad_credentials"
+  | "too_many_attempts"
+  | "locked"
+  | "account_required"
+  | "already_taken"
+  | "time_up"
+  | "not_finished"
   | "network"
   | "server";

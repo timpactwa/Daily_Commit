@@ -1,0 +1,133 @@
+{
+  "topic": "recursion",
+  "version": 1,
+  "track": "debugging",
+  "title": "Recursion: Base Cases and Progress",
+  "summary": "Write recursive functions that stop, shrink the problem each call, and combine results correctly.",
+  "minutes": 6,
+  "sections": [
+    {
+      "id": "base-and-step",
+      "heading": "Base case and recursive step",
+      "body": [
+        "A recursive function solves a problem by calling itself on a smaller version of that problem. It needs two parts. The **base case** answers directly without recursing, and acts as the stopping condition. The **recursive case** breaks the input into a smaller piece and combines the result.",
+        "Factorial is the standard example: `0! = 1` is the base case, and `n! = n * (n-1)!` is the recursive case. Each call lowers `n` by one, so it must eventually reach 0.",
+        "Notice that the multiplication happens after the inner call returns. That is why the calls pile up and then unwind, multiplying on the way back."
+      ],
+      "example": {
+        "title": "Factorial unwinding",
+        "code": "def factorial(n):\n    if n == 0:\n        return 1\n    return n * factorial(n - 1)\n\nprint(factorial(4))",
+        "text": "factorial(4) = 4 * factorial(3) = 4 * 3 * factorial(2) = 4 * 3 * 2 * factorial(1) = 4 * 3 * 2 * 1 * factorial(0), and factorial(0) is 1. Output: `24`."
+      },
+      "check": {
+        "prompt": "What does factorial(4) return?",
+        "options": [
+          {
+            "id": "a",
+            "text": "24"
+          },
+          {
+            "id": "b",
+            "text": "10"
+          },
+          {
+            "id": "c",
+            "text": "16"
+          },
+          {
+            "id": "d",
+            "text": "12"
+          }
+        ],
+        "answer": "a",
+        "explanation": "The result is 4 * 3 * 2 * 1 * 1 = 24. The base case supplies the final 1."
+      }
+    },
+    {
+      "id": "wrong-base-case",
+      "heading": "Wrong or missing base cases",
+      "body": [
+        "A missing or incorrect base case is the most common recursion bug. If the stopping condition is never reached, the function recurses without end. Each call uses stack space, and Python caps recursion depth, so you get a `RecursionError` instead of an infinite loop.",
+        "There are two typical mistakes. First, the base case is **unreachable**: for example it tests `n == 1`, but the input can start at 0 or go below it. Second, the base case is **wrong**: it returns the wrong value, which poisons every answer built on top of it.",
+        "A good habit is to ask what the smallest legal input is and make sure the base case covers it, then ask whether every recursive call really moves toward that base case."
+      ],
+      "example": {
+        "title": "Two broken base cases",
+        "code": "def fact_a(n):\n    if n == 1:\n        return 1\n    return n * fact_a(n - 1)\n\ndef fact_b(n):\n    if n == 0:\n        return 0\n    return n * fact_b(n - 1)",
+        "text": "`fact_a(0)` calls `fact_a(-1)`, `fact_a(-2)`, and so on until Python raises `RecursionError`. `fact_b(3)` always multiplies by 0 at the end, so every result is `0`."
+      },
+      "check": {
+        "prompt": "With the base case `if n == 1: return 1`, what does factorial(0) do?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Returns 1"
+          },
+          {
+            "id": "b",
+            "text": "Returns 0"
+          },
+          {
+            "id": "c",
+            "text": "Raises RecursionError"
+          },
+          {
+            "id": "d",
+            "text": "Returns -1"
+          }
+        ],
+        "answer": "c",
+        "explanation": "n never equals 1 when counting down from 0, so the base case is skipped and the calls continue below zero until the recursion limit is hit."
+      }
+    },
+    {
+      "id": "combining-results",
+      "heading": "Combining results correctly",
+      "body": [
+        "Even with a correct base case, the combine step can be wrong. Common slips: returning the recursive call without using the current value, adding when you should multiply, or forgetting a case entirely.",
+        "Fast exponentiation shows this well. To compute `x ** n`, compute `half = power(x, n // 2)`. If `n` is even, the answer is `half * half`. If `n` is odd, one factor of `x` is left over, so the answer is `half * half * x`. The depth is about log n instead of n.",
+        "When a recursive function gives wrong answers, trace a tiny input by hand, writing down what each call returns on the way back up."
+      ],
+      "example": {
+        "title": "Power by halving",
+        "code": "def power(x, n):\n    if n == 0:\n        return 1\n    half = power(x, n // 2)\n    if n % 2 == 0:\n        return half * half\n    return half * half * x\n\nprint(power(2, 5))",
+        "text": "power(2,5): half = power(2,2) = 4, n is odd, so 4 * 4 * 2 = `32`. And power(2,2): half = power(2,1) = 2, even, so 2 * 2 = 4."
+      },
+      "check": {
+        "prompt": "If the odd case wrongly returned just half * half, what would power(2, 1) give?",
+        "options": [
+          {
+            "id": "a",
+            "text": "2"
+          },
+          {
+            "id": "b",
+            "text": "1"
+          },
+          {
+            "id": "c",
+            "text": "0"
+          },
+          {
+            "id": "d",
+            "text": "4"
+          }
+        ],
+        "answer": "b",
+        "explanation": "half is power(2, 0) = 1, and 1 * 1 = 1. The correct answer is 2, but the missing factor of x (the leftover from odd n) is lost. That error then spreads to every larger odd power."
+      }
+    }
+  ],
+  "sources": [
+    {
+      "title": "Recursion (computer science) (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Recursion_(computer_science)",
+      "publisher": "Wikipedia"
+    },
+    {
+      "title": "sys.getrecursionlimit",
+      "url": "https://docs.python.org/3/library/sys.html#sys.getrecursionlimit",
+      "publisher": "Python Software Foundation"
+    }
+  ]
+}

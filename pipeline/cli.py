@@ -1,7 +1,8 @@
-"""python -m pipeline {build,check,demo}
+"""python -m pipeline {build,ranked,check,demo}
 
   build             generate content/debugging/questions.json from the corpus
-  check             verify every corpus function passes its cases and prints unchanged
+  ranked            generate content/ranked/debugging.json from pipeline/ranked_corpus
+  check             verify every corpus function (lesson + ranked) passes its cases and prints unchanged
   demo <function>   live walkthrough for the stage demo (e.g. binary_search)
 """
 import argparse
@@ -11,7 +12,7 @@ import re
 import sys
 import time
 
-from pipeline import build, mutators, runner
+from pipeline import build, mutators, ranked, runner
 
 GREEN, RED, YELLOW, CYAN, DIM, BOLD, RESET = "\033[32m", "\033[31m", "\033[33m", "\033[36m", "\033[2m", "\033[1m", "\033[0m"
 
@@ -33,21 +34,54 @@ def cmd_build(_: argparse.Namespace) -> int:
     return 1 if any(r.error for r in reports) else 0
 
 
+def cmd_ranked(_: argparse.Namespace) -> int:
+    t = time.time()
+    questions, reports, tiers = ranked.build_ranked()
+    errors = [r for r in reports if r.error]
+    for r in errors:
+        print(f"{r.name:18} ERROR {r.error}")
+    by_id = {q["id"]: q for q in questions}
+    print(f"{'tier':12} {'rating':>6}  id")
+    for tier, ids in tiers.items():
+        for qid in ids:
+            print(f"{tier:12} {by_id[qid]['difficulty_rating']:6}  {qid}")
+    print(f"\n{len(questions)} verified ranked questions -> {ranked.OUT.relative_to(build.ROOT)} ({time.time() - t:.1f}s)")
+    print("ids by tier (for content/ranked/tests.json):")
+    print(json.dumps(tiers, indent=2))
+    short = [t for t, ids in tiers.items() if len(ids) != ranked.QUESTIONS_PER_TIER]
+    for t in short:
+        print(f"ERROR tier {t} has {len(tiers[t])} questions, needs {ranked.QUESTIONS_PER_TIER}")
+    return 1 if errors or short else 0
+
+
+def corpus_problems(name: str, corpus: build.Corpus, min_cases: int, tiered: bool = False) -> list[str]:
+    source, cases = build.load(name, corpus)
+    printed = ast.unparse(ast.parse(source)) + "\n"
+    r = runner.run(source, cases.FUNCTION, cases.CASES)
+    problems = []
+    if printed != source:
+        problems.append("source changes when printed (write it the way ast.unparse prints it)")
+    if r.status != "pass":
+        problems.append(f"cases {r.status}: {r.failure_text}")
+    if len(cases.CASES) < min_cases:
+        problems.append(f"needs at least {min_cases} cases")
+    if tiered and getattr(cases, "TIER", None) not in ranked.TIERS:
+        problems.append(f"TIER must be one of {', '.join(ranked.TIERS)}")
+    return problems
+
+
 def cmd_check(_: argparse.Namespace) -> int:
     bad = 0
-    for name in build.corpus_names():
-        source, cases = build.load(name)
-        printed = ast.unparse(ast.parse(source)) + "\n"
-        r = runner.run(source, cases.FUNCTION, cases.CASES)
-        problems = []
-        if printed != source:
-            problems.append("source changes when printed (write it the way ast.unparse prints it)")
-        if r.status != "pass":
-            problems.append(f"cases {r.status}: {r.failure_text}")
-        if len(cases.CASES) < 4:
-            problems.append("needs at least 4 cases")
+    targets = [(n, build.LESSONS, 4, False) for n in build.corpus_names()]
+    lesson_names = set(build.corpus_names())
+    targets += [(n, ranked.RANKED, 5, True) for n in ranked.ranked_names()]
+    for name, corpus, min_cases, tiered in targets:
+        problems = corpus_problems(name, corpus, min_cases, tiered)
+        if tiered and name in lesson_names:
+            problems.append("also in the lesson corpus (ranked functions must be new)")
         bad += bool(problems)
-        print(f"{name:16} {'OK' if not problems else 'FAIL ' + '; '.join(problems)}")
+        label = f"{'ranked/' if tiered else ''}{name}"
+        print(f"{label:24} {'OK' if not problems else 'FAIL ' + '; '.join(problems)}")
     return 1 if bad else 0
 
 
@@ -135,7 +169,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m pipeline", description="Verified bug pipeline")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("build", help="generate content/debugging/questions.json").set_defaults(fn=cmd_build)
-    sub.add_parser("check", help="verify the corpus").set_defaults(fn=cmd_check)
+    sub.add_parser("ranked", help="generate content/ranked/debugging.json").set_defaults(fn=cmd_ranked)
+    sub.add_parser("check", help="verify the lesson and ranked corpora").set_defaults(fn=cmd_check)
     d = sub.add_parser("demo", help="live walkthrough for one corpus function")
     d.add_argument("function", nargs="?", default="binary_search")
     d.add_argument("--operator", help="prefer this mutation operator")

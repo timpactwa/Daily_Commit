@@ -1,0 +1,138 @@
+{
+  "topic": "sorting",
+  "version": 1,
+  "track": "debugging",
+  "title": "Sorting: Comparisons, Shifts and Merges",
+  "summary": "Understand insertion sort and merge sort well enough to spot the flipped comparison or missing step.",
+  "minutes": 6,
+  "sections": [
+    {
+      "id": "insertion-sort",
+      "heading": "Insertion sort: shifting into place",
+      "body": [
+        "Insertion sort grows a sorted prefix one element at a time. For each new `key`, it looks backward through the sorted part, **shifts** every larger value one slot to the right, and drops the key into the gap that opens up.",
+        "It is simple and in place. Already-sorted input takes O(n) comparisons, but reverse-sorted input takes O(n squared), which is also its average cost, so it suits small or nearly sorted data.",
+        "The inner `while` has two jobs: stay in range (`j >= 0`) and decide whether to keep shifting (`result[j] > key`). Forgetting `j -= 1` hangs the loop, and writing the key to the wrong slot overwrites data."
+      ],
+      "example": {
+        "title": "Trace [3, 1, 2]",
+        "code": "def insertion_sort(nums):\n    result = list(nums)\n    for i in range(1, len(result)):\n        key = result[i]\n        j = i - 1\n        while j >= 0 and result[j] > key:\n            result[j + 1] = result[j]\n            j -= 1\n        result[j + 1] = key\n    return result",
+        "text": "i=1, key=1: 3 shifts right giving [3,3,2], j reaches -1, key goes to index 0: [1,3,2]. i=2, key=2: 3 shifts, 1 stops it, key lands at index 1: [1,2,3]."
+      },
+      "check": {
+        "prompt": "In the inner loop, what does result[j + 1] = result[j] do?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Shifts a larger value one slot right to open a gap for key"
+          },
+          {
+            "id": "b",
+            "text": "Swaps key with its left neighbor"
+          },
+          {
+            "id": "c",
+            "text": "Deletes the value at j"
+          },
+          {
+            "id": "d",
+            "text": "Copies key into position j"
+          }
+        ],
+        "answer": "a",
+        "explanation": "Each shift moves a value greater than key right by one. Because key was saved first, nothing is lost, and key is written once at the end."
+      }
+    },
+    {
+      "id": "comparison-direction",
+      "heading": "Comparison direction and stability",
+      "body": [
+        "One flipped comparison reverses the whole sort. In insertion sort, `result[j] > key` means keep shifting while the left value is bigger, which yields ascending order. Change it to `<` and larger values stop smaller ones from moving, so you get descending order.",
+        "Equality matters too. Python's own sort is **stable**: items with equal keys stay in their original order. Insertion sort is stable only if it stops at equal values. Using `>=` makes equal items hop over each other.",
+        "Stability is practical: sort by a secondary key first, then by the primary key, and ties keep the earlier ordering."
+      ],
+      "example": {
+        "title": "Flipped comparison",
+        "code": "def sort_desc_bug(nums):\n    result = list(nums)\n    for i in range(1, len(result)):\n        key = result[i]\n        j = i - 1\n        while j >= 0 and result[j] < key:\n            result[j + 1] = result[j]\n            j -= 1\n        result[j + 1] = key\n    return result\n\nprint(sort_desc_bug([3, 1, 2]))",
+        "text": "i=1: 3 < 1 is false, so [3,1,2]. i=2, key=2: 1 < 2 shifts, then 3 < 2 is false, giving [3,2,1]. The function sorts descending."
+      },
+      "check": {
+        "prompt": "With `result[j] < key`, what does the function return for [3, 1, 2]?",
+        "options": [
+          {
+            "id": "a",
+            "text": "[1, 2, 3]"
+          },
+          {
+            "id": "b",
+            "text": "[3, 1, 2]"
+          },
+          {
+            "id": "c",
+            "text": "[3, 2, 1]"
+          },
+          {
+            "id": "d",
+            "text": "[2, 1, 3]"
+          }
+        ],
+        "answer": "c",
+        "explanation": "The flipped comparison makes smaller values shift past larger ones, producing descending order."
+      }
+    },
+    {
+      "id": "merge-step",
+      "heading": "Merge sort and the merge step",
+      "body": [
+        "Merge sort splits a list into halves, sorts each half, and **merges** the two sorted halves. Every level of merging costs linear time, and there are about log n levels, so the total is O(n log n). It typically needs O(n) extra memory.",
+        "The merge step keeps one index per input list. Compare the two front items and copy the smaller one. Using `<=` when comparing takes from the left list on ties, which keeps the sort stable.",
+        "Once one list runs out, the other still has items. They are already sorted and all at least as large as everything copied, so you append them. Forgetting those leftovers, or advancing the wrong index, are the classic merge bugs."
+      ],
+      "example": {
+        "title": "Merging with leftovers",
+        "code": "def merge(a, b):\n    result = []\n    i = 0\n    j = 0\n    while i < len(a) and j < len(b):\n        if a[i] <= b[j]:\n            result.append(a[i])\n            i += 1\n        else:\n            result.append(b[j])\n            j += 1\n    result.extend(a[i:])\n    result.extend(b[j:])\n    return result",
+        "text": "merge([1,4],[2,3]): take 1, then 2, then 3; b is exhausted with a=[4] left, and extend adds it. Result: [1,2,3,4]."
+      },
+      "check": {
+        "prompt": "If both extend lines are deleted, what does merge([1, 2], [3, 4]) return?",
+        "options": [
+          {
+            "id": "a",
+            "text": "[1, 2]"
+          },
+          {
+            "id": "b",
+            "text": "[1, 2, 3, 4]"
+          },
+          {
+            "id": "c",
+            "text": "[3, 4]"
+          },
+          {
+            "id": "d",
+            "text": "It raises IndexError"
+          }
+        ],
+        "answer": "a",
+        "explanation": "1 and 2 are both smaller than 3, so they are copied first. Then a runs out and the loop ends before b is touched, leaving [3, 4] uncopied."
+      }
+    }
+  ],
+  "sources": [
+    {
+      "title": "Insertion sort (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Insertion_sort",
+      "publisher": "Wikipedia"
+    },
+    {
+      "title": "Merge sort (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Merge_sort",
+      "publisher": "Wikipedia"
+    },
+    {
+      "title": "Sorting Techniques (Python HOWTO)",
+      "url": "https://docs.python.org/3/howto/sorting.html",
+      "publisher": "Python Software Foundation"
+    }
+  ]
+}

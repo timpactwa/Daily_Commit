@@ -39,6 +39,25 @@ PHRASE = {
 PLACEMENT_TARGETS = (1000, 1200, 1400)
 
 
+@dataclass(frozen=True)
+class Corpus:
+    """Where a set of corpus functions lives and how its questions are labelled.
+
+    `path=None` means the lesson corpus directory `CORPUS`, looked up at call time.
+    """
+    package: str                 # importable package holding the <name>_cases modules
+    source_prefix: str           # repo-relative dir written into provenance.source_function
+    id_prefix: str = "dbg"
+    path: Path | None = None
+
+    @property
+    def dir(self) -> Path:
+        return self.path if self.path is not None else CORPUS
+
+
+LESSONS = Corpus("pipeline.corpus", "pipeline/corpus")
+
+
 @dataclass
 class FunctionReport:
     name: str
@@ -54,14 +73,14 @@ class FunctionReport:
     error: str | None = None
 
 
-def corpus_names() -> list[str]:
-    return sorted(p.stem[: -len("_cases")] for p in CORPUS.glob("*_cases.py"))
+def corpus_names(corpus: Corpus = LESSONS) -> list[str]:
+    return sorted(p.stem[: -len("_cases")] for p in corpus.dir.glob("*_cases.py"))
 
 
-def load(name: str) -> tuple[str, object]:
+def load(name: str, corpus: Corpus = LESSONS) -> tuple[str, object]:
     # Normalize line endings: Windows checkouts may convert corpus files to CRLF.
-    source = (CORPUS / f"{name}.py").read_text(encoding="utf-8").replace("\r\n", "\n")
-    cases = importlib.import_module(f"pipeline.corpus.{name}_cases")
+    source = (corpus.dir / f"{name}.py").read_text(encoding="utf-8").replace("\r\n", "\n")
+    cases = importlib.import_module(f"{corpus.package}.{name}_cases")
     return source, cases
 
 
@@ -73,11 +92,12 @@ def difficulty(operator: str, code: str) -> int:
     return max(600, min(2200, SEED_BASE[operator] + 10 * (len(code.split("\n")) - 8)))
 
 
-def make_question(name: str, cases, m: mutators.Mutant, result: runner.RunResult, number: int) -> dict:
+def make_question(name: str, cases, m: mutators.Mutant, result: runner.RunResult, number: int,
+                  corpus: Corpus = LESSONS) -> dict:
     failure_lines = result.failure_text.split("\n")[:MAX_FAILURE_LINES]
     first_call = result.failed[0]["call"]
     question = {
-        "id": f"dbg-{name.replace('_', '-')}-{m.operator.replace('_', '-')}-{number:02d}",
+        "id": f"{corpus.id_prefix}-{name.replace('_', '-')}-{m.operator.replace('_', '-')}-{number:02d}",
         "version": 1,
         "track": "debugging",
         "topic": cases.TOPIC,
@@ -90,7 +110,7 @@ def make_question(name: str, cases, m: mutators.Mutant, result: runner.RunResult
         "explanation": f"Line {m.line} should be `{m.original_line.strip()}`, but {PHRASE[m.operator]}. That is why {first_call} fails.",
         "difficulty_rating": max(600, min(2200, difficulty(m.operator, m.source) + getattr(cases, "DIFFICULTY_OFFSET", 0))),
         "provenance": {
-            "source_function": f"pipeline/corpus/{name}.py::{cases.FUNCTION}",
+            "source_function": f"{corpus.source_prefix}/{name}.py::{cases.FUNCTION}",
             "mutation_operator": m.operator,
             "original_line": m.original_line,
             "mutated_line": m.mutated_line,
@@ -103,8 +123,8 @@ def make_question(name: str, cases, m: mutators.Mutant, result: runner.RunResult
     return question
 
 
-def process(name: str) -> FunctionReport:
-    source, cases = load(name)
+def process(name: str, corpus: Corpus = LESSONS, max_per_function: int = MAX_PER_FUNCTION) -> FunctionReport:
+    source, cases = load(name, corpus)
     report = FunctionReport(name, cases.TOPIC)
     limit = getattr(cases, "QUESTION_LIMIT", MAX_PER_FUNCTION)
     if type(limit) is not int or not 1 <= limit <= MAX_PER_FUNCTION:
@@ -145,6 +165,7 @@ def process(name: str) -> FunctionReport:
     for m, r in candidates:
         by_op.setdefault(m.operator, []).append((m, r))
     chosen = []
+    limit = min(limit, max_per_function)
     while len(chosen) < limit and any(by_op.values()):
         for op in OPERATOR_ORDER:
             if by_op.get(op) and len(chosen) < limit:
@@ -152,7 +173,7 @@ def process(name: str) -> FunctionReport:
     counters: dict[str, int] = {}
     for m, r in chosen:
         counters[m.operator] = counters.get(m.operator, 0) + 1
-        report.kept.append(make_question(name, cases, m, r, counters[m.operator]))
+        report.kept.append(make_question(name, cases, m, r, counters[m.operator], corpus))
     return report
 
 

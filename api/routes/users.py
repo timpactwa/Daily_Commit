@@ -5,7 +5,7 @@ from datetime import date
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
-from api import db, repo
+from api import db, features, repo
 from api.deps import client_date, current_user, today_for
 from engine import streak as streaks
 
@@ -39,11 +39,23 @@ def create_user(body: NewUser | None = None, conn: sqlite3.Connection = Depends(
     return {"user_id": user_id, "display_name": name, "placed": False}
 
 
-@router.get("/me")
-def me(user: sqlite3.Row = Depends(current_user), base: date = Depends(client_date)):
+def me_payload(user: sqlite3.Row, today: str) -> dict:
     return {
         "user_id": user["id"],
         "display_name": user["display_name"],
         "placed": bool(user["placed"]),
-        "streak": streak_payload(user, today_for(user, base)),
+        "username": user["username"],
+        "has_account": user["username"] is not None,
+        "streak": streak_payload(user, today),
     }
+
+
+@router.get("/me")
+def me(user: sqlite3.Row = Depends(current_user), base: date = Depends(client_date)):
+    return me_payload(user, today_for(user, base))
+
+
+@router.get("/config")
+def config():
+    """Feature flags so the app can hide unfinished features."""
+    return {"features": features.all_flags()}

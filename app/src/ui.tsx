@@ -23,7 +23,11 @@ export function ErrorNotice({
       {error instanceof ApiError && error.status === 404 && (
         <p>This feature is still being connected on the server.</p>
       )}
-      {error instanceof ApiError && error.code === "unknown_user" ? (
+      {error instanceof ApiError && error.code === "session_expired" ? (
+        <Link className="primary" to="/account">
+          Sign in →
+        </Link>
+      ) : error instanceof ApiError && error.code === "unknown_user" ? (
         <Link
           className="primary"
           to="/onboarding"
@@ -76,4 +80,26 @@ export function Resource<T>({
     return <ErrorNotice error={resource.error} retry={resource.retry} />;
   if (resource.data === undefined) return <Loading />;
   return children(resource.data);
+}
+/** Inline markup used by content: `code` and **bold**. Everything else is plain text. */
+export function Rich({ text }: { text: string }) {
+  const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*)/g).filter(Boolean);
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.startsWith("`") && p.endsWith("`") && p.length > 1 ? (
+          <code className="inline-code" key={i}>{p.slice(1, -1)}</code>
+        ) : p.startsWith("**") && p.endsWith("**") && p.length > 3 ? (
+          <strong key={i}>{p.slice(2, -2)}</strong>
+        ) : (
+          <span key={i}>{p}</span>
+        ),
+      )}
+    </>
+  );
+}
+/** mm:ss */
+export function clockText(ms: number) {
+  const s = Math.max(0, Math.round(ms / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
