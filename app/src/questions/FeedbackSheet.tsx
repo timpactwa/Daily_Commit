@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { AnswerResult, PublicQuestion } from "../api";
+import { Explanation } from "./Explanation";
 export function FeedbackSheet({
   result,
   question,
@@ -47,7 +48,7 @@ export function FeedbackSheet({
           {answer}
         </p>
       )}
-      <p>{result.explanation}</p>
+      <Explanation text={result.explanation} />
       <button ref={ref} className="primary full" onClick={onContinue}>
         Continue →
       </button>
