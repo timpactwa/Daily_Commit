@@ -694,5 +694,74 @@
     "batch-2",
     "source-backed"
   ]
+},
+{
+  "id": "sd-caching-continuation-025",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "With minimum TTL 0 and maximum TTL 600, how long does CloudFront cache max-age=900?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "600 seconds"
+    },
+    {
+      "id": "o1",
+      "text": "900 seconds"
+    },
+    {
+      "id": "o2",
+      "text": "0 seconds"
+    },
+    {
+      "id": "o3",
+      "text": "1,500 seconds"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "CloudFront caps the origin’s requested cache duration at its configured maximum TTL. Source: [CloudFront expiration](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)",
+  "difficulty_rating": 1150,
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-caching-continuation-026",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "Which cache-policy setting must be removed to let no-store prevent CloudFront caching?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "A positive minimum TTL"
+    },
+    {
+      "id": "o1",
+      "text": "A maximum TTL above zero"
+    },
+    {
+      "id": "o2",
+      "text": "A short default TTL alone"
+    },
+    {
+      "id": "o3",
+      "text": "An origin connection timeout"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A positive minimum TTL can override no-store, no-cache and private. Set minimum TTL to zero when these origin restrictions must be respected. Source: [CloudFront expiration](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)",
+  "difficulty_rating": 1450,
+  "scenario": "The origin sends Cache-Control: no-store, but the cache policy has minimum TTL 60 seconds.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
 }
 ]

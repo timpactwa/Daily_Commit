@@ -33,3 +33,18 @@ Debugging functions: `count_occurrences`, `minimum_rotated`. Five variants each.
 
 Checkpoint 2 passed: 244 bank questions (248 with fixtures), 213 Python tests, app build and 12 phone/desktop checks.
 
+
+## Batch 3
+
+Debugging functions: `recursive_count`, `balanced_parentheses`. Five variants each.
+
+| Primary source | Question IDs |
+| --- | --- |
+| [CloudFront expiration](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html) | sd-caching-continuation-025, sd-caching-continuation-026 |
+| [Kubernetes DaemonSets](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/) | sd-scaling-continuation-025, sd-scaling-continuation-026 |
+| [PostgreSQL index-only scans](https://www.postgresql.org/docs/18/indexes-index-only-scans.html) | sd-databases-continuation-025, sd-databases-continuation-026 |
+| [RabbitMQ queue limits](https://www.rabbitmq.com/docs/maxlength) | sd-async-messaging-continuation-025, sd-async-messaging-continuation-026 |
+| [Azure rate limiting](https://learn.microsoft.com/en-us/azure/architecture/patterns/rate-limiting-pattern) | sd-reliability-continuation-025, sd-reliability-continuation-026 |
+
+Checkpoint 3 passed: 264 bank questions (268 with fixtures), 218 Python tests, app build and 12 phone/desktop checks.
+

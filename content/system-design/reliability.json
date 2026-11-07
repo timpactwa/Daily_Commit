@@ -696,5 +696,112 @@
     "batch-2",
     "source-backed"
   ]
+},
+{
+  "id": "sd-reliability-continuation-025",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "mcq",
+  "prompt": "A vendor accepts at most 100 requests per second. What reduces avoidable throttling?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Pace outgoing requests within the shared quota"
+    },
+    {
+      "id": "o1",
+      "text": "Launch every queued request immediately"
+    },
+    {
+      "id": "o2",
+      "text": "Retry every rejection without delay"
+    },
+    {
+      "id": "o3",
+      "text": "Count only successful requests when pacing"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Rate limiting controls outgoing work before it overloads a throttled service; retrying rejected bursts adds more work. Source: [Azure rate limiting](https://learn.microsoft.com/en-us/azure/architecture/patterns/rate-limiting-pattern)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-reliability-continuation-026",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "tap_node",
+  "prompt": "Tap the shared control point that should allocate the vendor’s global request budget.",
+  "options": [
+    {
+      "id": "a",
+      "text": "Worker A"
+    },
+    {
+      "id": "b",
+      "text": "Worker B"
+    },
+    {
+      "id": "limiter",
+      "text": "Shared rate limiter"
+    },
+    {
+      "id": "vendor",
+      "text": "Vendor API"
+    }
+  ],
+  "answer": "limiter",
+  "explanation": "Workers sharing one service quota must share its budget. Giving each worker the whole quota can exceed the aggregate limit. Source: [Azure rate limiting](https://learn.microsoft.com/en-us/azure/architecture/patterns/rate-limiting-pattern)",
+  "difficulty_rating": 1400,
+  "scenario": "Both workers use the same vendor account; its quota applies to their combined requests.",
+  "diagram": {
+    "nodes": [
+      {
+        "id": "a",
+        "label": "Worker A",
+        "kind": "service"
+      },
+      {
+        "id": "b",
+        "label": "Worker B",
+        "kind": "service"
+      },
+      {
+        "id": "limiter",
+        "label": "Shared rate limiter",
+        "kind": "service"
+      },
+      {
+        "id": "vendor",
+        "label": "Vendor API",
+        "kind": "external"
+      }
+    ],
+    "edges": [
+      {
+        "from": "a",
+        "to": "limiter"
+      },
+      {
+        "from": "b",
+        "to": "limiter"
+      },
+      {
+        "from": "limiter",
+        "to": "vendor"
+      }
+    ]
+  },
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
 }
 ]

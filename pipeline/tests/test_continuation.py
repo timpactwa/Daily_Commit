@@ -87,6 +87,13 @@ def oracle(name, args):
         return xs.count(target)
     if name == 'minimum_rotated':
         return min(args[0])
+    if name == 'recursive_count':
+        xs, target = args
+        return xs.count(target)
+    if name == 'balanced_parentheses':
+        text, = args
+        prefixes = [text[:i].count('(') - text[:i].count(')') for i in range(len(text) + 1)]
+        return min(prefixes) >= 0 and prefixes[-1] == 0
     raise AssertionError(f'Missing independent oracle: {name}')
 
 
@@ -125,3 +132,18 @@ def test_binary_boundaries_and_rotated_minimum_exhaustive_short_inputs():
             for k in range(length):
                 rotated = xs[k:] + xs[:k]
                 assert functions['minimum_rotated'](rotated) == min(xs)
+
+
+def test_recursive_count_and_parentheses_exhaustive_short_inputs():
+    functions = {name: fn for name, fn, _ in originals()}
+    if 'recursive_count' not in functions:
+        return
+    for length in range(6):
+        for values in itertools.product((-1, 0, 2), repeat=length):
+            xs = list(values)
+            for target in (-1, 0, 1, 2):
+                assert functions['recursive_count'](xs, target) == xs.count(target)
+    for length in range(9):
+        for chars in itertools.product('()', repeat=length):
+            text = ''.join(chars)
+            assert functions['balanced_parentheses'](text) == oracle('balanced_parentheses', (text,))

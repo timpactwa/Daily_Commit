@@ -1,5 +1,136 @@
 [
   {
+    "id": "dbg-balanced-parentheses-flip-comparison-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "For a string containing only ( and ), return whether it is balanced. Tap the buggy line.",
+    "code": "def balanced_parentheses(text):\n\n    def walk(index, depth):\n        if depth <= 0:\n            return False\n        if index == len(text):\n            return depth == 0\n        if text[index] == '(':\n            return walk(index + 1, depth + 1)\n        return walk(index + 1, depth - 1)\n    return walk(0, 0)",
+    "language": "python",
+    "test_output": "balanced_parentheses(''): expected True, got False\nbalanced_parentheses('()'): expected True, got False\nbalanced_parentheses('(())'): expected True, got False",
+    "answer": 4,
+    "explanation": "Line 4 should be `if depth < 0:`, but the comparison was flipped. That is why balanced_parentheses('') fails.",
+    "difficulty_rating": 1180,
+    "provenance": {
+      "source_function": "pipeline/corpus/balanced_parentheses.py::balanced_parentheses",
+      "mutation_operator": "flip_comparison",
+      "original_line": "        if depth < 0:",
+      "mutated_line": "        if depth <= 0:",
+      "tests_failed": 7,
+      "tests_total": 13
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-balanced-parentheses-flip-comparison-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "For a string containing only ( and ), return whether it is balanced. Tap the buggy line.",
+    "code": "def balanced_parentheses(text):\n\n    def walk(index, depth):\n        if depth < 0:\n            return False\n        if index != len(text):\n            return depth == 0\n        if text[index] == '(':\n            return walk(index + 1, depth + 1)\n        return walk(index + 1, depth - 1)\n    return walk(0, 0)",
+    "language": "python",
+    "test_output": "balanced_parentheses(''): raised IndexError\nbalanced_parentheses('('): expected False, got True\nbalanced_parentheses(')'): expected False, got True",
+    "answer": 6,
+    "explanation": "Line 6 should be `if index == len(text):`, but the comparison was flipped. That is why balanced_parentheses('') fails.",
+    "difficulty_rating": 1180,
+    "provenance": {
+      "source_function": "pipeline/corpus/balanced_parentheses.py::balanced_parentheses",
+      "mutation_operator": "flip_comparison",
+      "original_line": "        if index == len(text):",
+      "mutated_line": "        if index != len(text):",
+      "tests_failed": 7,
+      "tests_total": 13
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-balanced-parentheses-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "For a string containing only ( and ), return whether it is balanced. Tap the buggy line.",
+    "code": "def balanced_parentheses(text):\n\n    def walk(index, depth):\n        if depth < 0:\n            return False\n        if index == len(text):\n            return depth == 0\n        if text[index] == '(':\n            return walk(index + 1, depth + 1)\n        return walk(index - 1, depth - 1)\n    return walk(0, 0)",
+    "language": "python",
+    "test_output": "balanced_parentheses('()'): raised RecursionError\nbalanced_parentheses('(())'): raised RecursionError\nbalanced_parentheses('()()'): raised RecursionError",
+    "answer": 10,
+    "explanation": "Line 10 should be `return walk(index + 1, depth - 1)`, but it uses the wrong operator. That is why balanced_parentheses('()') fails.",
+    "difficulty_rating": 1230,
+    "provenance": {
+      "source_function": "pipeline/corpus/balanced_parentheses.py::balanced_parentheses",
+      "mutation_operator": "wrong_operator",
+      "original_line": "        return walk(index + 1, depth - 1)",
+      "mutated_line": "        return walk(index - 1, depth - 1)",
+      "tests_failed": 9,
+      "tests_total": 13
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-balanced-parentheses-wrong-operator-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "For a string containing only ( and ), return whether it is balanced. Tap the buggy line.",
+    "code": "def balanced_parentheses(text):\n\n    def walk(index, depth):\n        if depth < 0:\n            return False\n        if index == len(text):\n            return depth == 0\n        if text[index] == '(':\n            return walk(index + 1, depth + 1)\n        return walk(index + 1, depth + 1)\n    return walk(0, 0)",
+    "language": "python",
+    "test_output": "balanced_parentheses('()'): expected True, got False\nbalanced_parentheses('(())'): expected True, got False\nbalanced_parentheses('()()'): expected True, got False",
+    "answer": 10,
+    "explanation": "Line 10 should be `return walk(index + 1, depth - 1)`, but it uses the wrong operator. That is why balanced_parentheses('()') fails.",
+    "difficulty_rating": 1230,
+    "provenance": {
+      "source_function": "pipeline/corpus/balanced_parentheses.py::balanced_parentheses",
+      "mutation_operator": "wrong_operator",
+      "original_line": "        return walk(index + 1, depth - 1)",
+      "mutated_line": "        return walk(index + 1, depth + 1)",
+      "tests_failed": 6,
+      "tests_total": 13
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-balanced-parentheses-wrong-return-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "For a string containing only ( and ), return whether it is balanced. Tap the buggy line.",
+    "code": "def balanced_parentheses(text):\n\n    def walk(index, depth):\n        if depth < 0:\n            return False\n        if index == len(text):\n            return depth == 0\n        if text[index] == '(':\n            return walk(index + 1, depth + 1)\n        return walk(index + 1, depth - 1)\n    return walk(0, 1)",
+    "language": "python",
+    "test_output": "balanced_parentheses(''): expected True, got False\nbalanced_parentheses(')'): expected False, got True\nbalanced_parentheses('()'): expected True, got False",
+    "answer": 11,
+    "explanation": "Line 11 should be `return walk(0, 0)`, but it returns the wrong value. That is why balanced_parentheses('') fails.",
+    "difficulty_rating": 1230,
+    "provenance": {
+      "source_function": "pipeline/corpus/balanced_parentheses.py::balanced_parentheses",
+      "mutation_operator": "wrong_return",
+      "original_line": "    return walk(0, 0)",
+      "mutated_line": "    return walk(0, 1)",
+      "tests_failed": 9,
+      "tests_total": 13
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
     "id": "dbg-binary-search-flip-comparison-01",
     "version": 1,
     "track": "debugging",
@@ -662,8 +793,7 @@
     "tags": [
       "research-2026-11",
       "verified-code"
-    ],
-    "placement": true
+    ]
   },
   {
     "id": "dbg-grid-paths-wrong-base-case-02",
@@ -2165,6 +2295,136 @@
       "verified-code"
     ],
     "placement": true
+  },
+  {
+    "id": "dbg-recursive-count-flip-comparison-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Recursively count target occurrences in an integer list; the list need not be sorted. Tap the buggy line.",
+    "code": "def recursive_count(nums, target):\n\n    def count(lo, hi):\n        if lo >= hi:\n            return 0\n        mid = (lo + hi) // 2\n        hit = 1 if nums[mid] == target else 0\n        return hit + count(lo, mid - 1) + count(mid + 1, hi)\n    return count(0, len(nums) - 1)",
+    "language": "python",
+    "test_output": "recursive_count([1], 1): expected 1, got 0\nrecursive_count([2, 1, 2, 2], 2): expected 3, got 1\nrecursive_count([0, 0, 0], 0): expected 3, got 1",
+    "answer": 4,
+    "explanation": "Line 4 should be `if lo > hi:`, but the comparison was flipped. That is why recursive_count([1], 1) fails.",
+    "difficulty_rating": 1010,
+    "provenance": {
+      "source_function": "pipeline/corpus/recursive_count.py::recursive_count",
+      "mutation_operator": "flip_comparison",
+      "original_line": "        if lo > hi:",
+      "mutated_line": "        if lo >= hi:",
+      "tests_failed": 7,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-recursive-count-flip-comparison-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Recursively count target occurrences in an integer list; the list need not be sorted. Tap the buggy line.",
+    "code": "def recursive_count(nums, target):\n\n    def count(lo, hi):\n        if lo > hi:\n            return 0\n        mid = (lo + hi) // 2\n        hit = 1 if nums[mid] != target else 0\n        return hit + count(lo, mid - 1) + count(mid + 1, hi)\n    return count(0, len(nums) - 1)",
+    "language": "python",
+    "test_output": "recursive_count([1], 1): expected 1, got 0\nrecursive_count([1], 0): expected 0, got 1\nrecursive_count([2, 1, 2, 2], 2): expected 3, got 1",
+    "answer": 7,
+    "explanation": "Line 7 should be `hit = 1 if nums[mid] == target else 0`, but the comparison was flipped. That is why recursive_count([1], 1) fails.",
+    "difficulty_rating": 1010,
+    "provenance": {
+      "source_function": "pipeline/corpus/recursive_count.py::recursive_count",
+      "mutation_operator": "flip_comparison",
+      "original_line": "        hit = 1 if nums[mid] == target else 0",
+      "mutated_line": "        hit = 1 if nums[mid] != target else 0",
+      "tests_failed": 8,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-recursive-count-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Recursively count target occurrences in an integer list; the list need not be sorted. Tap the buggy line.",
+    "code": "def recursive_count(nums, target):\n\n    def count(lo, hi):\n        if lo > hi:\n            return 0\n        mid = (lo + hi) // 2\n        hit = 2 if nums[mid] == target else 0\n        return hit + count(lo, mid - 1) + count(mid + 1, hi)\n    return count(0, len(nums) - 1)",
+    "language": "python",
+    "test_output": "recursive_count([1], 1): expected 1, got 2\nrecursive_count([2, 1, 2, 2], 2): expected 3, got 6\nrecursive_count([0, 0, 0], 0): expected 3, got 6",
+    "answer": 7,
+    "explanation": "Line 7 should be `hit = 1 if nums[mid] == target else 0`, but a number is off by one. That is why recursive_count([1], 1) fails.",
+    "difficulty_rating": 1160,
+    "provenance": {
+      "source_function": "pipeline/corpus/recursive_count.py::recursive_count",
+      "mutation_operator": "off_by_one",
+      "original_line": "        hit = 1 if nums[mid] == target else 0",
+      "mutated_line": "        hit = 2 if nums[mid] == target else 0",
+      "tests_failed": 8,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-recursive-count-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Recursively count target occurrences in an integer list; the list need not be sorted. Tap the buggy line.",
+    "code": "def recursive_count(nums, target):\n\n    def count(lo, hi):\n        if lo > hi:\n            return 0\n        mid = (lo + hi) // 2\n        hit = 1 if nums[mid] == target else 0\n        return hit + count(lo, mid - 1) - count(mid + 1, hi)\n    return count(0, len(nums) - 1)",
+    "language": "python",
+    "test_output": "recursive_count([2, 1, 2, 2], 2): expected 3, got 1\nrecursive_count([0, 0, 0], 0): expected 3, got 1\nrecursive_count([-1, 2, -1, 0], -1): expected 2, got 0",
+    "answer": 8,
+    "explanation": "Line 8 should be `return hit + count(lo, mid - 1) + count(mid + 1, hi)`, but it uses the wrong operator. That is why recursive_count([2, 1, 2, 2], 2) fails.",
+    "difficulty_rating": 1060,
+    "provenance": {
+      "source_function": "pipeline/corpus/recursive_count.py::recursive_count",
+      "mutation_operator": "wrong_operator",
+      "original_line": "        return hit + count(lo, mid - 1) + count(mid + 1, hi)",
+      "mutated_line": "        return hit + count(lo, mid - 1) - count(mid + 1, hi)",
+      "tests_failed": 5,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-recursive-count-wrong-return-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Recursively count target occurrences in an integer list; the list need not be sorted. Tap the buggy line.",
+    "code": "def recursive_count(nums, target):\n\n    def count(lo, hi):\n        if lo > hi:\n            return 0\n        mid = (lo + hi) // 2\n        hit = 1 if nums[mid] == target else 0\n        return hit + count(lo, mid - 1) + count(mid + 1, hi)\n    return count(1, len(nums) - 1)",
+    "language": "python",
+    "test_output": "recursive_count([1], 1): expected 1, got 0\nrecursive_count([2, 1, 2, 2], 2): expected 3, got 2\nrecursive_count([0, 0, 0], 0): expected 3, got 2",
+    "answer": 9,
+    "explanation": "Line 9 should be `return count(0, len(nums) - 1)`, but it returns the wrong value. That is why recursive_count([1], 1) fails.",
+    "difficulty_rating": 1060,
+    "provenance": {
+      "source_function": "pipeline/corpus/recursive_count.py::recursive_count",
+      "mutation_operator": "wrong_return",
+      "original_line": "    return count(0, len(nums) - 1)",
+      "mutated_line": "    return count(1, len(nums) - 1)",
+      "tests_failed": 6,
+      "tests_total": 11
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
   },
   {
     "id": "dbg-recursive-search-wrong-base-case-01",

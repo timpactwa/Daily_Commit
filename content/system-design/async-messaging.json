@@ -695,5 +695,74 @@
     "batch-2",
     "source-backed"
   ]
+},
+{
+  "id": "sd-async-messaging-continuation-025",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "A full RabbitMQ queue uses reject-publish with publisher confirms. What signals a rejected publish?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "basic.nack"
+    },
+    {
+      "id": "o1",
+      "text": "A consumer acknowledgement"
+    },
+    {
+      "id": "o2",
+      "text": "An unconditional basic.ack"
+    },
+    {
+      "id": "o3",
+      "text": "A shorter delivery tag"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "With confirms enabled, rejecting a new publish because of queue overflow notifies the publisher with basic.nack. Source: [RabbitMQ queue limits](https://www.rabbitmq.com/docs/maxlength)",
+  "difficulty_rating": 1100,
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-async-messaging-continuation-026",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "Which limit is exceeded by the next 700-byte message body?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "The body-byte limit only"
+    },
+    {
+      "id": "o1",
+      "text": "The message-count limit only"
+    },
+    {
+      "id": "o2",
+      "text": "Both limits"
+    },
+    {
+      "id": "o3",
+      "text": "Neither limit"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Both configured bounds apply. Eleven messages remain below 100, but 400 + 700 = 1,100 body bytes exceeds 1,000. Source: [RabbitMQ queue limits](https://www.rabbitmq.com/docs/maxlength)",
+  "difficulty_rating": 1350,
+  "scenario": "A classic queue has 10 ready messages totaling 400 body bytes, max-length 100 and max-length-bytes 1000. No consumers drain it.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
 }
 ]

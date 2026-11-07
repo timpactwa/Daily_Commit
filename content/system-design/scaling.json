@@ -712,5 +712,115 @@
     "batch-2",
     "source-backed"
   ]
+},
+{
+  "id": "sd-scaling-continuation-025",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "What happens when an eligible new node joins a cluster covered by a DaemonSet?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "The controller creates a matching Pod for that node"
+    },
+    {
+      "id": "o1",
+      "text": "The fixed replica count stays unchanged"
+    },
+    {
+      "id": "o2",
+      "text": "Every existing agent moves to the new node"
+    },
+    {
+      "id": "o3",
+      "text": "Only a future CronJob can start an agent"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A DaemonSet maintains node-local Pods on eligible nodes, including nodes added after its creation. Source: [Kubernetes DaemonSets](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)",
+  "difficulty_rating": 1000,
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-scaling-continuation-026",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "tap_node",
+  "prompt": "Tap the controller suited to keeping one log agent on each eligible node.",
+  "options": [
+    {
+      "id": "controller",
+      "text": "DaemonSet controller"
+    },
+    {
+      "id": "a",
+      "text": "Node A agent"
+    },
+    {
+      "id": "b",
+      "text": "Node B agent"
+    },
+    {
+      "id": "sink",
+      "text": "Log storage"
+    }
+  ],
+  "answer": "controller",
+  "explanation": "DaemonSets fit node-level agents. A fixed Deployment replica count does not itself ensure one agent on every eligible node. Source: [Kubernetes DaemonSets](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)",
+  "difficulty_rating": 1250,
+  "diagram": {
+    "nodes": [
+      {
+        "id": "controller",
+        "label": "DaemonSet controller",
+        "kind": "service"
+      },
+      {
+        "id": "a",
+        "label": "Node A agent",
+        "kind": "service"
+      },
+      {
+        "id": "b",
+        "label": "Node B agent",
+        "kind": "service"
+      },
+      {
+        "id": "sink",
+        "label": "Log storage",
+        "kind": "db"
+      }
+    ],
+    "edges": [
+      {
+        "from": "controller",
+        "to": "a"
+      },
+      {
+        "from": "controller",
+        "to": "b"
+      },
+      {
+        "from": "a",
+        "to": "sink"
+      },
+      {
+        "from": "b",
+        "to": "sink"
+      }
+    ]
+  },
+  "tags": [
+    "continuation-2026-11",
+    "batch-3",
+    "source-backed"
+  ]
 }
 ]
