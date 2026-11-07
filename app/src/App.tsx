@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
 import { api, getUserId } from './api';
 import { Lesson } from './screens/Lesson';
+import { Placement, PlacementResult } from './screens/Placement';
 import { ErrorNotice } from './ui';
 function Onboarding() {
   const [name, setName] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState<unknown>(); const navigate = useNavigate();
@@ -10,5 +11,7 @@ function Onboarding() {
 }
 function HomePlaceholder() { return getUserId() ? <div className="card"><h1>Your daily commit.</h1><Link className="primary" to="/lesson">Start today’s lesson →</Link></div> : <Navigate to="/onboarding" replace/>; }
 export function App() {
-  return <div className="app"><header><NavLink className="brand" to="/">[d<span>c</span>] <strong>daily commit<span className="brand-dot">.</span></strong></NavLink><span className="eyebrow">A LITTLE, EVERY DAY</span></header><main><Routes><Route path="/" element={<HomePlaceholder/>}/><Route path="/onboarding" element={<Onboarding/>}/><Route path="/lesson" element={<Lesson/>}/>{['/placement', '/placement/result', '/lesson/done', '/progress', '/tomorrow'].map(path => <Route key={path} path={path} element={<div className="card"><h2>Your next step is on its way.</h2><Link to="/">Back to today →</Link></div>}/>)}<Route path="*" element={<div className="card"><h1>Wrong turn.</h1><Link to="/">Back to today →</Link></div>}/></Routes></main><nav aria-label="Main navigation"><NavLink to="/" end>⌂ <span>Today</span></NavLink><NavLink to="/progress">↗ <span>Progress</span></NavLink></nav></div>;
+  return <div className="app"><header><NavLink className="brand" to="/">[d<span>c</span>] <strong>daily commit<span className="brand-dot">.</span></strong></NavLink><span className="eyebrow">A LITTLE, EVERY DAY</span></header><main><Routes><Route path="/" element={<HomePlaceholder/>}/><Route path="/onboarding" element={<Onboarding/>}/><Route path="/lesson" element={<Lesson/>}/><Route path="/placement" element={<Placement/>}/><Route path="/placement/result" element={<PlacementResult/>}/>{['/lesson/done', '/progress', '/tomorrow'].map(path => <Route key={path} path={path} element={<div className="card"><h2>Your next step is on its way.</h2><Link to="/">Back to today →</Link></div>}/>)}<Route path="*" element={<div className="card"><h1>Wrong turn.</h1><Link to="/">Back to today →</Link></div>}/></Routes></main><nav aria-label="Main navigation"><NavLink to="/" end>⌂ <span>Today</span></NavLink><NavLink to="/progress">↗ <span>Progress</span></NavLink></nav></div>;
 }
+
+
