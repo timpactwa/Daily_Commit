@@ -7,6 +7,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from api import content_loader, db, errors, seed_demo, seed_ranked
 from api.deps import demo_mode
@@ -44,6 +45,20 @@ def health():
     return {"ok": True, "questions": app.state.question_count}
 
 
+class SpaFiles(StaticFiles):
+    """Static app files; unknown non-API paths get index.html so deep links and refreshes
+    (e.g. /ranked/beginner/play) load the app instead of a 404."""
+
+    async def get_response(self, path, scope):
+        try:
+            return await super().get_response(path, scope)
+        except StarletteHTTPException as e:
+            p = path.replace("\\", "/")  # Starlette uses os.sep on Windows
+            if e.status_code != 404 or p.startswith(("v1/", "health")) or "." in p.rsplit("/", 1)[-1]:
+                raise
+            return await super().get_response("index.html", scope)
+
+
 # Production: serve the built app at "/". Must be mounted after all API routes.
 if APP_DIST.is_dir():
-    app.mount("/", StaticFiles(directory=APP_DIST, html=True), name="app")
+    app.mount("/", SpaFiles(directory=APP_DIST, html=True), name="app")
