@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# API data (SQLite lives here; Railway mounts a volume)
+api/data/
+
+# Node
+node_modules/
+app/dist/
+
+# Env / OS
+.env
+.env.*
+.DS_Store
+Thumbs.db
