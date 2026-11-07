@@ -58,7 +58,7 @@ Returns `contracts/topics.json` verbatim.
 ```json
 { "questions": [ /* 10 public questions, one per topic */ ] }
 ```
-In `DEMO_MODE=1`, `?limit=n` returns only n questions (split evenly across tracks) for a short live demo. Uncovered topics still move through same-track spillover (see `rating.md`).
+In `DEMO_MODE=1`, `?limit=n` returns only n questions (split evenly across tracks) for a short live demo. Without `?limit`, demo mode defaults to `DEMO_PLACEMENT_LIMIT` questions (env var, default 4; `0` = full test), so the app needs no demo-specific code. Uncovered topics still move through same-track spillover (see `rating.md`).
 
 ### `POST /v1/placement`
 No per-question feedback during placement; submit all at once.
