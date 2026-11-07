@@ -1,0 +1,6 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.lock-tmp/
+playwright-report/
+test-results/

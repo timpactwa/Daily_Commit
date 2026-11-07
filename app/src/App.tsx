@@ -1,0 +1,4 @@
+import { NavLink, Route, Routes } from 'react-router-dom';
+export function App() {
+  return <div className="app"><header><NavLink className="brand" to="/">[d<span>c</span>] <strong>daily commit<span className="brand-dot">.</span></strong></NavLink><span className="eyebrow">A LITTLE, EVERY DAY</span></header><main><Routes>{['/', '/onboarding', '/placement', '/placement/result', '/lesson', '/lesson/done', '/progress', '/tomorrow'].map(path => <Route key={path} path={path} element={<section className="card"><p className="eyebrow">YOUR DAILY PRACTICE</p><h1>Small commits.<br/>Real progress.</h1><p>Five minutes of system design and debugging, at your level.</p><NavLink className="primary" to="/onboarding">Get started →</NavLink></section>}/>)}<Route path="*" element={<p>Page not found. <NavLink to="/">Go home</NavLink></p>}/></Routes></main><nav><NavLink to="/" end>⌂ <span>Today</span></NavLink><NavLink to="/progress">↗ <span>Progress</span></NavLink></nav></div>;
+}
