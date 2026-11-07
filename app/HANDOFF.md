@@ -15,7 +15,7 @@ Railway project: https://railway.com/project/0d5c44e1-13ef-49af-b7d7-89873ddec36
 | C10 TapNode | #55 | Merged |
 | P5 Dashboard and progress | #56 | Merged |
 | P7 Mobile PWA | #57 | Merged |
-| P4 Deployment | #58 | Public cloud deployment and mobile-browser checks passed; final merge/redeploy and physical-phone confirmation finish the task |
+| P4 Deployment | #58 + follow-up image fix | Initial PR merged by Tim; working cloud image and container CI are in the follow-up. Persistence and reported cellular problem remain under verification |
 | D2 Freeze | Issue #37 | Tim + Liam coordinate Sunday Nov 8, 10 AM ET, after M3; tag only the verified demo build |
 
 Each implementation task has its own PR. The first eight task issues closed through their merged PRs. Keep #28 open until deployment persistence and the physical cellular check are confirmed.
@@ -24,7 +24,7 @@ Each implementation task has its own PR. The first eight task issues closed thro
 
 - Every task branch builds with npm.
 - GitHub CI passes the question validator, API/engine/pipeline tests, frontend build, six phone/desktop mock browser flows, and the production container build/startup check.
-- The public Railway API loaded 104 questions from both tracks. Fresh-user placement returns ten questions; a normal daily lesson contains six items and both tracks.
+- The public Railway API loaded 104 questions from both tracks. Initial fresh-user placement returned ten questions; latest main defaults demo placement to four (`DEMO_PLACEMENT_LIMIT=0` requests the full test). A normal daily lesson contains six items and both tracks.
 - The production PWA test passed against public HTTPS: demo switching, server grading, Elo feedback, lesson completion, progress, offline shell reload and retry after reconnecting.
 - A separate non-demo deployment-check user has completed placement and answered a lesson question. Its ratings/history/answer baseline is saved outside the repository in `.tools/railway-persistence.json` for comparison after redeploy. Demo data intentionally resets on every boot and must not be used to prove persistence.
 - Production mock answer fixtures are excluded unless mock mode is explicitly enabled.
@@ -39,7 +39,7 @@ Production environment: `48ffc7e6-a4b9-4c95-aca8-f30693da7a7e`.
 Service: `4efa730e-24f4-4838-8a62-019036a81346`.
 Volume: `9684274c-06e9-42a9-b555-d16696c058f0`.
 
-The user authorized GitHub publication and Railway repository access/deployment. Initial deployment verification uses a CI-verified PR commit. After #58 merges, connect the service to `timpactwa/Daily_Commit@main` without a commit pin for automatic deployments, and compare the non-demo user's state after that deployment settles.
+The user authorized GitHub publication and Railway repository access/deployment. Initial deployment verification uses a CI-verified PR commit. After the follow-up image fix merges, connect the service to `timpactwa/Daily_Commit@main` without a commit pin for automatic deployments, and compare the non-demo user's state after that deployment settles.
 
 The current GitHub account has push access but no repository administration access. Tim should ensure the CI check names are required by main's branch protection; the agent only merged application PRs after their checks passed. The CI-only bootstrap merge was explicitly authorized by Liam when GitHub initially reported zero workflows.
 
@@ -50,3 +50,4 @@ The main checkout is `Daily_Commit`; publication worktree is `../project-worktre
 See [README.md](README.md) for development, mock mode, real API, phone and tunnel commands. All authored changes stay in Liam's owned paths. Shared contracts, backend, pipeline and `app/src/api` were only brought in through main merges.
 
 The integration test resets the demo user on its target server. Use an isolated local database outside `app/test-results`, or explicitly target the demo environment with `DAILY_COMMIT_TEST_URL`. Keep `VITE_MOCK` unset for production.
+
