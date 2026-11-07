@@ -6,6 +6,12 @@ from fastapi.testclient import TestClient
 def client(tmp_path, monkeypatch):
     """Fresh SQLite file per test; lifespan runs (schema + content load)."""
     monkeypatch.setenv("DB_PATH", str(tmp_path / "test.db"))
+    # Pin content to contracts/examples (empty dir -> fallback) so tests don't depend on /content.
+    from api import content_loader
+
+    empty = tmp_path / "no-content"
+    empty.mkdir()
+    monkeypatch.setattr(content_loader, "CONTENT", empty)
     from api.main import app
 
     with TestClient(app) as c:
