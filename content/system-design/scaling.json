@@ -168,5 +168,413 @@
     "answer": "nfs",
     "explanation": "Every upload funnels through one file server whose network link is saturated. Adding API instances cannot help; uploading directly to object storage (signed URLs) removes the choke point.",
     "difficulty_rating": 1250
+  },
+  {
+    "id": "sd-scaling-research-011",
+    "version": 1,
+    "track": "system-design",
+    "topic": "scaling",
+    "format": "mcq",
+    "prompt": "Which probe controls whether a Pod receives normal Service traffic?",
+    "difficulty_rating": 850,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "options": [
+      {
+        "id": "a",
+        "text": "The image tag"
+      },
+      {
+        "id": "b",
+        "text": "Readiness probe"
+      },
+      {
+        "id": "c",
+        "text": "A liveness probe alone"
+      },
+      {
+        "id": "d",
+        "text": "An application log message"
+      }
+    ],
+    "answer": "b",
+    "explanation": "A failing readiness probe marks the Pod unready for Service traffic. Liveness instead helps decide whether a container needs restarting. Source: [Kubernetes probes](https://kubernetes.io/docs/concepts/workloads/pods/probes/)"
+  },
+  {
+    "id": "sd-scaling-research-012",
+    "version": 1,
+    "track": "system-design",
+    "topic": "scaling",
+    "format": "reorder",
+    "prompt": "Order the simplified CPU-based HPA control loop.",
+    "difficulty_rating": 950,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "options": [
+      {
+        "id": "s1",
+        "text": "Read CPU utilization for the current eligible Pods"
+      },
+      {
+        "id": "s2",
+        "text": "Calculate desired replicas from current utilization and target"
+      },
+      {
+        "id": "s3",
+        "text": "Update the workload replica count within configured bounds"
+      },
+      {
+        "id": "s4",
+        "text": "The workload controller creates or removes Pods"
+      }
+    ],
+    "answer": [
+      "s1",
+      "s2",
+      "s3",
+      "s4"
+    ],
+    "explanation": "HPA observes metrics, computes desired replicas relative to the target, then updates the scale target. Controllers create the resulting Pods. Source: [Kubernetes HPA](https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/)"
+  },
+  {
+    "id": "sd-scaling-research-013",
+    "version": 1,
+    "track": "system-design",
+    "topic": "scaling",
+    "format": "mcq",
+    "prompt": "What must be fixed for utilization-based CPU autoscaling?",
+    "difficulty_rating": 1100,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "A CPU-utilization HPA cannot evaluate some Pods. Relevant sidecar containers have neither CPU requests nor CPU limits.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Only increase the container image size"
+      },
+      {
+        "id": "b",
+        "text": "Remove the HPA target percentage"
+      },
+      {
+        "id": "c",
+        "text": "Configure a longer HTTP cache TTL"
+      },
+      {
+        "id": "d",
+        "text": "Set appropriate CPU requests for the relevant containers"
+      }
+    ],
+    "answer": "d",
+    "explanation": "CPU utilization is measured relative to requested CPU. If the relevant containers lack requests, HPA cannot calculate that Pod’s utilization for this metric. Source: [Kubernetes HPA](https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/)"
+  },
+  {
+    "id": "sd-scaling-research-014",
+    "version": 1,
+    "track": "system-design",
+    "topic": "scaling",
+    "format": "mcq",
+    "prompt": "What does this PodDisruptionBudget constrain?",
+    "difficulty_rating": 1150,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "A three-replica Deployment has minAvailable: 2. An operator performs a voluntary drain using the eviction API.",
+    "options": [
+      {
+        "id": "a",
+        "text": "All application releases regardless of method"
+      },
+      {
+        "id": "b",
+        "text": "How much CPU each request may consume"
+      },
+      {
+        "id": "c",
+        "text": "Evictions that would leave fewer than two healthy replicas"
+      },
+      {
+        "id": "d",
+        "text": "Every possible simultaneous hardware failure"
+      }
+    ],
+    "answer": "c",
+    "explanation": "A PDB limits voluntary disruptions through the eviction mechanism. It cannot prevent involuntary failures such as a node disappearing. Source: [Kubernetes PDBs](https://kubernetes.io/docs/tasks/run-application/configure-pdb/)"
+  },
+  {
+    "id": "sd-scaling-research-015",
+    "version": 1,
+    "track": "system-design",
+    "topic": "scaling",
+    "format": "mcq",
+    "prompt": "Which client policy distributes RPCs across ready backend connections?",
+    "difficulty_rating": 1200,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "A gRPC client resolves several healthy backend addresses, but using one selected connection leaves most replicas idle.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Assign a different DNS name to every RPC"
+      },
+      {
+        "id": "b",
+        "text": "round_robin"
+      },
+      {
+        "id": "c",
+        "text": "pick_first with one chosen backend"
+      },
+      {
+        "id": "d",
+        "text": "Increase response compression only"
+      }
+    ],
+    "answer": "b",
+    "explanation": "The round_robin policy cycles among ready subchannels. A policy that selects one connection can keep sending RPCs to one backend. Source: [gRPC load balancing](https://grpc.io/docs/guides/custom-load-balancing/)"
+  },
+  {
+    "id": "sd-scaling-research-016",
+    "version": 1,
+    "track": "system-design",
+    "topic": "scaling",
+    "format": "mcq",
+    "prompt": "Which balancing signal best matches this requirement?",
+    "difficulty_rating": 1050,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "A proxy handles connections with widely varying duration. Choose among equally weighted servers using their active connection counts.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Least connections"
+      },
+      {
+        "id": "b",
+        "text": "Unweighted round-robin"
+      },
+      {
+        "id": "c",
+        "text": "Always choose the first configured server"
+      },
+      {
+        "id": "d",
+        "text": "Choose the server with the longest hostname"
+      }
+    ],
+    "answer": "a",
+    "explanation": "Least-connections sends a new request toward a server with fewer active connections, accounting for configured weights. Round-robin does not use that count. Source: [NGINX balancing](https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/)"
+  },
+  {
+    "id": "sd-scaling-research-017",
+    "version": 1,
+    "track": "system-design",
+    "topic": "scaling",
+    "format": "tap_node",
+    "prompt": "Tap the write hotspot that the partition-key design should address.",
+    "difficulty_rating": 1450,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "A write-heavy event table uses one date as the partition key for every event today. Other date keys are idle; requests for today are throttled.",
+    "diagram": {
+      "nodes": [
+        {
+          "id": "ingest",
+          "label": "Ingestion API",
+          "kind": "service",
+          "note": "many writers"
+        },
+        {
+          "id": "today",
+          "label": "Today partition key",
+          "kind": "db",
+          "note": "all current writes"
+        },
+        {
+          "id": "past",
+          "label": "Older partition keys",
+          "kind": "db",
+          "note": "mostly idle"
+        }
+      ],
+      "edges": [
+        {
+          "from": "ingest",
+          "to": "today",
+          "label": "event writes"
+        },
+        {
+          "from": "ingest",
+          "to": "past",
+          "label": "rare historical writes"
+        }
+      ]
+    },
+    "options": [
+      {
+        "id": "ingest",
+        "text": "Ingestion API"
+      },
+      {
+        "id": "today",
+        "text": "Today partition key"
+      },
+      {
+        "id": "past",
+        "text": "Older partition keys"
+      }
+    ],
+    "answer": "today",
+    "explanation": "DynamoDB key design should distribute activity across partition keys. One extremely busy key can remain a hotspot even when other keys are idle. Source: [DynamoDB key design](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-partition-key-design.html)"
+  },
+  {
+    "id": "sd-scaling-research-018",
+    "version": 1,
+    "track": "system-design",
+    "topic": "scaling",
+    "format": "mcq",
+    "prompt": "What fits a predictable daily surge when new instances need time to warm?",
+    "difficulty_rating": 1250,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "A scheduled sale begins at 09:00 every weekday. New application instances take several minutes to become useful.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Reduce the maximum replica count during the sale"
+      },
+      {
+        "id": "b",
+        "text": "Disable all capacity monitoring"
+      },
+      {
+        "id": "c",
+        "text": "Schedule extra capacity before 09:00"
+      },
+      {
+        "id": "d",
+        "text": "Wait for the peak before starting any instances"
+      }
+    ],
+    "answer": "c",
+    "explanation": "Scheduled actions can raise desired capacity ahead of predictable demand. A schedule should account for startup time rather than waiting until the peak begins. Source: [AWS scheduled scaling](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-scheduled-scaling.html)"
+  },
+  {
+    "id": "sd-scaling-research-019",
+    "version": 1,
+    "track": "system-design",
+    "topic": "scaling",
+    "format": "tap_node",
+    "prompt": "Tap the resource boundary that can explain the throttling.",
+    "difficulty_rating": 1300,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "The node has spare CPU, but the API container reaches its configured CPU limit and reports throttling. The database has low latency.",
+    "diagram": {
+      "nodes": [
+        {
+          "id": "client",
+          "label": "Clients",
+          "kind": "client"
+        },
+        {
+          "id": "api",
+          "label": "API container",
+          "kind": "service",
+          "note": "CPU limit reached"
+        },
+        {
+          "id": "db",
+          "label": "Database",
+          "kind": "db",
+          "note": "low latency"
+        }
+      ],
+      "edges": [
+        {
+          "from": "client",
+          "to": "api",
+          "label": "requests"
+        },
+        {
+          "from": "api",
+          "to": "db",
+          "label": "queries"
+        }
+      ]
+    },
+    "options": [
+      {
+        "id": "client",
+        "text": "Clients"
+      },
+      {
+        "id": "api",
+        "text": "API container"
+      },
+      {
+        "id": "db",
+        "text": "Database"
+      }
+    ],
+    "answer": "api",
+    "explanation": "A container CPU limit can be enforced by throttling even when the node has spare CPU. Increasing replicas is a separate capacity decision. Source: [Kubernetes resources](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)"
+  },
+  {
+    "id": "sd-scaling-research-020",
+    "version": 1,
+    "track": "system-design",
+    "topic": "scaling",
+    "format": "reorder",
+    "prompt": "Order an ALB slow-start target’s transition to normal traffic weight.",
+    "difficulty_rating": 1550,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "An existing healthy target already serves traffic. A newly registered target needs warm caches. Round-robin routing and ALB slow start are enabled.",
+    "options": [
+      {
+        "id": "s1",
+        "text": "Register a new target with the target group"
+      },
+      {
+        "id": "s2",
+        "text": "Wait until the target passes the health checks"
+      },
+      {
+        "id": "s3",
+        "text": "Gradually increase its traffic share during slow start"
+      },
+      {
+        "id": "s4",
+        "text": "Use its full normal traffic share after the interval"
+      }
+    ],
+    "answer": [
+      "s1",
+      "s2",
+      "s3",
+      "s4"
+    ],
+    "explanation": "With supported routing and slow start enabled, a newly healthy target’s traffic weight increases over the slow-start interval before reaching its full share. Source: [ALB slow start](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-target-group-attributes.html#slow-start-mode)"
   }
+
 ]

@@ -152,5 +152,411 @@
     "answer": "a",
     "explanation": "This is cache penetration: keys that never exist are never cached. Negative caching or a Bloom filter answers 'no such ID' without touching the database. A bigger cache does not help with keys that have no value.",
     "difficulty_rating": 1250
+  },
+  {
+    "id": "sd-caching-research-011",
+    "version": 1,
+    "track": "system-design",
+    "topic": "caching",
+    "format": "mcq",
+    "prompt": "Which directive allows storage but requires validation before reuse?",
+    "difficulty_rating": 850,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "options": [
+      {
+        "id": "a",
+        "text": "Cache-Control: public, max-age=3600"
+      },
+      {
+        "id": "b",
+        "text": "Cache-Control: no-cache"
+      },
+      {
+        "id": "c",
+        "text": "Cache-Control: no-store"
+      },
+      {
+        "id": "d",
+        "text": "Cache-Control: immutable"
+      }
+    ],
+    "answer": "b",
+    "explanation": "An unqualified no-cache response may be stored, but reuse needs successful validation. no-store instead prohibits storage. Source: [RFC 9111](https://www.rfc-editor.org/rfc/rfc9111.html)"
+  },
+  {
+    "id": "sd-caching-research-012",
+    "version": 1,
+    "track": "system-design",
+    "topic": "caching",
+    "format": "mcq",
+    "prompt": "Which response header separates these cached representations?",
+    "difficulty_rating": 1050,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "The same public URL returns English or French based on Accept-Language. A shared cache must not mix languages.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Vary: Accept-Language"
+      },
+      {
+        "id": "b",
+        "text": "Content-Length: 0"
+      },
+      {
+        "id": "c",
+        "text": "Retry-After: 60"
+      },
+      {
+        "id": "d",
+        "text": "Connection: close"
+      }
+    ],
+    "answer": "a",
+    "explanation": "Vary makes the nominated request headers part of cache matching. Here, Accept-Language distinguishes the representations. Source: [RFC 9111](https://www.rfc-editor.org/rfc/rfc9111.html)"
+  },
+  {
+    "id": "sd-caching-research-013",
+    "version": 1,
+    "track": "system-design",
+    "topic": "caching",
+    "format": "reorder",
+    "prompt": "Order a successful conditional GET when the resource has not changed.",
+    "difficulty_rating": 950,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "options": [
+      {
+        "id": "s1",
+        "text": "Keep the body and ETag from the initial response"
+      },
+      {
+        "id": "s2",
+        "text": "Send a GET with If-None-Match containing that ETag"
+      },
+      {
+        "id": "s3",
+        "text": "Origin checks the current representation and returns 304"
+      },
+      {
+        "id": "s4",
+        "text": "Reuse the stored body with the validated response metadata"
+      }
+    ],
+    "answer": [
+      "s1",
+      "s2",
+      "s3",
+      "s4"
+    ],
+    "explanation": "The stored entity tag is sent in If-None-Match. A matching current representation permits a 304 response, reusing the stored body. Source: [RFC 9110 §13.1.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-13.1.2)"
+  },
+  {
+    "id": "sd-caching-research-014",
+    "version": 1,
+    "track": "system-design",
+    "topic": "caching",
+    "format": "mcq",
+    "prompt": "Which cache extension fits this explicitly allowed fallback?",
+    "difficulty_rating": 1100,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "A public weather summary may be up to ten minutes stale during an origin outage. Normal responses should still expire after a minute.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Treat every failed write as successful"
+      },
+      {
+        "id": "b",
+        "text": "Keep expired entries forever without a policy"
+      },
+      {
+        "id": "c",
+        "text": "stale-if-error with a bounded stale window"
+      },
+      {
+        "id": "d",
+        "text": "no-store on every response"
+      }
+    ],
+    "answer": "c",
+    "explanation": "stale-if-error permits a stale cached response for a bounded interval when qualifying origin errors occur. It does not make writes succeed. Source: [RFC 5861 §4](https://www.rfc-editor.org/rfc/rfc5861.html#section-4)"
+  },
+  {
+    "id": "sd-caching-research-015",
+    "version": 1,
+    "track": "system-design",
+    "topic": "caching",
+    "format": "mcq",
+    "prompt": "Which policy can evict entries even when they have no expiration?",
+    "difficulty_rating": 1150,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "Redis is used only as a disposable cache. maxmemory is reached, most keys have no TTL, and volatile-lru finds too few candidates.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Persist every cache miss as a new key"
+      },
+      {
+        "id": "b",
+        "text": "allkeys-lru"
+      },
+      {
+        "id": "c",
+        "text": "volatile-lru with the same nonexpiring keys"
+      },
+      {
+        "id": "d",
+        "text": "Disable the memory limit"
+      }
+    ],
+    "answer": "b",
+    "explanation": "allkeys-lru considers all keys for eviction. volatile policies restrict candidates to keys with an expiration, so they cannot solve this pool mismatch. Source: [Redis eviction](https://redis.io/docs/latest/develop/reference/eviction/)"
+  },
+  {
+    "id": "sd-caching-research-016",
+    "version": 1,
+    "track": "system-design",
+    "topic": "caching",
+    "format": "mcq",
+    "prompt": "Which Redis policy approximates usage frequency rather than just recency?",
+    "difficulty_rating": 1200,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "options": [
+      {
+        "id": "a",
+        "text": "allkeys-lfu"
+      },
+      {
+        "id": "b",
+        "text": "allkeys-random"
+      },
+      {
+        "id": "c",
+        "text": "volatile-ttl"
+      },
+      {
+        "id": "d",
+        "text": "noeviction"
+      }
+    ],
+    "answer": "a",
+    "explanation": "allkeys-lfu uses approximate frequency to choose eviction candidates. This is a different signal from how recently an entry was touched. Source: [Redis eviction](https://redis.io/docs/latest/develop/reference/eviction/)"
+  },
+  {
+    "id": "sd-caching-research-017",
+    "version": 1,
+    "track": "system-design",
+    "topic": "caching",
+    "format": "tap_node",
+    "prompt": "Tap the component that must discard its local value after INVALIDATE(profile:7).",
+    "difficulty_rating": 1300,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "API A cached profile:7 locally with Redis tracking enabled. API B updates it in Redis; A receives the invalidation but ignores it.",
+    "diagram": {
+      "nodes": [
+        {
+          "id": "reader",
+          "label": "API A local cache",
+          "kind": "cache",
+          "note": "still holds old profile"
+        },
+        {
+          "id": "redis",
+          "label": "Redis",
+          "kind": "cache",
+          "note": "contains new profile"
+        },
+        {
+          "id": "writer",
+          "label": "API B",
+          "kind": "service",
+          "note": "completed update"
+        }
+      ],
+      "edges": [
+        {
+          "from": "writer",
+          "to": "redis",
+          "label": "SET profile:7"
+        },
+        {
+          "from": "redis",
+          "to": "reader",
+          "label": "INVALIDATE profile:7"
+        }
+      ]
+    },
+    "options": [
+      {
+        "id": "reader",
+        "text": "API A local cache"
+      },
+      {
+        "id": "redis",
+        "text": "Redis"
+      },
+      {
+        "id": "writer",
+        "text": "API B"
+      }
+    ],
+    "answer": "reader",
+    "explanation": "The client that receives an invalidation must remove its corresponding local entry. Updating Redis alone does not rewrite an application process’s memory. Source: [Redis client caching](https://redis.io/docs/latest/develop/reference/client-side-caching/)"
+  },
+  {
+    "id": "sd-caching-research-018",
+    "version": 1,
+    "track": "system-design",
+    "topic": "caching",
+    "format": "tap_node",
+    "prompt": "Tap the layer whose cache-key policy should exclude the tracking parameter.",
+    "difficulty_rating": 1250,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "The origin varies a public guide only by language. CloudFront caches separately for every campaign_id, although that value never changes the content.",
+    "diagram": {
+      "nodes": [
+        {
+          "id": "browser",
+          "label": "Browser",
+          "kind": "client"
+        },
+        {
+          "id": "cdn",
+          "label": "CloudFront",
+          "kind": "cdn",
+          "note": "key includes campaign_id"
+        },
+        {
+          "id": "origin",
+          "label": "Guide origin",
+          "kind": "service",
+          "note": "varies only by language"
+        }
+      ],
+      "edges": [
+        {
+          "from": "browser",
+          "to": "cdn",
+          "label": "language + campaign_id"
+        },
+        {
+          "from": "cdn",
+          "to": "origin",
+          "label": "cache miss"
+        }
+      ]
+    },
+    "options": [
+      {
+        "id": "browser",
+        "text": "Browser"
+      },
+      {
+        "id": "cdn",
+        "text": "CloudFront"
+      },
+      {
+        "id": "origin",
+        "text": "Guide origin"
+      }
+    ],
+    "answer": "cdn",
+    "explanation": "CloudFront can cache on selected query parameters. Include language, which changes the representation, and exclude an irrelevant tracking ID. Source: [CloudFront cache keys](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/QueryStringParameters.html)"
+  },
+  {
+    "id": "sd-caching-research-019",
+    "version": 1,
+    "track": "system-design",
+    "topic": "caching",
+    "format": "reorder",
+    "prompt": "Order the write-and-refill path for a cache-aside update.",
+    "difficulty_rating": 1450,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "options": [
+      {
+        "id": "s1",
+        "text": "Commit the new value to the database"
+      },
+      {
+        "id": "s2",
+        "text": "Invalidate the corresponding cached entry"
+      },
+      {
+        "id": "s3",
+        "text": "A later reader observes the cache miss"
+      },
+      {
+        "id": "s4",
+        "text": "Read the committed value and populate the cache"
+      }
+    ],
+    "answer": [
+      "s1",
+      "s2",
+      "s3",
+      "s4"
+    ],
+    "explanation": "Commit the database change before invalidating the cache, so a miss can reload the committed value. This ordering still does not guarantee strong consistency. Source: [Azure Cache-Aside](https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside)"
+  },
+  {
+    "id": "sd-caching-research-020",
+    "version": 1,
+    "track": "system-design",
+    "topic": "caching",
+    "format": "mcq",
+    "prompt": "What should the losing Memcached updater do?",
+    "difficulty_rating": 1550,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "Two clients use gets to read the same cached JSON document and token. One cas succeeds; the other reports that the item changed.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Read again and recompute before retrying CAS"
+      },
+      {
+        "id": "b",
+        "text": "Force-set its old computed document"
+      },
+      {
+        "id": "c",
+        "text": "Retry forever with the same token"
+      },
+      {
+        "id": "d",
+        "text": "Assume both updates were applied"
+      }
+    ],
+    "answer": "a",
+    "explanation": "CAS checks the token returned by gets. On a conflict, fetch the current value/token and recompute the update rather than overwriting a concurrent change. Source: [Memcached protocol](https://docs.memcached.org/protocols/basic/)"
   }
+
 ]

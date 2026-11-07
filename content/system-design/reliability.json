@@ -152,5 +152,409 @@
     "answer": "b",
     "explanation": "A shared dependency in the health check makes every instance fail at once, turning a brief database blip into a total outage. The load balancer should only remove instances that are themselves broken.",
     "difficulty_rating": 1300
+  },
+  {
+    "id": "sd-reliability-research-011",
+    "version": 1,
+    "track": "system-design",
+    "topic": "reliability",
+    "format": "mcq",
+    "prompt": "Which item is an SLI rather than the target SLO?",
+    "difficulty_rating": 850,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "options": [
+      {
+        "id": "a",
+        "text": "The deployment branch name"
+      },
+      {
+        "id": "b",
+        "text": "The measured fraction of successful requests"
+      },
+      {
+        "id": "c",
+        "text": "The target of 99.9% successful requests"
+      },
+      {
+        "id": "d",
+        "text": "The on-call engineer’s name"
+      }
+    ],
+    "answer": "b",
+    "explanation": "An SLI is a measured service characteristic. An SLO specifies the target for that indicator over a defined scope and window. Source: [Google SRE objectives](https://sre.google/sre-book/service-level-objectives/)"
+  },
+  {
+    "id": "sd-reliability-research-012",
+    "version": 1,
+    "track": "system-design",
+    "topic": "reliability",
+    "format": "mcq",
+    "prompt": "What failure count corresponds to the entire error budget?",
+    "difficulty_rating": 950,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "The window contains exactly 1,000,000 eligible requests. The SLO is 99.9% successful requests, with every request weighted equally.",
+    "options": [
+      {
+        "id": "a",
+        "text": "1,000 failed requests"
+      },
+      {
+        "id": "b",
+        "text": "100 failed requests"
+      },
+      {
+        "id": "c",
+        "text": "10,000 failed requests"
+      },
+      {
+        "id": "d",
+        "text": "Zero failed requests"
+      }
+    ],
+    "answer": "a",
+    "explanation": "For this request-based objective, 0.1% of 1,000,000 is 1,000 failed requests. This is not a time-based downtime calculation. Source: [Google SRE objectives](https://sre.google/sre-book/service-level-objectives/)"
+  },
+  {
+    "id": "sd-reliability-research-013",
+    "version": 1,
+    "track": "system-design",
+    "topic": "reliability",
+    "format": "mcq",
+    "prompt": "Which latency view exposes the users hidden by the average?",
+    "difficulty_rating": 1050,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "Most requests remain fast, but around 2% now take several seconds. The team wants to see that slow tail.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Only average response size"
+      },
+      {
+        "id": "b",
+        "text": "Only the total server count"
+      },
+      {
+        "id": "c",
+        "text": "Only successful-request mean latency"
+      },
+      {
+        "id": "d",
+        "text": "High latency percentiles such as p99"
+      }
+    ],
+    "answer": "d",
+    "explanation": "Tail latency shows the slow fraction of requests that an average can hide. Inspect successful and failed requests separately as well. Source: [Google SRE monitoring](https://sre.google/sre-book/monitoring-distributed-systems/)"
+  },
+  {
+    "id": "sd-reliability-research-014",
+    "version": 1,
+    "track": "system-design",
+    "topic": "reliability",
+    "format": "mcq",
+    "prompt": "What is the maximum number of database calls for one API request?",
+    "difficulty_rating": 1150,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "An API can call a worker three times. Each worker attempt can call a gateway three times; each gateway attempt can call the database three times. All attempts fail.",
+    "options": [
+      {
+        "id": "a",
+        "text": "6"
+      },
+      {
+        "id": "b",
+        "text": "9"
+      },
+      {
+        "id": "c",
+        "text": "27"
+      },
+      {
+        "id": "d",
+        "text": "3"
+      }
+    ],
+    "answer": "c",
+    "explanation": "If all three layers independently make up to three attempts and every attempt reaches the next layer, the leaf can see 3 × 3 × 3 = 27 attempts. Retries can multiply load. Source: [AWS Builders Library](https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/)"
+  },
+  {
+    "id": "sd-reliability-research-015",
+    "version": 1,
+    "track": "system-design",
+    "topic": "reliability",
+    "format": "mcq",
+    "prompt": "What reduces synchronization when many clients retry at the same backoff times?",
+    "difficulty_rating": 1200,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "Clients use identical exponential backoff intervals after an outage. Their retries form recurring traffic spikes.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Make all clients use one fixed retry timestamp"
+      },
+      {
+        "id": "b",
+        "text": "Add jitter to the bounded backoff policy"
+      },
+      {
+        "id": "c",
+        "text": "Retry immediately with no limit"
+      },
+      {
+        "id": "d",
+        "text": "Remove every timeout"
+      }
+    ],
+    "answer": "b",
+    "explanation": "Jitter randomizes retry timing so clients do not all return together. Keep retries bounded and budgeted; random delays alone do not fix an overloaded dependency. Source: [AWS Builders Library](https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/)"
+  },
+  {
+    "id": "sd-reliability-research-016",
+    "version": 1,
+    "track": "system-design",
+    "topic": "reliability",
+    "format": "tap_node",
+    "prompt": "Tap the queue whose unbounded backlog defeats the request deadlines.",
+    "difficulty_rating": 1450,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "Requests have a one-second end-to-end deadline, but the server’s waiting queue already takes ten seconds to drain. Workers keep starting expired requests.",
+    "diagram": {
+      "nodes": [
+        {
+          "id": "client",
+          "label": "Clients",
+          "kind": "client",
+          "note": "deadline: 1 second"
+        },
+        {
+          "id": "queue",
+          "label": "Server waiting queue",
+          "kind": "queue",
+          "note": "wait: 10 seconds"
+        },
+        {
+          "id": "workers",
+          "label": "Workers",
+          "kind": "service",
+          "note": "start expired requests"
+        }
+      ],
+      "edges": [
+        {
+          "from": "client",
+          "to": "queue",
+          "label": "requests"
+        },
+        {
+          "from": "queue",
+          "to": "workers",
+          "label": "unbounded backlog"
+        }
+      ]
+    },
+    "options": [
+      {
+        "id": "client",
+        "text": "Clients"
+      },
+      {
+        "id": "queue",
+        "text": "Server waiting queue"
+      },
+      {
+        "id": "workers",
+        "text": "Workers"
+      }
+    ],
+    "answer": "queue",
+    "explanation": "Bounding queues and shedding overload can avoid spending scarce capacity on requests that cannot meet their deadlines. More queued work is not automatically useful work. Source: [Google SRE overload](https://sre.google/sre-book/handling-overload/)"
+  },
+  {
+    "id": "sd-reliability-research-017",
+    "version": 1,
+    "track": "system-design",
+    "topic": "reliability",
+    "format": "tap_node",
+    "prompt": "Tap the resource pool that should be isolated from optional work.",
+    "difficulty_rating": 1250,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "Slow recommendation calls consume every connection in a shared pool. Checkout is healthy but cannot get a connection.",
+    "diagram": {
+      "nodes": [
+        {
+          "id": "checkout",
+          "label": "Checkout",
+          "kind": "service",
+          "note": "critical"
+        },
+        {
+          "id": "optional",
+          "label": "Recommendations",
+          "kind": "service",
+          "note": "optional and slow"
+        },
+        {
+          "id": "pool",
+          "label": "Shared connection pool",
+          "kind": "service",
+          "note": "all slots occupied"
+        }
+      ],
+      "edges": [
+        {
+          "from": "checkout",
+          "to": "pool",
+          "label": "needs capacity"
+        },
+        {
+          "from": "optional",
+          "to": "pool",
+          "label": "uses every slot"
+        }
+      ]
+    },
+    "options": [
+      {
+        "id": "checkout",
+        "text": "Checkout"
+      },
+      {
+        "id": "optional",
+        "text": "Recommendations"
+      },
+      {
+        "id": "pool",
+        "text": "Shared connection pool"
+      }
+    ],
+    "answer": "pool",
+    "explanation": "Bulkheads partition resources so one failing part cannot consume all capacity needed by another. Separate bounded pools make that isolation explicit. Source: [Azure Bulkhead](https://learn.microsoft.com/en-us/azure/architecture/patterns/bulkhead)"
+  },
+  {
+    "id": "sd-reliability-research-018",
+    "version": 1,
+    "track": "system-design",
+    "topic": "reliability",
+    "format": "mcq",
+    "prompt": "Which probe can gate liveness and readiness until initial startup succeeds?",
+    "difficulty_rating": 1300,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "A container legitimately needs 90 seconds to initialize, but ordinary liveness checks keep restarting it before initialization finishes.",
+    "options": [
+      {
+        "id": "a",
+        "text": "An unrelated cache eviction policy"
+      },
+      {
+        "id": "b",
+        "text": "A new hostname without changing probe behavior"
+      },
+      {
+        "id": "c",
+        "text": "A suitably configured startup probe"
+      },
+      {
+        "id": "d",
+        "text": "An even shorter liveness failure threshold"
+      }
+    ],
+    "answer": "c",
+    "explanation": "A startup probe delays liveness and readiness checks until it succeeds. Its failure threshold and period must allow the expected initialization time. Source: [Kubernetes probes](https://kubernetes.io/docs/concepts/workloads/pods/probes/)"
+  },
+  {
+    "id": "sd-reliability-research-019",
+    "version": 1,
+    "track": "system-design",
+    "topic": "reliability",
+    "format": "mcq",
+    "prompt": "Which recovery objective is missed in the worst case?",
+    "difficulty_rating": 1100,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "Backups are four hours apart, with no later recoverable log. The required RPO is one hour and RTO is 30 minutes. Restoration takes ten minutes.",
+    "options": [
+      {
+        "id": "a",
+        "text": "RTO and RPO mean the same thing"
+      },
+      {
+        "id": "b",
+        "text": "The one-hour RPO"
+      },
+      {
+        "id": "c",
+        "text": "The 30-minute RTO"
+      },
+      {
+        "id": "d",
+        "text": "Neither objective can ever be met by any system"
+      }
+    ],
+    "answer": "b",
+    "explanation": "RPO constrains tolerable data loss measured from the recovery point. Fast restoration can satisfy RTO while an old backup still misses the RPO. Source: [AWS recovery objectives](https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/rel_planning_for_recovery_objective_defined_recovery.html)"
+  },
+  {
+    "id": "sd-reliability-research-020",
+    "version": 1,
+    "track": "system-design",
+    "topic": "reliability",
+    "format": "reorder",
+    "prompt": "Order a basic canary evaluation before a broad rollout.",
+    "difficulty_rating": 1550,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "options": [
+      {
+        "id": "s1",
+        "text": "Choose representative traffic, comparison metrics and stop criteria"
+      },
+      {
+        "id": "s2",
+        "text": "Send a small controlled share to the new version"
+      },
+      {
+        "id": "s3",
+        "text": "Compare canary and control over an adequate sample and window"
+      },
+      {
+        "id": "s4",
+        "text": "Expand if criteria pass, or stop and investigate if they fail"
+      }
+    ],
+    "answer": [
+      "s1",
+      "s2",
+      "s3",
+      "s4"
+    ],
+    "explanation": "A useful canary compares a representative sample against the control and service objectives. A few successful requests alone are not sufficient evidence for expansion. Source: [Google SRE canaries](https://sre.google/workbook/canarying-releases/)"
   }
+
 ]
