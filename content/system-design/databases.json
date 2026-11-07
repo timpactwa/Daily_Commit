@@ -10,7 +10,7 @@
       { "id": "d", "text": "Add RAM to the API servers" }
     ],
     "answer": "b",
-    "explanation": "Without an index the database scans all 50M rows. An index on user_id turns it into a fast lookup. Changing databases or caching the whole table is far more work for the same win.",
+    "explanation": "An index on user_id gives the database a way to locate matching orders without examining every row. This matches the query's filter directly, making it a smaller first step than changing databases. Check the query plan afterward: if the query returns a large fraction of the table, a scan may still be appropriate. Indexes also cost storage and write work, so add them to support real access patterns.",
     "difficulty_rating": 1000, "placement": true
   },
   {
@@ -24,7 +24,7 @@
       { "id": "d", "text": "Increase the replicas' cache size" }
     ],
     "answer": "c",
-    "explanation": "Replica lag means a fresh write may not have reached the replica yet. Routing a user's reads to the primary right after their own write gives read-your-writes consistency without sending all reads there.",
+    "explanation": "An asynchronous replica can be behind the primary even after a write succeeds. A refresh sent to that replica may therefore miss the new comment. Serving the author's next reads from the primary provides read-your-writes behavior while other reads can use replicas. A fixed time window is a heuristic, not a guarantee of catch-up; stronger designs track replication progress. Adding more lagging replicas does not solve freshness.",
     "difficulty_rating": 1200, "placement": true
   },
   {
@@ -38,7 +38,7 @@
       { "id": "d", "text": "Shard by tenant_id, and give the largest tenants their own shards" }
     ],
     "answer": "d",
-    "explanation": "tenant_id keeps nearly every query on one shard. The giant tenants would overload a shared shard, so they get dedicated ones. Sharding by month makes the newest shard hot; random IDs force every query to hit every shard.",
+    "explanation": "Choose a partition key that matches how data is accessed. tenant_id keeps most queries local to one shard, avoiding fan-out to every database. But equal numbers of tenants do not mean equal load: one huge tenant can dominate a shard. Isolating the largest tenants addresses that skew. Time-based partitions can create a hot newest shard, while random row placement makes tenant-wide queries expensive.",
     "difficulty_rating": 1400, "placement": true, "tags": ["tradeoff"]
   },
   {
@@ -51,7 +51,7 @@
       { "id": "d", "text": "Nothing; indexes are free" }
     ],
     "answer": "a",
-    "explanation": "An index is an extra data structure the database must update on every insert, update and delete, and it takes disk space. In return, lookups on the indexed column are much faster.",
+    "explanation": "An index is an additional structure that points to rows. It saves search work for suitable queries, but relevant inserts, updates and deletes must maintain it, and it occupies storage. Think of a book's index: locating a term is easier, but the index must change when the contents change. Measure the read benefit against write overhead rather than indexing every column automatically.",
     "difficulty_rating": 850, "tags": ["tradeoff"]
   },
   {
@@ -64,7 +64,7 @@
       { "id": "d", "text": "To enforce the schema" }
     ],
     "answer": "b",
-    "explanation": "Replicas copy the primary's data so they can serve reads and take over if the primary fails. Every write still goes to the primary, so they do not speed up writes.",
+    "explanation": "A read replica maintains a copy of the primary's data and can answer read-only queries, spreading read load. It may also be a failover candidate if promotion and routing are configured. Writes still go through the primary in this design, so replicas do not directly increase write throughput. Asynchronous replication can lag, so decide which reads tolerate stale results before routing them to replicas.",
     "difficulty_rating": 950
   },
   {
@@ -94,7 +94,7 @@
       { "id": "replica", "text": "Read replica" }
     ],
     "answer": "primary",
-    "explanation": "The primary is pegged at 98% because the report runs heavy scans on it while checkout needs it too. Point the report at the idle replica.",
+    "explanation": "The timing suggests resource contention: the report and checkout share the primary, and heavy report scans consume capacity needed by transactions. Moving the report to the idle read replica separates those workloads. The report must tolerate replication delay, and replica queries can have their own operational limits. The lesson is to identify shared resources and isolate workloads with different freshness and latency needs.",
     "difficulty_rating": 1050
   },
   {
@@ -107,7 +107,7 @@
       { "id": "s4", "text": "Add the NOT NULL constraint" }
     ],
     "answer": ["s1", "s2", "s3", "s4"],
-    "explanation": "Adding a NOT NULL column directly fails or locks the table. Add it nullable, make new writes fill it, backfill the old rows, and only then enforce the constraint.",
+    "explanation": "Expand the schema before enforcing the new rule. A nullable column keeps old rows valid; new code starts filling it; a batched backfill updates historical rows; only then enforce NOT NULL. Reversing those dependencies can reject writes or fail the migration. Check for remaining nulls and coordinate older application versions before adding the constraint. Exact locking behavior also depends on the database and migration method.",
     "difficulty_rating": 1150
   },
   {
@@ -121,7 +121,7 @@
       { "id": "d", "text": "Paginate to 10 posts per page" }
     ],
     "answer": "a",
-    "explanation": "This is the N+1 query problem. One batched query replaces 50 round trips. Smaller pages only shrink N; they do not remove the pattern.",
+    "explanation": "This is an N+1 access pattern: one query loads posts and N extra queries load authors. Each round trip adds overhead even if individual lookups are fast. A JOIN or one batched author query fetches the needed data together, replacing 50 author trips here. Smaller pages only reduce N temporarily. Check query counts and duplicate author IDs when diagnosing this pattern.",
     "difficulty_rating": 1000
   },
   {
@@ -135,7 +135,7 @@
       { "id": "d", "text": "Put a connection pooler (like PgBouncer) in front and shrink per-instance pools" }
     ],
     "answer": "d",
-    "explanation": "200 x 50 = 10,000 possible connections against a limit of 1,000. Each Postgres connection costs memory, so raising the limit that far hurts. A pooler multiplexes many client connections onto a small set of real ones.",
+    "explanation": "Connection capacity is shared across the whole fleet. Two hundred pools of 50 can request 10,000 backend connections against a 1,000-connection limit, with extra overlap during deploys. A pooler multiplexes clients onto fewer backend connections; smaller application pools reduce demand too. Raising the database limit is not free because connections consume resources. Size for fleet-wide peak concurrency, not one instance.",
     "difficulty_rating": 1250
   },
   {
@@ -149,7 +149,412 @@
       { "id": "d", "text": "Run the 6 joins in the application instead" }
     ],
     "answer": "b",
-    "explanation": "With reads dominating, doing the expensive work once at write time and reading a ready-made row is a good trade. The cost is extra storage and keeping the copy in sync on writes.",
+    "explanation": "A denormalized feed moves repeated join work into an update path. When reads greatly outnumber changes, maintaining a ready-to-read view can save the same expensive computation many times. The tradeoff is extra storage and a second representation to keep current. Decide how updates propagate and how much staleness is acceptable. Moving the same joins into application code does not remove their underlying work.",
     "difficulty_rating": 1300, "tags": ["tradeoff"]
+  },
+  {
+    "id": "sd-databases-research-011",
+    "version": 1,
+    "track": "system-design",
+    "topic": "databases",
+    "format": "mcq",
+    "prompt": "Which PostgreSQL constraint prevents duplicate non-null request IDs?",
+    "difficulty_rating": 850,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "Two API workers may insert the same non-null request_id concurrently. The table must reject a duplicate.",
+    "options": [
+      {
+        "id": "a",
+        "text": "A longer cache TTL"
+      },
+      {
+        "id": "b",
+        "text": "A UNIQUE constraint on request_id"
+      },
+      {
+        "id": "c",
+        "text": "A SELECT-before-INSERT check with no constraint"
+      },
+      {
+        "id": "d",
+        "text": "An index on an unrelated timestamp"
+      }
+    ],
+    "answer": "b",
+    "explanation": "A UNIQUE constraint enforces uniqueness in the database, including concurrent inserts. An application-only existence check can race. Source: [PostgreSQL constraints](https://www.postgresql.org/docs/18/ddl-constraints.html)"
+  },
+  {
+    "id": "sd-databases-research-012",
+    "version": 1,
+    "track": "system-design",
+    "topic": "databases",
+    "format": "mcq",
+    "prompt": "Which B-tree order matches equality on tenant_id followed by a created_at range?",
+    "difficulty_rating": 1050,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "options": [
+      {
+        "id": "a",
+        "text": "(tenant_id, created_at)"
+      },
+      {
+        "id": "b",
+        "text": "(created_at, unrelated_note)"
+      },
+      {
+        "id": "c",
+        "text": "(unrelated_note, tenant_id)"
+      },
+      {
+        "id": "d",
+        "text": "An index on no queried columns"
+      }
+    ],
+    "answer": "a",
+    "explanation": "Leading equality conditions followed by the range column can bound a multicolumn B-tree scan. Actual plan choice still depends on the data and costs. Source: [PostgreSQL indexes](https://www.postgresql.org/docs/18/indexes-multicolumn.html)"
+  },
+  {
+    "id": "sd-databases-research-013",
+    "version": 1,
+    "track": "system-design",
+    "topic": "databases",
+    "format": "mcq",
+    "prompt": "Which query most directly uses the leftmost leading column of this B-tree?",
+    "difficulty_rating": 1150,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "PostgreSQL has a B-tree index on (organization_id, event_time). Do not assume that a later-column-only filter can never use it.",
+    "options": [
+      {
+        "id": "a",
+        "text": "Only an unrelated description substring"
+      },
+      {
+        "id": "b",
+        "text": "Only a nonindexed status flag"
+      },
+      {
+        "id": "c",
+        "text": "No filter and no ordering requirement"
+      },
+      {
+        "id": "d",
+        "text": "organization_id = one organization"
+      }
+    ],
+    "answer": "d",
+    "explanation": "An equality restriction on the leading column directly bounds the scan. Later-column-only predicates may need more scanning or a skip-scan strategy. Source: [PostgreSQL indexes](https://www.postgresql.org/docs/18/indexes-multicolumn.html)"
+  },
+  {
+    "id": "sd-databases-research-014",
+    "version": 1,
+    "track": "system-design",
+    "topic": "databases",
+    "format": "mcq",
+    "prompt": "What must you remember before using EXPLAIN ANALYZE on this statement?",
+    "difficulty_rating": 950,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "You want execution measurements for an UPDATE on a production table, without accidentally leaving test changes committed.",
+    "options": [
+      {
+        "id": "a",
+        "text": "It automatically creates a backup"
+      },
+      {
+        "id": "b",
+        "text": "It ignores all row locks"
+      },
+      {
+        "id": "c",
+        "text": "The UPDATE really runs"
+      },
+      {
+        "id": "d",
+        "text": "It only estimates and never executes the UPDATE"
+      }
+    ],
+    "answer": "c",
+    "explanation": "EXPLAIN ANALYZE executes the statement to gather actual measurements. For a data-changing statement, use an appropriate safe test or transaction/rollback plan. Source: [PostgreSQL EXPLAIN](https://www.postgresql.org/docs/18/using-explain.html)"
+  },
+  {
+    "id": "sd-databases-research-015",
+    "version": 1,
+    "track": "system-design",
+    "topic": "databases",
+    "format": "mcq",
+    "prompt": "Why can the second SELECT observe a different committed value?",
+    "difficulty_rating": 1100,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "A transaction runs two SELECTs at Read Committed. Another transaction commits an update between them.",
+    "options": [
+      {
+        "id": "a",
+        "text": "The database has lost atomicity"
+      },
+      {
+        "id": "b",
+        "text": "Each statement can get a newer committed snapshot"
+      },
+      {
+        "id": "c",
+        "text": "Read Committed reads only uncommitted data"
+      },
+      {
+        "id": "d",
+        "text": "SELECT always locks the entire table"
+      }
+    ],
+    "answer": "b",
+    "explanation": "At PostgreSQL Read Committed, each statement uses a snapshot taken when that statement starts. One transaction does not imply one fixed snapshot at this level. Source: [PostgreSQL isolation](https://www.postgresql.org/docs/18/transaction-iso.html)"
+  },
+  {
+    "id": "sd-databases-research-016",
+    "version": 1,
+    "track": "system-design",
+    "topic": "databases",
+    "format": "reorder",
+    "prompt": "Order the application response to a PostgreSQL serialization failure.",
+    "difficulty_rating": 1450,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "options": [
+      {
+        "id": "s1",
+        "text": "Recognize that the current transaction was aborted"
+      },
+      {
+        "id": "s2",
+        "text": "Roll back the failed transaction"
+      },
+      {
+        "id": "s3",
+        "text": "Begin a new transaction and repeat its reads and decisions"
+      },
+      {
+        "id": "s4",
+        "text": "Attempt all writes and commit the new transaction"
+      }
+    ],
+    "answer": [
+      "s1",
+      "s2",
+      "s3",
+      "s4"
+    ],
+    "explanation": "A serialization failure requires retrying the whole transaction, including reads and decisions, rather than only the final write using stale assumptions. Source: [PostgreSQL isolation](https://www.postgresql.org/docs/18/transaction-iso.html)"
+  },
+  {
+    "id": "sd-databases-research-017",
+    "version": 1,
+    "track": "system-design",
+    "topic": "databases",
+    "format": "mcq",
+    "prompt": "Which claim mechanism lets another worker skip this locked job row?",
+    "difficulty_rating": 1250,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "Workers claim jobs inside short PostgreSQL transactions. One selected job row is already locked by another worker.",
+    "options": [
+      {
+        "id": "a",
+        "text": "A plain SELECT with no locking"
+      },
+      {
+        "id": "b",
+        "text": "Sleep while holding every table row lock"
+      },
+      {
+        "id": "c",
+        "text": "Read the same row and assume ownership"
+      },
+      {
+        "id": "d",
+        "text": "SELECT ... FOR UPDATE SKIP LOCKED"
+      }
+    ],
+    "answer": "d",
+    "explanation": "FOR UPDATE SKIP LOCKED skips rows whose row lock cannot be acquired immediately. It is useful for queue-like tables, not a general consistent-read guarantee. Source: [PostgreSQL SELECT](https://www.postgresql.org/docs/18/sql-select.html#SQL-FOR-UPDATE-SHARE)"
+  },
+  {
+    "id": "sd-databases-research-018",
+    "version": 1,
+    "track": "system-design",
+    "topic": "databases",
+    "format": "tap_node",
+    "prompt": "Tap the replica where a query-versus-replay conflict must be handled.",
+    "difficulty_rating": 1300,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "A PostgreSQL standby runs a long report while incoming WAL needs to remove data the report still uses. The primary already committed that change.",
+    "diagram": {
+      "nodes": [
+        {
+          "id": "primary",
+          "label": "Primary",
+          "kind": "db",
+          "note": "change committed"
+        },
+        {
+          "id": "replica",
+          "label": "Reporting standby",
+          "kind": "db",
+          "note": "query conflicts with WAL"
+        },
+        {
+          "id": "report",
+          "label": "Report client",
+          "kind": "client"
+        }
+      ],
+      "edges": [
+        {
+          "from": "primary",
+          "to": "replica",
+          "label": "WAL replay"
+        },
+        {
+          "from": "report",
+          "to": "replica",
+          "label": "long SELECT"
+        }
+      ]
+    },
+    "options": [
+      {
+        "id": "primary",
+        "text": "Primary"
+      },
+      {
+        "id": "replica",
+        "text": "Reporting standby"
+      },
+      {
+        "id": "report",
+        "text": "Report client"
+      }
+    ],
+    "answer": "replica",
+    "explanation": "A standby may delay WAL replay or cancel a conflicting query. Allowing replay to wait indefinitely can increase lag; adding a read replica does not remove this tradeoff. Source: [PostgreSQL hot standby](https://www.postgresql.org/docs/18/hot-standby.html)"
+  },
+  {
+    "id": "sd-databases-research-019",
+    "version": 1,
+    "track": "system-design",
+    "topic": "databases",
+    "format": "tap_node",
+    "prompt": "Tap the layer where partition pruning can exclude unrelated months.",
+    "difficulty_rating": 1200,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "scenario": "An events table is range-partitioned monthly on event_time. A query explicitly restricts event_time to one month.",
+    "diagram": {
+      "nodes": [
+        {
+          "id": "api",
+          "label": "Report API",
+          "kind": "service"
+        },
+        {
+          "id": "planner",
+          "label": "Postgres query planner",
+          "kind": "db",
+          "note": "event_time range known"
+        },
+        {
+          "id": "store",
+          "label": "Monthly partitions",
+          "kind": "db"
+        }
+      ],
+      "edges": [
+        {
+          "from": "api",
+          "to": "planner",
+          "label": "one-month query"
+        },
+        {
+          "from": "planner",
+          "to": "store",
+          "label": "select partitions"
+        }
+      ]
+    },
+    "options": [
+      {
+        "id": "api",
+        "text": "Report API"
+      },
+      {
+        "id": "planner",
+        "text": "Postgres query planner"
+      },
+      {
+        "id": "store",
+        "text": "Monthly partitions"
+      }
+    ],
+    "answer": "planner",
+    "explanation": "PostgreSQL can prune partitions using partition bounds and a suitable predicate on the partition key. Partitioning alone does not make every query selective. Source: [PostgreSQL pruning](https://www.postgresql.org/docs/18/ddl-partitioning.html#DDL-PARTITION-PRUNING)"
+  },
+  {
+    "id": "sd-databases-research-020",
+    "version": 1,
+    "track": "system-design",
+    "topic": "databases",
+    "format": "reorder",
+    "prompt": "Order the basic operational plan for a concurrent index build.",
+    "difficulty_rating": 1550,
+    "tags": [
+      "research-2026-11",
+      "source-backed"
+    ],
+    "options": [
+      {
+        "id": "s1",
+        "text": "Choose the needed index and check operational constraints"
+      },
+      {
+        "id": "s2",
+        "text": "Run CREATE INDEX CONCURRENTLY outside a transaction block"
+      },
+      {
+        "id": "s3",
+        "text": "Monitor the build and any waits for transactions"
+      },
+      {
+        "id": "s4",
+        "text": "Confirm that the completed index is valid and inspect query plans"
+      }
+    ],
+    "answer": [
+      "s1",
+      "s2",
+      "s3",
+      "s4"
+    ],
+    "explanation": "CREATE INDEX CONCURRENTLY avoids locking out ordinary writes but does more work and can wait for transactions. Check the finished index’s validity before relying on it. Source: [PostgreSQL CREATE INDEX](https://www.postgresql.org/docs/18/sql-createindex.html#SQL-CREATEINDEX-CONCURRENTLY)"
   }
+
 ]

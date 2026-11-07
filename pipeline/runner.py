@@ -10,7 +10,9 @@ import subprocess
 import sys
 from dataclasses import dataclass
 
-TIMEOUT_S = 1.0
+# Allow interpreter startup under load as well as the tiny case tables. A short
+# startup race must not change which mutants enter the generated question bank.
+TIMEOUT_S = 3.0
 
 _CHILD = r"""
 import copy, json, sys

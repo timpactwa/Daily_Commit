@@ -12,13 +12,13 @@
         "sd-ranked-beginner-01",
         "dbg-ranked-contains-duplicate-flip-comparison-01",
         "sd-ranked-beginner-02",
-        "dbg-ranked-sum-digits-wrong-base-case-01",
+        "dbg-ranked-count-vowels-off-by-one-01",
         "sd-ranked-beginner-03",
         "dbg-ranked-is-sorted-wrong-operator-01",
         "sd-ranked-beginner-04",
-        "dbg-ranked-count-vowels-off-by-one-01",
+        "dbg-ranked-max-of-list-off-by-one-01",
         "sd-ranked-beginner-05",
-        "dbg-ranked-max-of-list-off-by-one-01"
+        "dbg-ranked-sum-digits-wrong-base-case-01"
       ]
     },
     {
@@ -30,15 +30,15 @@
       "max_rating": 1300,
       "questions": [
         "sd-ranked-intermediate-01",
-        "dbg-ranked-remove-duplicates-flip-comparison-01",
-        "sd-ranked-intermediate-02",
         "dbg-ranked-first-occurrence-flip-comparison-01",
-        "sd-ranked-intermediate-03",
-        "dbg-ranked-bubble-sort-wrong-operator-01",
-        "sd-ranked-intermediate-04",
+        "sd-ranked-intermediate-02",
         "dbg-ranked-is-anagram-wrong-return-01",
+        "sd-ranked-intermediate-03",
+        "dbg-ranked-max-depth-wrong-operator-01",
+        "sd-ranked-intermediate-04",
+        "dbg-ranked-remove-duplicates-flip-comparison-01",
         "sd-ranked-intermediate-05",
-        "dbg-ranked-depth-sum-off-by-one-01"
+        "dbg-ranked-selection-sort-off-by-one-01"
       ]
     },
     {
@@ -50,15 +50,15 @@
       "max_rating": 2201,
       "questions": [
         "sd-ranked-advanced-01",
-        "dbg-ranked-gen-parens-wrong-operator-02",
+        "dbg-ranked-find-peak-wrong-operator-02",
         "sd-ranked-advanced-02",
-        "dbg-ranked-search-rotated-flip-comparison-02",
+        "dbg-ranked-gen-parens-flip-comparison-01",
         "sd-ranked-advanced-03",
-        "dbg-ranked-longest-unique-swap-and-or-01",
+        "dbg-ranked-quick-sort-wrong-operator-02",
         "sd-ranked-advanced-04",
-        "dbg-ranked-quick-sort-off-by-one-04",
+        "dbg-ranked-spiral-order-swap-and-or-01",
         "sd-ranked-advanced-05",
-        "dbg-ranked-spiral-order-swap-and-or-01"
+        "dbg-ranked-word-pattern-wrong-return-01"
       ]
     }
   ]

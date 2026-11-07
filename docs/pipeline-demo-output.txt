@@ -1,0 +1,42 @@
+STEP 1  A working function and its tests
+   1    def search(nums, target):
+   2        lo = 0
+   3        hi = len(nums) - 1
+   4        while lo <= hi:
+   5            mid = (lo + hi) // 2
+   6            if nums[mid] == target:
+   7                return mid
+   8            if nums[mid] < target:
+   9                lo = mid + 1
+  10            else:
+  11                hi = mid - 1
+  12        return -1
+  running 6 test cases ... all pass
+
+STEP 2  Generate every single-line bug
+  12 candidate bugs: 7 break a test, 2 don't (thrown away), 3 loop forever (thrown away)
+
+STEP 3  Inject one bug (flip comparison)
+  line 4:  while lo <= hi:
+      ->   while lo < hi:
+
+STEP 4  Run the same tests: the bug must make them fail
+  3 of 6 cases fail  ->  bug is real, keep it
+    search([1, 3, 5, 7], 7): expected 3, got -1
+    search([1, 3, 5, 7], 1): expected 0, got -1
+    search([4], 4): expected 0, got -1
+
+STEP 5  Emit the question (answer = the line we changed)
+   1    def search(nums, target):
+   2        lo = 0
+   3        hi = len(nums) - 1
+   4 >>     while lo < hi:
+   5            mid = (lo + hi) // 2
+   6            if nums[mid] == target:
+   7                return mid
+   8            if nums[mid] < target:
+   9                lo = mid + 1
+  10            else:
+  11                hi = mid - 1
+  12        return -1
+  answer: line 4   difficulty: 1015   id: dbg-binary-search-flip-comparison-01

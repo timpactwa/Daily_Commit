@@ -118,6 +118,7 @@ function Player({ initial }: { initial: LessonData }) {
           {feedback && (
             <FeedbackSheet
               question={item.question}
+              response={value}
               result={feedback}
               onContinue={next}
             />

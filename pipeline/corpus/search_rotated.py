@@ -1,5 +1,6 @@
 def search_rotated(nums, target):
-    lo, hi = (0, len(nums) - 1)
+    lo = 0
+    hi = len(nums) - 1
     while lo <= hi:
         mid = (lo + hi) // 2
         if nums[mid] == target:

@@ -6,7 +6,9 @@ test("built PWA against real API: demo, feedback, completion, progress, offline 
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (err) => errors.push(err.message));
-  const reset = await request.post("/v1/demo/reset", { data: { user_id: "demo" } });
+  const reset = await request.post("/v1/demo/reset", {
+    data: { user_id: "demo" },
+  });
   expect(reset.ok()).toBeTruthy();
   await page.goto("/");
   const logo = page.getByRole("button", { name: /^Daily Commit home/ });
@@ -42,18 +44,37 @@ test("built PWA against real API: demo, feedback, completion, progress, offline 
       page.getByRole("heading", { name: q.prompt, exact: true }),
     ).toBeVisible();
     if (q.format === "tap_line")
-      await page
-        .getByRole("button", { name: /^Line 1:/ })
-        .click();
+      await page.getByRole("button", { name: /^Line 1:/ }).click();
     else if (q.format === "reorder") {
       for (let i = 0; i < q.options.length; i++)
         await page.locator(".reorder .options button").first().click();
-    } else
-      await page.locator(".options button").first().click();
+    } else await page.locator(".options button").first().click();
     await page.getByRole("button", { name: "Check answer" }).click();
     await expect(
       page.getByRole("region", { name: "Answer feedback" }),
     ).toContainText("Elo");
+    const feedback = page.getByRole("region", { name: "Answer feedback" });
+    await expect(
+      feedback.getByRole("heading", { name: "Why this works" }),
+    ).toBeVisible();
+    await expect(
+      feedback.getByRole("heading", { name: "Check your understanding" }),
+    ).toBeVisible();
+    await feedback
+      .getByText("Read more about this concept", { exact: true })
+      .click();
+    await expect(feedback.locator(".further-reading a")).toHaveCount(2);
+    if (q.format === "tap_line") {
+      await feedback
+        .getByText("Trace the failing case and the fix", { exact: true })
+        .click();
+      await expect(
+        feedback.getByRole("heading", { name: "Observed failure" }),
+      ).toBeVisible();
+      await expect(
+        feedback.getByRole("heading", { name: "Corrected line" }),
+      ).toBeVisible();
+    }
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
