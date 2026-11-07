@@ -1,0 +1,15 @@
+300 simulated students, 14 days, 10 topics, 120 questions
+
+Average error between a student's rating and their true skill (Elo points):
+  before placement        128
+  after placement         118   (10 questions)
+  after day 1             115
+  after day 3             111
+  after day 7             103
+  after day 14             91
+
+Real success rate in lessons (target ~70%):
+  days 1-3  61%    last 3 days  59%
+
+Question difficulty error (author's guess vs learned):
+  seed 119  ->  learned 52 Elo points
