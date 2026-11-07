@@ -10,7 +10,7 @@
       { "id": "d", "text": "Send the email before creating the account" }
     ],
     "answer": "b",
-    "explanation": "The user does not need to wait for the email. Enqueue the job and respond; a background worker sends it, and retries if the email provider is slow.",
+    "explanation": "Separate the work required to confirm sign-up from work that can finish later. Save the account and durably enqueue the email job, then acknowledge sign-up while a worker handles delivery. This removes the provider's three-second delay from the request path. A longer HTTP timeout still makes the user wait. Plan retries and deduplication, and avoid reporting success if the required job handoff was never persisted.",
     "difficulty_rating": 1000, "placement": true
   },
   {
@@ -24,7 +24,7 @@
       { "id": "s5", "text": "Client is notified that the video is ready" }
     ],
     "answer": ["s1", "s2", "s3", "s4", "s5"],
-    "explanation": "The upload bypasses the API, the API enqueues work, workers process it asynchronously, then completion is signaled.",
+    "explanation": "Each step produces something the next step needs. Upload the file before enqueueing a job that references it; a worker then creates outputs, records completion and finally notifies the client. Notifying first could expose a 'ready' video that does not exist yet. Separate the fast request path from expensive transcoding, and make retried jobs safe so duplicate delivery does not corrupt outputs.",
     "difficulty_rating": 1000
   },
   {
@@ -38,7 +38,7 @@
       { "id": "d", "text": "Turn off retries" }
     ],
     "answer": "c",
-    "explanation": "Duplicates are expected with at-least-once delivery. An idempotency key checked before charging makes a duplicate harmless. Turning off retries trades double charges for lost charges.",
+    "explanation": "At-least-once delivery permits the same logical payment to arrive again, for example after a worker crashes before acknowledgment. Use a stable payment ID so repeating the request does not repeat the charge. Deduplication must handle concurrency and crashes; a separate 'already processed?' check is not enough. Use the provider's idempotency support with durable state. Disabling retries instead risks losing legitimate payments.",
     "difficulty_rating": 1200, "placement": true
   },
   {
@@ -52,7 +52,7 @@
       { "id": "d", "text": "Let consumers sort events by their timestamps" }
     ],
     "answer": "b",
-    "explanation": "Ordering only needs to hold per order. Keying partitions by order_id keeps each order's events in sequence, while different orders are processed in parallel. Timestamps fail under clock skew and late arrivals.",
+    "explanation": "Ordering is required within one order, not across all orders. Route the same order_id to the same ordered partition and process that partition sequentially. Different partitions can work in parallel. Random partitioning splits related events, while timestamps alone cannot repair late arrivals or clock skew. Keep consumer concurrency and retries consistent with the ordering guarantee, or later events can still overtake earlier work.",
     "difficulty_rating": 1400, "placement": true, "tags": ["tradeoff"]
   },
   {
@@ -65,7 +65,7 @@
       { "id": "d", "text": "You no longer need a database" }
     ],
     "answer": "a",
-    "explanation": "A queue decouples the two sides: the producer hands off work and moves on, and the consumer works through a backlog at its own pace instead of being overwhelmed by spikes.",
+    "explanation": "A queue holds accepted work until consumers can process it, so a producer does not need to wait for the whole operation. This buffers short bursts and separates service lifecycles. It does not create processing capacity: if arrivals stay above completions, the backlog keeps growing. Watch queue age and worker throughput, and add backpressure or capacity rather than treating an unlimited backlog as a solution.",
     "difficulty_rating": 850
   },
   {
@@ -79,7 +79,7 @@
       { "id": "d", "text": "Publish an 'order placed' event to a topic that each service subscribes to" }
     ],
     "answer": "d",
-    "explanation": "Pub/sub delivers each event to every subscriber, and new services subscribe without changing the order service. A work queue hands each message to only one consumer.",
+    "explanation": "Publish-subscribe gives each independent service its own subscription to the order event. Email, analytics and inventory can all react without the producer calling each one. A competing-consumer work queue instead distributes each job to one worker group, so it would not notify every service. Durable delivery and retries depend on the broker configuration; consumers still need to handle duplicates safely.",
     "difficulty_rating": 950
   },
   {
@@ -106,7 +106,7 @@
       { "id": "storage", "text": "Object storage" }
     ],
     "answer": "workers",
-    "explanation": "About 2,100 jobs/min arrive but two workers finish only 100/min, so the queue grows by about 2k/min. The queue is doing its job (buffering); add workers or autoscale on queue depth.",
+    "explanation": "Compare arrival and completion rates. About 2,100 jobs arrive each minute, but the two workers complete only 100, so the backlog grows by about 2,000 per minute. The queue is exposing the imbalance, not performing the slow work. Add or speed up workers if downstream storage can support them, and autoscale using queue age or depth. A larger queue only postpones the capacity problem.",
     "difficulty_rating": 1100
   },
   {
@@ -120,7 +120,7 @@
       { "id": "d", "text": "A longer visibility timeout" }
     ],
     "answer": "b",
-    "explanation": "A poison message will never succeed. After a few attempts, park it in a dead-letter queue for inspection so the rest of the queue keeps flowing.",
+    "explanation": "A malformed message is a poison message: repeating the same work will not fix its contents. Bound the retries, then move it to a dead-letter queue so valid messages can proceed. Keep enough context for diagnosis, alert on dead-letter growth, and repair before replaying it. Increasing queue size or retry delay does not make invalid data valid. Distinguish permanent failures from transient ones.",
     "difficulty_rating": 1050
   },
   {
@@ -134,7 +134,7 @@
       { "id": "d", "text": "Retry all at once at the top of each minute" }
     ],
     "answer": "a",
-    "explanation": "Backoff spaces out retries as failures continue, and jitter spreads workers apart so they do not retry in sync. Retrying at a fixed time recreates the stampede.",
+    "explanation": "Immediate retries multiply load on a dependency that is already struggling. Exponential backoff increases the delay after failures; jitter makes different workers choose different retry times, avoiding synchronized bursts. Bound attempts and total elapsed time as well. For payment calls, retries also need idempotency: a timeout does not tell you whether the provider performed the charge before the response was lost.",
     "difficulty_rating": 1150
   },
   {
@@ -148,7 +148,7 @@
       { "id": "s5", "text": "The relay marks those outbox rows as sent" }
     ],
     "answer": ["s1", "s2", "s3", "s4", "s5"],
-    "explanation": "Writing the event in the same transaction as the order means both exist or neither does. The relay then publishes it, and marks it sent only after publishing, so a crash causes a retry rather than a lost event.",
+    "explanation": "The database transaction atomically stores the order and the intent to publish its event. After commit, a relay publishes that durable outbox record, then marks it sent. A crash before publishing leaves work to retry. A crash after publishing but before marking sent can produce a duplicate, so consumers still need idempotency. The outbox prevents the lost-event gap; it does not make the broker and database one atomic system.",
     "difficulty_rating": 1250
   }
 ]
