@@ -48,3 +48,18 @@ Debugging functions: `recursive_count`, `balanced_parentheses`. Five variants ea
 
 Checkpoint 3 passed: 264 bank questions (268 with fixtures), 218 Python tests, app build and 12 phone/desktop checks.
 
+
+## Batch 4
+
+Debugging functions: `selection_sort`, `merge_sorted_unique`. Five variants each.
+
+| Primary source | Question IDs |
+| --- | --- |
+| [CloudFront HTTPS policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-viewers-to-cloudfront.html) | sd-caching-continuation-027, sd-caching-continuation-028 |
+| [Kubernetes Services](https://kubernetes.io/docs/concepts/services-networking/service/) | sd-scaling-continuation-027, sd-scaling-continuation-028 |
+| [PostgreSQL PREPARE](https://www.postgresql.org/docs/18/sql-prepare.html) | sd-databases-continuation-027, sd-databases-continuation-028 |
+| [RabbitMQ consumer prefetch](https://www.rabbitmq.com/docs/consumer-prefetch) | sd-async-messaging-continuation-027, sd-async-messaging-continuation-028 |
+| [Google SRE toil](https://sre.google/sre-book/eliminating-toil/) | sd-reliability-continuation-027, sd-reliability-continuation-028 |
+
+Checkpoint 4 passed: 284 practice-bank questions (288 with fixtures), 223 Python tests, app build and 12 phone/desktop checks.
+

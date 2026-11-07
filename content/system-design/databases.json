@@ -762,5 +762,73 @@
     "batch-3",
     "source-backed"
   ]
+},
+{
+  "id": "sd-databases-continuation-027",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "How long does a SQL PREPARE statement normally exist in PostgreSQL?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Until deallocated or the session ends"
+    },
+    {
+      "id": "o1",
+      "text": "Across every future connection"
+    },
+    {
+      "id": "o2",
+      "text": "Only until the next COMMIT"
+    },
+    {
+      "id": "o3",
+      "text": "Until the underlying rows expire"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "SQL prepared statements belong to one session; they are not a global cache shared by other database connections. Source: [PostgreSQL PREPARE](https://www.postgresql.org/docs/18/sql-prepare.html)",
+  "difficulty_rating": 1100,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-databases-continuation-028",
+  "version": 1,
+  "track": "system-design",
+  "topic": "databases",
+  "format": "mcq",
+  "prompt": "Why might a custom prepared-statement plan outperform a generic plan for a highly skewed tenant_id?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "It can use the current parameter value to choose a plan"
+    },
+    {
+      "id": "o1",
+      "text": "It skips transaction visibility checks"
+    },
+    {
+      "id": "o2",
+      "text": "It caches the previous query’s result rows"
+    },
+    {
+      "id": "o3",
+      "text": "It eliminates all planning overhead"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Custom plans use execution-specific parameter values. They can improve execution for skewed data, at the cost of repeated planning. Source: [PostgreSQL PREPARE](https://www.postgresql.org/docs/18/sql-prepare.html)",
+  "difficulty_rating": 1500,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
 }
 ]

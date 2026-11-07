@@ -764,5 +764,74 @@
     "batch-3",
     "source-backed"
   ]
+},
+{
+  "id": "sd-async-messaging-continuation-027",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "A manual-ack consumer has prefetch 10 and ten unacknowledged deliveries. What permits another delivery?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Acknowledging a completed delivery"
+    },
+    {
+      "id": "o1",
+      "text": "Publishing an unrelated message"
+    },
+    {
+      "id": "o2",
+      "text": "Increasing only the message TTL"
+    },
+    {
+      "id": "o3",
+      "text": "Reading the message body twice"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Prefetch bounds outstanding unacknowledged deliveries. An acknowledgement releases capacity for another delivery. Source: [RabbitMQ consumer prefetch](https://www.rabbitmq.com/docs/consumer-prefetch)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-async-messaging-continuation-028",
+  "version": 1,
+  "track": "system-design",
+  "topic": "async-messaging",
+  "format": "mcq",
+  "prompt": "Two consumers share one RabbitMQ channel with prefetch 10, global=false. What is their combined outstanding limit?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "20 deliveries, ten per consumer"
+    },
+    {
+      "id": "o1",
+      "text": "10 deliveries shared between them"
+    },
+    {
+      "id": "o2",
+      "text": "1 delivery total"
+    },
+    {
+      "id": "o3",
+      "text": "Unlimited deliveries"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "RabbitMQ applies this prefetch setting separately to each consumer. A separate global channel limit would change the combined bound. Source: [RabbitMQ consumer prefetch](https://www.rabbitmq.com/docs/consumer-prefetch)",
+  "difficulty_rating": 1400,
+  "scenario": "Both use manual acknowledgements; no additional channel-wide limit is configured.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
 }
 ]

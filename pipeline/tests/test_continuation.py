@@ -94,6 +94,10 @@ def oracle(name, args):
         text, = args
         prefixes = [text[:i].count('(') - text[:i].count(')') for i in range(len(text) + 1)]
         return min(prefixes) >= 0 and prefixes[-1] == 0
+    if name == 'selection_sort':
+        return sorted(args[0])
+    if name == 'merge_sorted_unique':
+        return sorted(set(args[0]) | set(args[1]))
     raise AssertionError(f'Missing independent oracle: {name}')
 
 
@@ -147,3 +151,20 @@ def test_recursive_count_and_parentheses_exhaustive_short_inputs():
         for chars in itertools.product('()', repeat=length):
             text = ''.join(chars)
             assert functions['balanced_parentheses'](text) == oracle('balanced_parentheses', (text,))
+
+
+def test_new_sorts_exhaustive_duplicates_negatives_and_empty_inputs():
+    functions = {name: fn for name, fn, _ in originals()}
+    if 'selection_sort' not in functions:
+        return
+    for length in range(6):
+        for values in itertools.product((-2, 0, 3), repeat=length):
+            xs = list(values)
+            assert functions['selection_sort'](xs) == sorted(xs)
+            assert xs == list(values)
+    inputs = [list(values) for length in range(4)
+              for values in itertools.combinations_with_replacement((-2, 0, 3), length)]
+    for a, b in itertools.product(inputs, repeat=2):
+        before = copy.deepcopy((a, b))
+        assert functions['merge_sorted_unique'](a, b) == sorted(set(a) | set(b))
+        assert (a, b) == before

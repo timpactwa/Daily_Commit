@@ -494,8 +494,7 @@
     "tags": [
       "research-2026-11",
       "verified-code"
-    ],
-    "placement": true
+    ]
   },
   {
     "id": "dbg-counting-sort-wrong-operator-01",
@@ -1553,6 +1552,137 @@
       "tests_failed": 4,
       "tests_total": 5
     }
+  },
+  {
+    "id": "dbg-merge-sorted-unique-flip-comparison-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Merge two sorted integer lists into a new sorted list containing each value once. Tap the buggy line.",
+    "code": "def merge_sorted_unique(left, right):\n    i = 0\n    j = 0\n    result = []\n    while i <= len(left) or j < len(right):\n        if j == len(right) or (i < len(left) and left[i] <= right[j]):\n            value = left[i]\n            i += 1\n        else:\n            value = right[j]\n            j += 1\n        if not result or value != result[-1]:\n            result.append(value)\n    return result",
+    "language": "python",
+    "test_output": "merge_sorted_unique([], []): raised IndexError\nmerge_sorted_unique([], [1]): raised IndexError\nmerge_sorted_unique([1], []): raised IndexError",
+    "answer": 5,
+    "explanation": "Line 5 should be `while i < len(left) or j < len(right):`, but the comparison was flipped. That is why merge_sorted_unique([], []) fails.",
+    "difficulty_rating": 1235,
+    "provenance": {
+      "source_function": "pipeline/corpus/merge_sorted_unique.py::merge_sorted_unique",
+      "mutation_operator": "flip_comparison",
+      "original_line": "    while i < len(left) or j < len(right):",
+      "mutated_line": "    while i <= len(left) or j < len(right):",
+      "tests_failed": 12,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-merge-sorted-unique-flip-comparison-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Merge two sorted integer lists into a new sorted list containing each value once. Tap the buggy line.",
+    "code": "def merge_sorted_unique(left, right):\n    i = 0\n    j = 0\n    result = []\n    while i < len(left) or j < len(right):\n        if j == len(right) or (i < len(left) and left[i] <= right[j]):\n            value = left[i]\n            i += 1\n        else:\n            value = right[j]\n            j += 1\n        if not result or value == result[-1]:\n            result.append(value)\n    return result",
+    "language": "python",
+    "test_output": "merge_sorted_unique([1], [1]): expected [1], got [1, 1]\nmerge_sorted_unique([1], [2]): expected [1, 2], got [1]\nmerge_sorted_unique([2], [1]): expected [1, 2], got [1]",
+    "answer": 12,
+    "explanation": "Line 12 should be `if not result or value != result[-1]:`, but the comparison was flipped. That is why merge_sorted_unique([1], [1]) fails.",
+    "difficulty_rating": 1235,
+    "provenance": {
+      "source_function": "pipeline/corpus/merge_sorted_unique.py::merge_sorted_unique",
+      "mutation_operator": "flip_comparison",
+      "original_line": "        if not result or value != result[-1]:",
+      "mutated_line": "        if not result or value == result[-1]:",
+      "tests_failed": 9,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-merge-sorted-unique-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Merge two sorted integer lists into a new sorted list containing each value once. Tap the buggy line.",
+    "code": "def merge_sorted_unique(left, right):\n    i = 1\n    j = 0\n    result = []\n    while i < len(left) or j < len(right):\n        if j == len(right) or (i < len(left) and left[i] <= right[j]):\n            value = left[i]\n            i += 1\n        else:\n            value = right[j]\n            j += 1\n        if not result or value != result[-1]:\n            result.append(value)\n    return result",
+    "language": "python",
+    "test_output": "merge_sorted_unique([1], []): expected [1], got []\nmerge_sorted_unique([1], [2]): expected [1, 2], got [2]\nmerge_sorted_unique([2], [1]): expected [1, 2], got [1]",
+    "answer": 2,
+    "explanation": "Line 2 should be `i = 0`, but a number is off by one. That is why merge_sorted_unique([1], []) fails.",
+    "difficulty_rating": 1385,
+    "provenance": {
+      "source_function": "pipeline/corpus/merge_sorted_unique.py::merge_sorted_unique",
+      "mutation_operator": "off_by_one",
+      "original_line": "    i = 0",
+      "mutated_line": "    i = 1",
+      "tests_failed": 6,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-merge-sorted-unique-swap-and-or-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Merge two sorted integer lists into a new sorted list containing each value once. Tap the buggy line.",
+    "code": "def merge_sorted_unique(left, right):\n    i = 0\n    j = 0\n    result = []\n    while i < len(left) and j < len(right):\n        if j == len(right) or (i < len(left) and left[i] <= right[j]):\n            value = left[i]\n            i += 1\n        else:\n            value = right[j]\n            j += 1\n        if not result or value != result[-1]:\n            result.append(value)\n    return result",
+    "language": "python",
+    "test_output": "merge_sorted_unique([], [1]): expected [1], got []\nmerge_sorted_unique([1], []): expected [1], got []\nmerge_sorted_unique([1], [2]): expected [1, 2], got [1]",
+    "answer": 5,
+    "explanation": "Line 5 should be `while i < len(left) or j < len(right):`, but `and` and `or` were swapped. That is why merge_sorted_unique([], [1]) fails.",
+    "difficulty_rating": 1335,
+    "provenance": {
+      "source_function": "pipeline/corpus/merge_sorted_unique.py::merge_sorted_unique",
+      "mutation_operator": "swap_and_or",
+      "original_line": "    while i < len(left) or j < len(right):",
+      "mutated_line": "    while i < len(left) and j < len(right):",
+      "tests_failed": 8,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-merge-sorted-unique-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Merge two sorted integer lists into a new sorted list containing each value once. Tap the buggy line.",
+    "code": "def merge_sorted_unique(left, right):\n    i = 0\n    j = 0\n    result = []\n    while i < len(left) or j < len(right):\n        if j == len(right) or (i < len(left) and left[i] <= right[j]):\n            value = left[i]\n            i += 1\n        else:\n            value = right[j]\n            j -= 1\n        if not result or value != result[-1]:\n            result.append(value)\n    return result",
+    "language": "python",
+    "test_output": "merge_sorted_unique([], [1]): raised IndexError\nmerge_sorted_unique([1], [1]): raised IndexError\nmerge_sorted_unique([1], [2]): raised IndexError",
+    "answer": 11,
+    "explanation": "Line 11 should be `j += 1`, but it uses the wrong operator. That is why merge_sorted_unique([], [1]) fails.",
+    "difficulty_rating": 1285,
+    "provenance": {
+      "source_function": "pipeline/corpus/merge_sorted_unique.py::merge_sorted_unique",
+      "mutation_operator": "wrong_operator",
+      "original_line": "            j += 1",
+      "mutated_line": "            j -= 1",
+      "tests_failed": 10,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
   },
   {
     "id": "dbg-merge-swap-and-or-01",
@@ -2841,6 +2971,136 @@
     },
     "tags": [
       "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-selection-sort-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Return a sorted copy using selection sort without changing the input list. Tap the buggy line.",
+    "code": "def selection_sort(nums):\n    result = nums[:]\n    n = len(result)\n    i = 1\n    while i < n - 1:\n        smallest = i\n        j = i + 1\n        while j < n:\n            if result[j] < result[smallest]:\n                smallest = j\n            j += 1\n        result[i], result[smallest] = (result[smallest], result[i])\n        i += 1\n    return result",
+    "language": "python",
+    "test_output": "selection_sort([2, 1]): expected [1, 2], got [2, 1]\nselection_sort([3, 1, 2]): expected [1, 2, 3], got [3, 1, 2]\nselection_sort([3, 2, 1]): expected [1, 2, 3], got [3, 1, 2]",
+    "answer": 4,
+    "explanation": "Line 4 should be `i = 0`, but a number is off by one. That is why selection_sort([2, 1]) fails.",
+    "difficulty_rating": 1135,
+    "provenance": {
+      "source_function": "pipeline/corpus/selection_sort.py::selection_sort",
+      "mutation_operator": "off_by_one",
+      "original_line": "    i = 0",
+      "mutated_line": "    i = 1",
+      "tests_failed": 7,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-selection-sort-off-by-one-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Return a sorted copy using selection sort without changing the input list. Tap the buggy line.",
+    "code": "def selection_sort(nums):\n    result = nums[:]\n    n = len(result)\n    i = 0\n    while i < n - 1:\n        smallest = i\n        j = i + 1\n        while j < n:\n            if result[j] < result[smallest]:\n                smallest = j\n            j += 1\n        result[i], result[smallest] = (result[smallest], result[i])\n        i += 2\n    return result",
+    "language": "python",
+    "test_output": "selection_sort([3, 1, 2]): expected [1, 2, 3], got [1, 3, 2]\nselection_sort([-3, 0, -1]): expected [-3, -1, 0], got [-3, 0, -1]\nselection_sort([5, 2, 8, 1, 0]): expected [0, 1, 2, 5, 8], got [0, 2, 1, 8, 5]",
+    "answer": 13,
+    "explanation": "Line 13 should be `i += 1`, but a number is off by one. That is why selection_sort([3, 1, 2]) fails.",
+    "difficulty_rating": 1135,
+    "provenance": {
+      "source_function": "pipeline/corpus/selection_sort.py::selection_sort",
+      "mutation_operator": "off_by_one",
+      "original_line": "        i += 1",
+      "mutated_line": "        i += 2",
+      "tests_failed": 3,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-selection-sort-off-by-one-03",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Return a sorted copy using selection sort without changing the input list. Tap the buggy line.",
+    "code": "def selection_sort(nums):\n    result = nums[:]\n    n = len(result)\n    i = 0\n    while i < n - 2:\n        smallest = i\n        j = i + 1\n        while j < n:\n            if result[j] < result[smallest]:\n                smallest = j\n            j += 1\n        result[i], result[smallest] = (result[smallest], result[i])\n        i += 1\n    return result",
+    "language": "python",
+    "test_output": "selection_sort([2, 1]): expected [1, 2], got [2, 1]\nselection_sort([3, 1, 2]): expected [1, 2, 3], got [1, 3, 2]\nselection_sort([-3, 0, -1]): expected [-3, -1, 0], got [-3, 0, -1]",
+    "answer": 5,
+    "explanation": "Line 5 should be `while i < n - 1:`, but a number is off by one. That is why selection_sort([2, 1]) fails.",
+    "difficulty_rating": 1135,
+    "provenance": {
+      "source_function": "pipeline/corpus/selection_sort.py::selection_sort",
+      "mutation_operator": "off_by_one",
+      "original_line": "    while i < n - 1:",
+      "mutated_line": "    while i < n - 2:",
+      "tests_failed": 4,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-selection-sort-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Return a sorted copy using selection sort without changing the input list. Tap the buggy line.",
+    "code": "def selection_sort(nums):\n    result = nums[:]\n    n = len(result)\n    i = 0\n    while i < n - 1:\n        smallest = i\n        j = i + 1\n        while j < n:\n            if result[j] < result[smallest]:\n                smallest = j\n            j += 1\n        result[i], result[smallest] = (result[smallest], result[i])\n        i -= 1\n    return result",
+    "language": "python",
+    "test_output": "selection_sort([2, 1]): raised IndexError\nselection_sort([1, 2]): raised IndexError\nselection_sort([3, 1, 2]): raised IndexError",
+    "answer": 13,
+    "explanation": "Line 13 should be `i += 1`, but it uses the wrong operator. That is why selection_sort([2, 1]) fails.",
+    "difficulty_rating": 1035,
+    "provenance": {
+      "source_function": "pipeline/corpus/selection_sort.py::selection_sort",
+      "mutation_operator": "wrong_operator",
+      "original_line": "        i += 1",
+      "mutated_line": "        i -= 1",
+      "tests_failed": 10,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-selection-sort-wrong-operator-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Return a sorted copy using selection sort without changing the input list. Tap the buggy line.",
+    "code": "def selection_sort(nums):\n    result = nums[:]\n    n = len(result)\n    i = 0\n    while i < n + 1:\n        smallest = i\n        j = i + 1\n        while j < n:\n            if result[j] < result[smallest]:\n                smallest = j\n            j += 1\n        result[i], result[smallest] = (result[smallest], result[i])\n        i += 1\n    return result",
+    "language": "python",
+    "test_output": "selection_sort([]): raised IndexError\nselection_sort([1]): raised IndexError\nselection_sort([2, 1]): raised IndexError",
+    "answer": 5,
+    "explanation": "Line 5 should be `while i < n - 1:`, but it uses the wrong operator. That is why selection_sort([]) fails.",
+    "difficulty_rating": 1035,
+    "provenance": {
+      "source_function": "pipeline/corpus/selection_sort.py::selection_sort",
+      "mutation_operator": "wrong_operator",
+      "original_line": "    while i < n - 1:",
+      "mutated_line": "    while i < n + 1:",
+      "tests_failed": 12,
+      "tests_total": 12
+    },
+    "tags": [
+      "continuation-2026-11",
       "verified-code"
     ]
   },

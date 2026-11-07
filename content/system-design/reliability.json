@@ -803,5 +803,73 @@
     "batch-3",
     "source-backed"
   ]
+},
+{
+  "id": "sd-reliability-continuation-027",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "mcq",
+  "prompt": "Which recurring activity best fits SRE’s concept of toil?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Manually provisioning every new customer with the same routine"
+    },
+    {
+      "id": "o1",
+      "text": "Designing an automated provisioning system"
+    },
+    {
+      "id": "o2",
+      "text": "Investigating a new failure mode"
+    },
+    {
+      "id": "o3",
+      "text": "Removing an obsolete operational workflow"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Repetitive hands-on operations that grow with the service are candidates for toil reduction through engineering. Source: [Google SRE toil](https://sre.google/sre-book/eliminating-toil/)",
+  "difficulty_rating": 1000,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-reliability-continuation-028",
+  "version": 1,
+  "track": "system-design",
+  "topic": "reliability",
+  "format": "mcq",
+  "prompt": "Which change most directly reduces hands-on toil as customer count grows?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Automatically trigger and validate the routine provisioning workflow"
+    },
+    {
+      "id": "o1",
+      "text": "Require an operator to start the same script per customer"
+    },
+    {
+      "id": "o2",
+      "text": "Write a longer manual checklist for every customer"
+    },
+    {
+      "id": "o3",
+      "text": "Add another manual approval to each routine step"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A script still consumes toil when an operator must repeatedly run it. Removing recurring hands-on execution creates lasting operational improvement. Source: [Google SRE toil](https://sre.google/sre-book/eliminating-toil/)",
+  "difficulty_rating": 1250,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
 }
 ]

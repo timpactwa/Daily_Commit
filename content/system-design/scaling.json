@@ -822,5 +822,73 @@
     "batch-3",
     "source-backed"
   ]
+},
+{
+  "id": "sd-scaling-continuation-027",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "Which Kubernetes abstraction gives clients a stable ClusterIP while backend Pods change?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "A normal ClusterIP Service"
+    },
+    {
+      "id": "o1",
+      "text": "An individual Pod IP"
+    },
+    {
+      "id": "o2",
+      "text": "A container’s restart count"
+    },
+    {
+      "id": "o3",
+      "text": "An emptyDir volume"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A Service provides a stable access point for a changing set of matching backend Pods. Source: [Kubernetes Services](https://kubernetes.io/docs/concepts/services-networking/service/)",
+  "difficulty_rating": 1050,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-scaling-continuation-028",
+  "version": 1,
+  "track": "system-design",
+  "topic": "scaling",
+  "format": "mcq",
+  "prompt": "What does DNS for a selector-based headless Service normally return?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "Addresses of its backing Pods"
+    },
+    {
+      "id": "o1",
+      "text": "One allocated Service ClusterIP"
+    },
+    {
+      "id": "o2",
+      "text": "Only the node’s public address"
+    },
+    {
+      "id": "o3",
+      "text": "The Deployment revision number"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "A headless Service allocates no ClusterIP. Its DNS records expose backing Pod addresses for direct client connections. Source: [Kubernetes Services](https://kubernetes.io/docs/concepts/services-networking/service/)",
+  "difficulty_rating": 1400,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
 }
 ]

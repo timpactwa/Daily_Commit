@@ -763,5 +763,74 @@
     "batch-3",
     "source-backed"
   ]
+},
+{
+  "id": "sd-caching-continuation-027",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "A CloudFront behavior uses HTTPS only. What happens to an HTTP viewer request?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "It receives 403 Forbidden"
+    },
+    {
+      "id": "o1",
+      "text": "It always receives a 301 redirect"
+    },
+    {
+      "id": "o2",
+      "text": "CloudFront silently serves it over HTTP"
+    },
+    {
+      "id": "o3",
+      "text": "CloudFront upgrades the existing TCP connection"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "HTTPS only rejects HTTP viewers. Redirect HTTP to HTTPS is a separate viewer policy. Source: [CloudFront HTTPS policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-viewers-to-cloudfront.html)",
+  "difficulty_rating": 1000,
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
+},
+{
+  "id": "sd-caching-continuation-028",
+  "version": 1,
+  "track": "system-design",
+  "topic": "caching",
+  "format": "mcq",
+  "prompt": "Does requiring HTTPS from viewers also guarantee HTTPS from CloudFront to the origin?",
+  "options": [
+    {
+      "id": "o0",
+      "text": "No; configure the origin protocol separately"
+    },
+    {
+      "id": "o1",
+      "text": "Yes; viewer policy controls both network legs"
+    },
+    {
+      "id": "o2",
+      "text": "Yes, but only on a cache miss"
+    },
+    {
+      "id": "o3",
+      "text": "Only for GET requests"
+    }
+  ],
+  "answer": "o0",
+  "explanation": "Viewer and origin connections are separate. To require encryption on both legs, configure HTTPS for each. Source: [CloudFront HTTPS policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-viewers-to-cloudfront.html)",
+  "difficulty_rating": 1350,
+  "scenario": "The CDN terminates viewer TLS before contacting a custom origin.",
+  "tags": [
+    "continuation-2026-11",
+    "batch-4",
+    "source-backed"
+  ]
 }
 ]
