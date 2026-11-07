@@ -1,0 +1,97 @@
+[
+  {
+    "id": "sd-caching-001",
+    "version": 1,
+    "track": "system-design",
+    "topic": "caching",
+    "format": "mcq",
+    "scenario": "A product page is read 50,000 times per second and the price changes about once a day. Reads must be fast; a price that is a few seconds stale is acceptable.",
+    "prompt": "Which caching strategy fits best?",
+    "options": [
+      { "id": "a", "text": "No cache; add read replicas" },
+      { "id": "b", "text": "Cache-aside with a TTL and invalidate on price update" },
+      { "id": "c", "text": "Write-through cache with no TTL" },
+      { "id": "d", "text": "Client-side cache for 24 hours" }
+    ],
+    "answer": "b",
+    "explanation": "Read-heavy, rarely written, small staleness allowed: cache-aside with TTL plus explicit invalidation keeps reads fast and bounds staleness. A 24h client cache would show stale prices after an update.",
+    "difficulty_rating": 1100,
+    "placement": true,
+    "tags": ["tradeoff"]
+  },
+  {
+    "id": "sd-scaling-004",
+    "version": 1,
+    "track": "system-design",
+    "topic": "scaling",
+    "format": "tap_node",
+    "scenario": "Traffic doubled and p99 latency went from 80ms to 2s. The API tier autoscaled to 12 instances.",
+    "prompt": "Tap the bottleneck.",
+    "diagram": {
+      "nodes": [
+        { "id": "client", "label": "Mobile clients", "kind": "client" },
+        { "id": "lb", "label": "Load balancer", "kind": "lb" },
+        { "id": "api", "label": "API x12", "kind": "service", "note": "autoscaled" },
+        { "id": "session", "label": "Session store", "kind": "db", "note": "1 instance, 5k ops/s max" },
+        { "id": "db", "label": "Postgres", "kind": "db", "note": "3 read replicas" }
+      ],
+      "edges": [
+        { "from": "client", "to": "lb" },
+        { "from": "lb", "to": "api" },
+        { "from": "api", "to": "session", "label": "every request" },
+        { "from": "api", "to": "db" }
+      ]
+    },
+    "options": [
+      { "id": "client", "text": "Mobile clients" },
+      { "id": "lb", "text": "Load balancer" },
+      { "id": "api", "text": "API x12" },
+      { "id": "session", "text": "Session store" },
+      { "id": "db", "text": "Postgres" }
+    ],
+    "answer": "session",
+    "explanation": "Every request hits a single session store capped at 5k ops/s. Scaling the API tier just sends more load to it.",
+    "difficulty_rating": 1300
+  },
+  {
+    "id": "sd-async-002",
+    "version": 1,
+    "track": "system-design",
+    "topic": "async-messaging",
+    "format": "reorder",
+    "prompt": "Put the steps of processing an uploaded video in order.",
+    "options": [
+      { "id": "s1", "text": "Client uploads file to object storage via signed URL" },
+      { "id": "s2", "text": "API records upload and enqueues a transcode job" },
+      { "id": "s3", "text": "Worker pulls the job and transcodes" },
+      { "id": "s4", "text": "Worker writes outputs and marks job done" },
+      { "id": "s5", "text": "Client is notified the video is ready" }
+    ],
+    "answer": ["s1", "s2", "s3", "s4", "s5"],
+    "explanation": "Upload bypasses the API, the API enqueues work, workers process asynchronously, then completion is signaled.",
+    "difficulty_rating": 1000
+  },
+  {
+    "id": "dbg-binary-search-flip-comparison-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "This function fails the test below. Tap the buggy line.",
+    "code": "def search(nums, target):\n    lo, hi = 0, len(nums) - 1\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1",
+    "language": "python",
+    "test_output": "search([1, 3, 5, 7], 7): expected 3, got -1\nsearch([4], 4): expected 0, got -1",
+    "answer": 3,
+    "explanation": "The loop uses < instead of <=, so when lo == hi the last candidate is never checked.",
+    "difficulty_rating": 1250,
+    "provenance": {
+      "source_function": "pipeline/corpus/binary_search.py::search",
+      "mutation_operator": "flip_comparison",
+      "original_line": "    while lo <= hi:",
+      "mutated_line": "    while lo < hi:",
+      "tests_failed": 2,
+      "tests_total": 6,
+      "generated_at": "2026-11-07T20:00:00Z"
+    }
+  }
+]

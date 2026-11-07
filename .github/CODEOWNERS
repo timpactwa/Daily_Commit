@@ -1,0 +1,12 @@
+# Only /contracts and /engine need human approval; everything else merges on green CI.
+#   Tim    = timpactwa
+#   Rushi  = rushigurav1409
+#   Liam   = LiamJB513
+#   Jordan = TODO: add Jordan's username to the /contracts line once known
+
+/contracts/          @timpactwa @rushigurav1409 @LiamJB513
+/engine/             @rushigurav1409
+/AGENTS.md           @timpactwa
+/CLAUDE.md           @timpactwa
+/docs/PLAN.md        @timpactwa
+/.github/CODEOWNERS  @timpactwa

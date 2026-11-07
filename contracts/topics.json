@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "topics": [
+    { "id": "caching",         "track": "system-design", "name": "Caching",                  "description": "Cache placement, invalidation, eviction, CDN, write-through vs write-back" },
+    { "id": "scaling",         "track": "system-design", "name": "Scaling & Load Balancing", "description": "Horizontal vs vertical, load balancers, stateless services, hot spots" },
+    { "id": "databases",       "track": "system-design", "name": "Databases & Storage",      "description": "SQL vs NoSQL, indexing, replication, sharding, partition keys" },
+    { "id": "async-messaging", "track": "system-design", "name": "Queues & Async",           "description": "Message queues, pub/sub, backpressure, idempotency, retries" },
+    { "id": "reliability",     "track": "system-design", "name": "Reliability & Consistency","description": "CAP tradeoffs, rate limiting, failover, timeouts, consistency models" },
+
+    { "id": "arrays-strings",  "track": "debugging", "name": "Arrays & Strings", "description": "Loops, indexing, two pointers, slicing, string building" },
+    { "id": "binary-search",   "track": "debugging", "name": "Binary Search",    "description": "Bounds, midpoint, loop conditions, insertion points" },
+    { "id": "recursion",       "track": "debugging", "name": "Recursion",        "description": "Base cases, recursive step, accumulation" },
+    { "id": "sorting",         "track": "debugging", "name": "Sorting",          "description": "Comparison direction, swap logic, merge steps" },
+    { "id": "hash-maps",       "track": "debugging", "name": "Hash Maps",        "description": "Counting, lookups, default values, key choice" }
+  ]
+}

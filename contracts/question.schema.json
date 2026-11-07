@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-commit/contracts/question.schema.json",
+  "title": "Question",
+  "description": "One question, either track. Content files are a JSON array of these. The API never sends `answer`, `explanation`, or `provenance` to the client before the answer is submitted.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "version", "track", "topic", "format", "prompt", "answer", "explanation", "difficulty_rating"],
+  "properties": {
+    "id":      { "type": "string", "pattern": "^(sd|dbg)-[a-z0-9-]+$", "description": "Stable, unique. sd-* for system design, dbg-* for debugging." },
+    "version": { "type": "integer", "const": 1 },
+    "track":   { "enum": ["system-design", "debugging"] },
+    "topic":   { "type": "string", "description": "Must be an id from contracts/topics.json whose track matches." },
+    "format":  { "enum": ["mcq", "tap_line", "reorder", "tap_node", "predict_output"] },
+    "prompt":  { "type": "string", "minLength": 1, "maxLength": 400 },
+
+    "scenario": { "type": "string", "maxLength": 600, "description": "Optional context paragraph shown above the prompt (system design)." },
+    "code": { "type": "string", "description": "Required for tap_line and predict_output. Lines are 1-indexed by splitting on \\n." },
+    "language": { "enum": ["python"], "default": "python" },
+    "test_output": { "type": "string", "description": "Failing test output shown under the code (tap_line). Written by the pipeline's own table runner, one line per failing case: 'fn(args): expected X, got Y' or 'fn(args): raised ErrorName'. Never a traceback. Must not contain any line of `code`." },
+
+    "options": {
+      "type": "array",
+      "description": "mcq / predict_output: choices. reorder: the steps (stored in CORRECT order; the API shuffles). tap_node: one option per node so the app can fall back to mcq.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "text"],
+        "properties": {
+          "id":   { "type": "string", "pattern": "^[a-z0-9_-]+$" },
+          "text": { "type": "string", "maxLength": 200 }
+        }
+      }
+    },
+
+    "diagram": {
+      "type": "object",
+      "description": "Required for tap_node. Left-to-right flow; app lays out by edge order.",
+      "additionalProperties": false,
+      "required": ["nodes", "edges"],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "label"],
+            "properties": {
+              "id":    { "type": "string", "pattern": "^[a-z0-9_-]+$" },
+              "label": { "type": "string", "maxLength": 40 },
+              "kind":  { "enum": ["client", "service", "lb", "cache", "db", "queue", "cdn", "external"] },
+              "note":  { "type": "string", "maxLength": 60, "description": "e.g. '1 instance, 200 req/s max'" }
+            }
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "to"],
+            "properties": {
+              "from":  { "type": "string" },
+              "to":    { "type": "string" },
+              "label": { "type": "string", "maxLength": 40 }
+            }
+          }
+        }
+      }
+    },
+
+    "answer": {
+      "description": "mcq / predict_output: option id (string). tap_line: 1-indexed line number (integer). reorder: option ids in correct order (array). tap_node: node id (string).",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "integer", "minimum": 1 },
+        { "type": "array", "items": { "type": "string" }, "minItems": 2 }
+      ]
+    },
+    "explanation": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "difficulty_rating": { "type": "integer", "minimum": 600, "maximum": 2200, "description": "Seed Elo. Engine stores the live value in the DB; content files are never rewritten." },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "placement": { "type": "boolean", "default": false, "description": "Eligible for the placement test. Content owners mark >= 3 per topic: one easy (~1000), one medium (~1200), one hard (~1400)." },
+
+    "provenance": {
+      "type": "object",
+      "description": "Debugging only. Written by the pipeline; powers the 'how it was made' showcase.",
+      "additionalProperties": false,
+      "required": ["source_function", "mutation_operator", "original_line", "mutated_line", "tests_failed", "tests_total"],
+      "properties": {
+        "source_function":   { "type": "string", "description": "e.g. pipeline/corpus/binary_search.py::search" },
+        "mutation_operator": { "enum": ["off_by_one", "flip_comparison", "wrong_base_case", "wrong_operator", "wrong_return", "swap_and_or"], "description": "Every mutation changes exactly one existing line. Lines are never added or deleted." },
+        "original_line":     { "type": "string" },
+        "mutated_line":      { "type": "string" },
+        "tests_failed":      { "type": "integer", "minimum": 1 },
+        "tests_total":       { "type": "integer", "minimum": 1 },
+        "generated_at":      { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+
+  "allOf": [
+    { "if": { "properties": { "format": { "const": "mcq" } } },
+      "then": { "required": ["options"], "properties": { "answer": { "type": "string" }, "options": { "minItems": 2, "maxItems": 5 } } } },
+    { "if": { "properties": { "format": { "const": "predict_output" } } },
+      "then": { "required": ["options", "code"], "properties": { "answer": { "type": "string" }, "options": { "minItems": 2, "maxItems": 5 } } } },
+    { "if": { "properties": { "format": { "const": "tap_line" } } },
+      "then": { "required": ["code", "test_output"], "properties": { "answer": { "type": "integer" } } } },
+    { "if": { "properties": { "format": { "const": "reorder" } } },
+      "then": { "required": ["options"], "properties": { "answer": { "type": "array" }, "options": { "minItems": 3, "maxItems": 7 } } } },
+    { "if": { "properties": { "format": { "const": "tap_node" } } },
+      "then": { "required": ["diagram", "options"], "properties": { "answer": { "type": "string" } } } },
+    { "if": { "properties": { "track": { "const": "debugging" } } },
+      "then": { "properties": { "id": { "pattern": "^dbg-" }, "format": { "enum": ["tap_line", "predict_output"] } } } },
+    { "if": { "properties": { "track": { "const": "system-design" } } },
+      "then": { "properties": { "id": { "pattern": "^sd-" }, "format": { "enum": ["mcq", "reorder", "tap_node"] } } } }
+  ]
+}
