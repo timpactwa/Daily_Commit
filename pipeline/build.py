@@ -76,19 +76,19 @@ def difficulty(operator: str, code: str) -> int:
 def make_question(name: str, cases, m: mutators.Mutant, result: runner.RunResult, number: int) -> dict:
     failure_lines = result.failure_text.split("\n")[:MAX_FAILURE_LINES]
     first_call = result.failed[0]["call"]
-    return {
+    question = {
         "id": f"dbg-{name.replace('_', '-')}-{m.operator.replace('_', '-')}-{number:02d}",
         "version": 1,
         "track": "debugging",
         "topic": cases.TOPIC,
         "format": "tap_line",
-        "prompt": "This function fails the tests below. Tap the buggy line.",
+        "prompt": getattr(cases, "PROMPT", "This function fails the tests below. Tap the buggy line."),
         "code": m.source,
         "language": "python",
         "test_output": "\n".join(failure_lines),
         "answer": m.line,
         "explanation": f"Line {m.line} should be `{m.original_line.strip()}`, but {PHRASE[m.operator]}. That is why {first_call} fails.",
-        "difficulty_rating": difficulty(m.operator, m.source),
+        "difficulty_rating": max(600, min(2200, difficulty(m.operator, m.source) + getattr(cases, "DIFFICULTY_OFFSET", 0))),
         "provenance": {
             "source_function": f"pipeline/corpus/{name}.py::{cases.FUNCTION}",
             "mutation_operator": m.operator,
@@ -98,11 +98,18 @@ def make_question(name: str, cases, m: mutators.Mutant, result: runner.RunResult
             "tests_total": result.total,
         },
     }
+    if edition := getattr(cases, "EDITION", None):
+        question["tags"] = [edition, "verified-code"]
+    return question
 
 
 def process(name: str) -> FunctionReport:
     source, cases = load(name)
     report = FunctionReport(name, cases.TOPIC)
+    limit = getattr(cases, "QUESTION_LIMIT", MAX_PER_FUNCTION)
+    if type(limit) is not int or not 1 <= limit <= MAX_PER_FUNCTION:
+        report.error = f"QUESTION_LIMIT must be an integer in 1..{MAX_PER_FUNCTION}"
+        return report
     original = runner.run(source, cases.FUNCTION, cases.CASES)
     if original.status != "pass":
         report.error = f"original does not pass its cases ({original.status}): {original.failure_text}"
@@ -138,9 +145,9 @@ def process(name: str) -> FunctionReport:
     for m, r in candidates:
         by_op.setdefault(m.operator, []).append((m, r))
     chosen = []
-    while len(chosen) < MAX_PER_FUNCTION and any(by_op.values()):
+    while len(chosen) < limit and any(by_op.values()):
         for op in OPERATOR_ORDER:
-            if by_op.get(op) and len(chosen) < MAX_PER_FUNCTION:
+            if by_op.get(op) and len(chosen) < limit:
                 chosen.append(by_op[op].pop(0))
     counters: dict[str, int] = {}
     for m, r in chosen:

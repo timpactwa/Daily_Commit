@@ -63,8 +63,7 @@
       "mutated_line": "    lo = 1",
       "tests_failed": 2,
       "tests_total": 6
-    },
-    "placement": true
+    }
   },
   {
     "id": "dbg-binary-search-off-by-one-02",
@@ -86,8 +85,7 @@
       "mutated_line": "    hi = len(nums) - 2",
       "tests_failed": 2,
       "tests_total": 6
-    },
-    "placement": true
+    }
   },
   {
     "id": "dbg-binary-search-wrong-operator-01",
@@ -134,6 +132,163 @@
     }
   },
   {
+    "id": "dbg-bubble-sort-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Return an ascending sorted copy, retaining duplicates. Tap the buggy line.",
+    "code": "def bubble_sort(nums):\n    result = nums[:]\n    for end in range(len(result) - 1, 1, -1):\n        for index in range(end):\n            if result[index] > result[index + 1]:\n                result[index], result[index + 1] = (result[index + 1], result[index])\n    return result",
+    "language": "python",
+    "test_output": "bubble_sort([2, 1]): expected [1, 2], got [2, 1]\nbubble_sort([5, 4, 3, 2, 1]): expected [1, 2, 3, 4, 5], got [2, 1, 3, 4, 5]",
+    "answer": 3,
+    "explanation": "Line 3 should be `for end in range(len(result) - 1, 0, -1):`, but a number is off by one. That is why bubble_sort([2, 1]) fails.",
+    "difficulty_rating": 1115,
+    "provenance": {
+      "source_function": "pipeline/corpus/bubble_sort.py::bubble_sort",
+      "mutation_operator": "off_by_one",
+      "original_line": "    for end in range(len(result) - 1, 0, -1):",
+      "mutated_line": "    for end in range(len(result) - 1, 1, -1):",
+      "tests_failed": 2,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-bubble-sort-off-by-one-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Return an ascending sorted copy, retaining duplicates. Tap the buggy line.",
+    "code": "def bubble_sort(nums):\n    result = nums[:]\n    for end in range(len(result) - 2, 0, -1):\n        for index in range(end):\n            if result[index] > result[index + 1]:\n                result[index], result[index + 1] = (result[index + 1], result[index])\n    return result",
+    "language": "python",
+    "test_output": "bubble_sort([2, 1]): expected [1, 2], got [2, 1]\nbubble_sort([3, 1, 2]): expected [1, 2, 3], got [1, 3, 2]\nbubble_sort([5, 4, 3, 2, 1]): expected [1, 2, 3, 4, 5], got [2, 3, 4, 5, 1]",
+    "answer": 3,
+    "explanation": "Line 3 should be `for end in range(len(result) - 1, 0, -1):`, but a number is off by one. That is why bubble_sort([2, 1]) fails.",
+    "difficulty_rating": 1115,
+    "provenance": {
+      "source_function": "pipeline/corpus/bubble_sort.py::bubble_sort",
+      "mutation_operator": "off_by_one",
+      "original_line": "    for end in range(len(result) - 1, 0, -1):",
+      "mutated_line": "    for end in range(len(result) - 2, 0, -1):",
+      "tests_failed": 4,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-bubble-sort-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Return an ascending sorted copy, retaining duplicates. Tap the buggy line.",
+    "code": "def bubble_sort(nums):\n    result = nums[:]\n    for end in range(len(result) + 1, 0, -1):\n        for index in range(end):\n            if result[index] > result[index + 1]:\n                result[index], result[index + 1] = (result[index + 1], result[index])\n    return result",
+    "language": "python",
+    "test_output": "bubble_sort([]): raised IndexError\nbubble_sort([2, 1]): raised IndexError\nbubble_sort([3, 1, 2]): raised IndexError",
+    "answer": 3,
+    "explanation": "Line 3 should be `for end in range(len(result) - 1, 0, -1):`, but it uses the wrong operator. That is why bubble_sort([]) fails.",
+    "difficulty_rating": 1015,
+    "provenance": {
+      "source_function": "pipeline/corpus/bubble_sort.py::bubble_sort",
+      "mutation_operator": "wrong_operator",
+      "original_line": "    for end in range(len(result) - 1, 0, -1):",
+      "mutated_line": "    for end in range(len(result) + 1, 0, -1):",
+      "tests_failed": 9,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-counting-sort-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Counting sort must retain duplicates and handle negative integers in a small range. Tap the buggy line.",
+    "code": "def counting_sort(nums):\n    if not nums:\n        return []\n    low = min(nums)\n    high = max(nums)\n    counts = [0] * (high - low + 1)\n    for value in nums:\n        counts[value - low] += 2\n    result = []\n    for offset, count in enumerate(counts):\n        for _ in range(count):\n            result.append(offset + low)\n    return result",
+    "language": "python",
+    "test_output": "counting_sort([2, 1]): expected [1, 2], got [1, 1, 2, 2]\ncounting_sort([3, 1, 2]): expected [1, 2, 3], got [1, 1, 2, 2, 3, 3]\ncounting_sort([5, 4, 3, 2, 1]): expected [1, 2, 3, 4, 5], got [1, 1, 2, 2, 3, 3, 4, 4, 5, 5]",
+    "answer": 8,
+    "explanation": "Line 8 should be `counts[value - low] += 1`, but a number is off by one. That is why counting_sort([2, 1]) fails.",
+    "difficulty_rating": 1450,
+    "provenance": {
+      "source_function": "pipeline/corpus/counting_sort.py::counting_sort",
+      "mutation_operator": "off_by_one",
+      "original_line": "        counts[value - low] += 1",
+      "mutated_line": "        counts[value - low] += 2",
+      "tests_failed": 10,
+      "tests_total": 11
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-counting-sort-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Counting sort must retain duplicates and handle negative integers in a small range. Tap the buggy line.",
+    "code": "def counting_sort(nums):\n    if not nums:\n        return []\n    low = min(nums)\n    high = max(nums)\n    counts = [0] + (high - low + 1)\n    for value in nums:\n        counts[value - low] += 1\n    result = []\n    for offset, count in enumerate(counts):\n        for _ in range(count):\n            result.append(offset + low)\n    return result",
+    "language": "python",
+    "test_output": "counting_sort([2, 1]): raised TypeError\ncounting_sort([3, 1, 2]): raised TypeError\ncounting_sort([5, 4, 3, 2, 1]): raised TypeError",
+    "answer": 6,
+    "explanation": "Line 6 should be `counts = [0] * (high - low + 1)`, but it uses the wrong operator. That is why counting_sort([2, 1]) fails.",
+    "difficulty_rating": 1350,
+    "provenance": {
+      "source_function": "pipeline/corpus/counting_sort.py::counting_sort",
+      "mutation_operator": "wrong_operator",
+      "original_line": "    counts = [0] * (high - low + 1)",
+      "mutated_line": "    counts = [0] + (high - low + 1)",
+      "tests_failed": 10,
+      "tests_total": 11
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-counting-sort-wrong-operator-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Counting sort must retain duplicates and handle negative integers in a small range. Tap the buggy line.",
+    "code": "def counting_sort(nums):\n    if not nums:\n        return []\n    low = min(nums)\n    high = max(nums)\n    counts = [0] * (high - low + 1)\n    for value in nums:\n        counts[value - low] -= 1\n    result = []\n    for offset, count in enumerate(counts):\n        for _ in range(count):\n            result.append(offset + low)\n    return result",
+    "language": "python",
+    "test_output": "counting_sort([2, 1]): expected [1, 2], got []\ncounting_sort([3, 1, 2]): expected [1, 2, 3], got []\ncounting_sort([5, 4, 3, 2, 1]): expected [1, 2, 3, 4, 5], got []",
+    "answer": 8,
+    "explanation": "Line 8 should be `counts[value - low] += 1`, but it uses the wrong operator. That is why counting_sort([2, 1]) fails.",
+    "difficulty_rating": 1350,
+    "provenance": {
+      "source_function": "pipeline/corpus/counting_sort.py::counting_sort",
+      "mutation_operator": "wrong_operator",
+      "original_line": "        counts[value - low] += 1",
+      "mutated_line": "        counts[value - low] -= 1",
+      "tests_failed": 10,
+      "tests_total": 11
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
     "id": "dbg-factorial-wrong-base-case-01",
     "version": 1,
     "track": "debugging",
@@ -153,8 +308,7 @@
       "mutated_line": "    if n != 0:",
       "tests_failed": 3,
       "tests_total": 4
-    },
-    "placement": true
+    }
   },
   {
     "id": "dbg-factorial-wrong-base-case-02",
@@ -308,8 +462,7 @@
       "mutated_line": "        if counts[s[i]] == 2:",
       "tests_failed": 4,
       "tests_total": 5
-    },
-    "placement": true
+    }
   },
   {
     "id": "dbg-first-unique-wrong-operator-01",
@@ -354,6 +507,111 @@
       "tests_failed": 2,
       "tests_total": 5
     }
+  },
+  {
+    "id": "dbg-grid-paths-wrong-base-case-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Count top-left to bottom-right grid paths using only right/down moves. Nonpositive dimensions have 0 paths. Tap the buggy line.",
+    "code": "def grid_paths(rows, cols):\n    if rows <= 0 and cols <= 0:\n        return 0\n    if rows == 1 or cols == 1:\n        return 1\n    return grid_paths(rows - 1, cols) + grid_paths(rows, cols - 1)",
+    "language": "python",
+    "test_output": "grid_paths(0, 3): raised RecursionError\ngrid_paths(3, 0): raised RecursionError\ngrid_paths(-1, 2): raised RecursionError",
+    "answer": 2,
+    "explanation": "Line 2 should be `if rows <= 0 or cols <= 0:`, but the base case is wrong. That is why grid_paths(0, 3) fails.",
+    "difficulty_rating": 1155,
+    "provenance": {
+      "source_function": "pipeline/corpus/grid_paths.py::grid_paths",
+      "mutation_operator": "wrong_base_case",
+      "original_line": "    if rows <= 0 or cols <= 0:",
+      "mutated_line": "    if rows <= 0 and cols <= 0:",
+      "tests_failed": 3,
+      "tests_total": 10
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-grid-paths-wrong-base-case-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Count top-left to bottom-right grid paths using only right/down moves. Nonpositive dimensions have 0 paths. Tap the buggy line.",
+    "code": "def grid_paths(rows, cols):\n    if rows < 0 or cols <= 0:\n        return 0\n    if rows == 1 or cols == 1:\n        return 1\n    return grid_paths(rows - 1, cols) + grid_paths(rows, cols - 1)",
+    "language": "python",
+    "test_output": "grid_paths(0, 3): expected 0, got 1",
+    "answer": 2,
+    "explanation": "Line 2 should be `if rows <= 0 or cols <= 0:`, but the base case is wrong. That is why grid_paths(0, 3) fails.",
+    "difficulty_rating": 1155,
+    "provenance": {
+      "source_function": "pipeline/corpus/grid_paths.py::grid_paths",
+      "mutation_operator": "wrong_base_case",
+      "original_line": "    if rows <= 0 or cols <= 0:",
+      "mutated_line": "    if rows < 0 or cols <= 0:",
+      "tests_failed": 1,
+      "tests_total": 10
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-grid-paths-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Count top-left to bottom-right grid paths using only right/down moves. Nonpositive dimensions have 0 paths. Tap the buggy line.",
+    "code": "def grid_paths(rows, cols):\n    if rows <= 0 or cols <= 0:\n        return 0\n    if rows == 1 or cols == 1:\n        return 1\n    return grid_paths(rows - 1, cols) - grid_paths(rows, cols - 1)",
+    "language": "python",
+    "test_output": "grid_paths(2, 2): expected 2, got 0\ngrid_paths(3, 4): expected 10, got -2\ngrid_paths(4, 4): expected 20, got -6",
+    "answer": 6,
+    "explanation": "Line 6 should be `return grid_paths(rows - 1, cols) + grid_paths(rows, cols - 1)`, but it uses the wrong operator. That is why grid_paths(2, 2) fails.",
+    "difficulty_rating": 1155,
+    "provenance": {
+      "source_function": "pipeline/corpus/grid_paths.py::grid_paths",
+      "mutation_operator": "wrong_operator",
+      "original_line": "    return grid_paths(rows - 1, cols) + grid_paths(rows, cols - 1)",
+      "mutated_line": "    return grid_paths(rows - 1, cols) - grid_paths(rows, cols - 1)",
+      "tests_failed": 3,
+      "tests_total": 10
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-grid-paths-wrong-return-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Count top-left to bottom-right grid paths using only right/down moves. Nonpositive dimensions have 0 paths. Tap the buggy line.",
+    "code": "def grid_paths(rows, cols):\n    if rows <= 0 or cols <= 0:\n        return 0\n    if rows == 1 or cols == 1:\n        return 1\n    return grid_paths(rows - 2, cols) + grid_paths(rows, cols - 1)",
+    "language": "python",
+    "test_output": "grid_paths(2, 2): expected 2, got 1\ngrid_paths(3, 4): expected 10, got 4\ngrid_paths(4, 4): expected 20, got 4",
+    "answer": 6,
+    "explanation": "Line 6 should be `return grid_paths(rows - 1, cols) + grid_paths(rows, cols - 1)`, but it returns the wrong value. That is why grid_paths(2, 2) fails.",
+    "difficulty_rating": 1155,
+    "provenance": {
+      "source_function": "pipeline/corpus/grid_paths.py::grid_paths",
+      "mutation_operator": "wrong_return",
+      "original_line": "    return grid_paths(rows - 1, cols) + grid_paths(rows, cols - 1)",
+      "mutated_line": "    return grid_paths(rows - 2, cols) + grid_paths(rows, cols - 1)",
+      "tests_failed": 3,
+      "tests_total": 10
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
   },
   {
     "id": "dbg-insertion-sort-flip-comparison-01",
@@ -489,6 +747,295 @@
     }
   },
   {
+    "id": "dbg-integer-sqrt-flip-comparison-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "For a nonnegative integer, return floor(sqrt(number)). Tap the buggy line.",
+    "code": "def integer_sqrt(number):\n    lo = 0\n    hi = number\n    answer = 0\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if mid * mid <= number:\n            answer = mid\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return answer",
+    "language": "python",
+    "test_output": "integer_sqrt(1): expected 1, got 0\ninteger_sqrt(9): expected 3, got 2\ninteger_sqrt(16): expected 4, got 3",
+    "answer": 5,
+    "explanation": "Line 5 should be `while lo <= hi:`, but the comparison was flipped. That is why integer_sqrt(1) fails.",
+    "difficulty_rating": 1140,
+    "provenance": {
+      "source_function": "pipeline/corpus/integer_sqrt.py::integer_sqrt",
+      "mutation_operator": "flip_comparison",
+      "original_line": "    while lo <= hi:",
+      "mutated_line": "    while lo < hi:",
+      "tests_failed": 4,
+      "tests_total": 12
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-integer-sqrt-flip-comparison-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "For a nonnegative integer, return floor(sqrt(number)). Tap the buggy line.",
+    "code": "def integer_sqrt(number):\n    lo = 0\n    hi = number\n    answer = 0\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if mid * mid < number:\n            answer = mid\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return answer",
+    "language": "python",
+    "test_output": "integer_sqrt(1): expected 1, got 0\ninteger_sqrt(4): expected 2, got 1\ninteger_sqrt(9): expected 3, got 2",
+    "answer": 7,
+    "explanation": "Line 7 should be `if mid * mid <= number:`, but the comparison was flipped. That is why integer_sqrt(1) fails.",
+    "difficulty_rating": 1140,
+    "provenance": {
+      "source_function": "pipeline/corpus/integer_sqrt.py::integer_sqrt",
+      "mutation_operator": "flip_comparison",
+      "original_line": "        if mid * mid <= number:",
+      "mutated_line": "        if mid * mid < number:",
+      "tests_failed": 6,
+      "tests_total": 12
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-integer-sqrt-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "For a nonnegative integer, return floor(sqrt(number)). Tap the buggy line.",
+    "code": "def integer_sqrt(number):\n    lo = 0\n    hi = number\n    answer = 0\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if mid * mid <= number:\n            answer = mid\n            lo = mid + 2\n        else:\n            hi = mid - 1\n    return answer",
+    "language": "python",
+    "test_output": "integer_sqrt(1): expected 1, got 0\ninteger_sqrt(8): expected 2, got 1\ninteger_sqrt(16): expected 4, got 3",
+    "answer": 9,
+    "explanation": "Line 9 should be `lo = mid + 1`, but a number is off by one. That is why integer_sqrt(1) fails.",
+    "difficulty_rating": 1290,
+    "provenance": {
+      "source_function": "pipeline/corpus/integer_sqrt.py::integer_sqrt",
+      "mutation_operator": "off_by_one",
+      "original_line": "            lo = mid + 1",
+      "mutated_line": "            lo = mid + 2",
+      "tests_failed": 4,
+      "tests_total": 12
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-integer-sqrt-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "For a nonnegative integer, return floor(sqrt(number)). Tap the buggy line.",
+    "code": "def integer_sqrt(number):\n    lo = 0\n    hi = number\n    answer = 0\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if mid + mid <= number:\n            answer = mid\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return answer",
+    "language": "python",
+    "test_output": "integer_sqrt(1): expected 1, got 0\ninteger_sqrt(8): expected 2, got 4\ninteger_sqrt(9): expected 3, got 4",
+    "answer": 7,
+    "explanation": "Line 7 should be `if mid * mid <= number:`, but it uses the wrong operator. That is why integer_sqrt(1) fails.",
+    "difficulty_rating": 1190,
+    "provenance": {
+      "source_function": "pipeline/corpus/integer_sqrt.py::integer_sqrt",
+      "mutation_operator": "wrong_operator",
+      "original_line": "        if mid * mid <= number:",
+      "mutated_line": "        if mid + mid <= number:",
+      "tests_failed": 8,
+      "tests_total": 12
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-longest-consecutive-flip-comparison-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Find the longest run of consecutive integer values, ignoring input order and duplicates. Tap the buggy line.",
+    "code": "def longest_consecutive(nums):\n    values = set(nums)\n    best = 0\n    for value in values:\n        if value - 1 in values:\n            current = value\n            length = 1\n            while current + 1 in values:\n                current += 1\n                length += 1\n            best = max(best, length)\n    return best",
+    "language": "python",
+    "test_output": "longest_consecutive([1]): expected 1, got 0\nlongest_consecutive([100, 4, 200, 1, 3, 2]): expected 4, got 3\nlongest_consecutive([1, 2, 0, 1]): expected 3, got 2",
+    "answer": 5,
+    "explanation": "Line 5 should be `if value - 1 not in values:`, but the comparison was flipped. That is why longest_consecutive([1]) fails.",
+    "difficulty_rating": 1140,
+    "provenance": {
+      "source_function": "pipeline/corpus/longest_consecutive.py::longest_consecutive",
+      "mutation_operator": "flip_comparison",
+      "original_line": "        if value - 1 not in values:",
+      "mutated_line": "        if value - 1 in values:",
+      "tests_failed": 8,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-longest-consecutive-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Find the longest run of consecutive integer values, ignoring input order and duplicates. Tap the buggy line.",
+    "code": "def longest_consecutive(nums):\n    values = set(nums)\n    best = 1\n    for value in values:\n        if value - 1 not in values:\n            current = value\n            length = 1\n            while current + 1 in values:\n                current += 1\n                length += 1\n            best = max(best, length)\n    return best",
+    "language": "python",
+    "test_output": "longest_consecutive([]): expected 0, got 1",
+    "answer": 3,
+    "explanation": "Line 3 should be `best = 0`, but a number is off by one. That is why longest_consecutive([]) fails.",
+    "difficulty_rating": 1290,
+    "provenance": {
+      "source_function": "pipeline/corpus/longest_consecutive.py::longest_consecutive",
+      "mutation_operator": "off_by_one",
+      "original_line": "    best = 0",
+      "mutated_line": "    best = 1",
+      "tests_failed": 1,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-longest-consecutive-off-by-one-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Find the longest run of consecutive integer values, ignoring input order and duplicates. Tap the buggy line.",
+    "code": "def longest_consecutive(nums):\n    values = set(nums)\n    best = 0\n    for value in values:\n        if value - 1 not in values:\n            current = value\n            length = 2\n            while current + 1 in values:\n                current += 1\n                length += 1\n            best = max(best, length)\n    return best",
+    "language": "python",
+    "test_output": "longest_consecutive([1]): expected 1, got 2\nlongest_consecutive([100, 4, 200, 1, 3, 2]): expected 4, got 5\nlongest_consecutive([1, 2, 0, 1]): expected 3, got 4",
+    "answer": 7,
+    "explanation": "Line 7 should be `length = 1`, but a number is off by one. That is why longest_consecutive([1]) fails.",
+    "difficulty_rating": 1290,
+    "provenance": {
+      "source_function": "pipeline/corpus/longest_consecutive.py::longest_consecutive",
+      "mutation_operator": "off_by_one",
+      "original_line": "            length = 1",
+      "mutated_line": "            length = 2",
+      "tests_failed": 8,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-longest-consecutive-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Find the longest run of consecutive integer values, ignoring input order and duplicates. Tap the buggy line.",
+    "code": "def longest_consecutive(nums):\n    values = set(nums)\n    best = 0\n    for value in values:\n        if value + 1 not in values:\n            current = value\n            length = 1\n            while current + 1 in values:\n                current += 1\n                length += 1\n            best = max(best, length)\n    return best",
+    "language": "python",
+    "test_output": "longest_consecutive([100, 4, 200, 1, 3, 2]): expected 4, got 1\nlongest_consecutive([1, 2, 0, 1]): expected 3, got 1\nlongest_consecutive([-2, -1, 0, 5]): expected 3, got 1",
+    "answer": 5,
+    "explanation": "Line 5 should be `if value - 1 not in values:`, but it uses the wrong operator. That is why longest_consecutive([100, 4, 200, 1, 3, 2]) fails.",
+    "difficulty_rating": 1190,
+    "provenance": {
+      "source_function": "pipeline/corpus/longest_consecutive.py::longest_consecutive",
+      "mutation_operator": "wrong_operator",
+      "original_line": "        if value - 1 not in values:",
+      "mutated_line": "        if value + 1 not in values:",
+      "tests_failed": 5,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-longest-unique-substring-flip-comparison-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Find the longest substring with no repeated characters. Python string characters count individually. Tap the buggy line.",
+    "code": "def longest_unique_substring(text):\n    last = {}\n    start = 0\n    best = 0\n    for index, char in enumerate(text):\n        if char in last and last[char] > start:\n            start = last[char] + 1\n        last[char] = index\n        best = max(best, index - start + 1)\n    return best",
+    "language": "python",
+    "test_output": "longest_unique_substring('aaaa'): expected 1, got 2\nlongest_unique_substring('abcabcbb'): expected 3, got 4\nlongest_unique_substring('pwwkew'): expected 3, got 4",
+    "answer": 6,
+    "explanation": "Line 6 should be `if char in last and last[char] >= start:`, but the comparison was flipped. That is why longest_unique_substring('aaaa') fails.",
+    "difficulty_rating": 1295,
+    "provenance": {
+      "source_function": "pipeline/corpus/longest_unique_substring.py::longest_unique_substring",
+      "mutation_operator": "flip_comparison",
+      "original_line": "        if char in last and last[char] >= start:",
+      "mutated_line": "        if char in last and last[char] > start:",
+      "tests_failed": 5,
+      "tests_total": 10
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-longest-unique-substring-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Find the longest substring with no repeated characters. Python string characters count individually. Tap the buggy line.",
+    "code": "def longest_unique_substring(text):\n    last = {}\n    start = 1\n    best = 0\n    for index, char in enumerate(text):\n        if char in last and last[char] >= start:\n            start = last[char] + 1\n        last[char] = index\n        best = max(best, index - start + 1)\n    return best",
+    "language": "python",
+    "test_output": "longest_unique_substring('a'): expected 1, got 0\nlongest_unique_substring('abcd'): expected 4, got 3",
+    "answer": 3,
+    "explanation": "Line 3 should be `start = 0`, but a number is off by one. That is why longest_unique_substring('a') fails.",
+    "difficulty_rating": 1445,
+    "provenance": {
+      "source_function": "pipeline/corpus/longest_unique_substring.py::longest_unique_substring",
+      "mutation_operator": "off_by_one",
+      "original_line": "    start = 0",
+      "mutated_line": "    start = 1",
+      "tests_failed": 2,
+      "tests_total": 10
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-longest-unique-substring-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Find the longest substring with no repeated characters. Python string characters count individually. Tap the buggy line.",
+    "code": "def longest_unique_substring(text):\n    last = {}\n    start = 0\n    best = 0\n    for index, char in enumerate(text):\n        if char in last and last[char] >= start:\n            start = last[char] - 1\n        last[char] = index\n        best = max(best, index - start + 1)\n    return best",
+    "language": "python",
+    "test_output": "longest_unique_substring('aaaa'): expected 1, got 3\nlongest_unique_substring('abba'): expected 2, got 5\nlongest_unique_substring('abcabcbb'): expected 3, got 5",
+    "answer": 7,
+    "explanation": "Line 7 should be `start = last[char] + 1`, but it uses the wrong operator. That is why longest_unique_substring('aaaa') fails.",
+    "difficulty_rating": 1345,
+    "provenance": {
+      "source_function": "pipeline/corpus/longest_unique_substring.py::longest_unique_substring",
+      "mutation_operator": "wrong_operator",
+      "original_line": "            start = last[char] + 1",
+      "mutated_line": "            start = last[char] - 1",
+      "tests_failed": 7,
+      "tests_total": 10
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
     "id": "dbg-lower-bound-flip-comparison-01",
     "version": 1,
     "track": "debugging",
@@ -556,6 +1103,111 @@
     }
   },
   {
+    "id": "dbg-max-subarray-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Find the largest nonempty contiguous-subarray sum; return 0 for empty input. Tap the buggy line.",
+    "code": "def max_subarray(nums):\n    if not nums:\n        return 0\n    current = nums[1]\n    best = nums[0]\n    for value in nums[1:]:\n        current = max(value, current + value)\n        best = max(best, current)\n    return best",
+    "language": "python",
+    "test_output": "max_subarray([-8]): raised IndexError\nmax_subarray([4, -1, 2, 1]): expected 6, got 4\nmax_subarray([1, 2, 3]): expected 6, got 7",
+    "answer": 4,
+    "explanation": "Line 4 should be `current = nums[0]`, but a number is off by one. That is why max_subarray([-8]) fails.",
+    "difficulty_rating": 1285,
+    "provenance": {
+      "source_function": "pipeline/corpus/max_subarray.py::max_subarray",
+      "mutation_operator": "off_by_one",
+      "original_line": "    current = nums[0]",
+      "mutated_line": "    current = nums[1]",
+      "tests_failed": 3,
+      "tests_total": 8
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-max-subarray-off-by-one-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Find the largest nonempty contiguous-subarray sum; return 0 for empty input. Tap the buggy line.",
+    "code": "def max_subarray(nums):\n    if not nums:\n        return 0\n    current = nums[0]\n    best = nums[1]\n    for value in nums[1:]:\n        current = max(value, current + value)\n        best = max(best, current)\n    return best",
+    "language": "python",
+    "test_output": "max_subarray([-8]): raised IndexError\nmax_subarray([8, -10, 5]): expected 8, got 5",
+    "answer": 5,
+    "explanation": "Line 5 should be `best = nums[0]`, but a number is off by one. That is why max_subarray([-8]) fails.",
+    "difficulty_rating": 1285,
+    "provenance": {
+      "source_function": "pipeline/corpus/max_subarray.py::max_subarray",
+      "mutation_operator": "off_by_one",
+      "original_line": "    best = nums[0]",
+      "mutated_line": "    best = nums[1]",
+      "tests_failed": 2,
+      "tests_total": 8
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-max-subarray-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Find the largest nonempty contiguous-subarray sum; return 0 for empty input. Tap the buggy line.",
+    "code": "def max_subarray(nums):\n    if not nums:\n        return 0\n    current = nums[0]\n    best = nums[0]\n    for value in nums[1:]:\n        current = max(value, current - value)\n        best = max(best, current)\n    return best",
+    "language": "python",
+    "test_output": "max_subarray([-4, -2, -7]): expected -2, got 5\nmax_subarray([4, -1, 2, 1]): expected 6, got 5\nmax_subarray([-2, 1, -3, 4, -1, 2, 1, -5, 4]): expected 6, got 7",
+    "answer": 7,
+    "explanation": "Line 7 should be `current = max(value, current + value)`, but it uses the wrong operator. That is why max_subarray([-4, -2, -7]) fails.",
+    "difficulty_rating": 1185,
+    "provenance": {
+      "source_function": "pipeline/corpus/max_subarray.py::max_subarray",
+      "mutation_operator": "wrong_operator",
+      "original_line": "        current = max(value, current + value)",
+      "mutated_line": "        current = max(value, current - value)",
+      "tests_failed": 5,
+      "tests_total": 8
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-max-subarray-wrong-return-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Find the largest nonempty contiguous-subarray sum; return 0 for empty input. Tap the buggy line.",
+    "code": "def max_subarray(nums):\n    if not nums:\n        return 1\n    current = nums[0]\n    best = nums[0]\n    for value in nums[1:]:\n        current = max(value, current + value)\n        best = max(best, current)\n    return best",
+    "language": "python",
+    "test_output": "max_subarray([]): expected 0, got 1",
+    "answer": 3,
+    "explanation": "Line 3 should be `return 0`, but it returns the wrong value. That is why max_subarray([]) fails.",
+    "difficulty_rating": 1185,
+    "provenance": {
+      "source_function": "pipeline/corpus/max_subarray.py::max_subarray",
+      "mutation_operator": "wrong_return",
+      "original_line": "        return 0",
+      "mutated_line": "        return 1",
+      "tests_failed": 1,
+      "tests_total": 8
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
     "id": "dbg-merge-flip-comparison-01",
     "version": 1,
     "track": "debugging",
@@ -619,8 +1271,7 @@
       "mutated_line": "    i = 1",
       "tests_failed": 4,
       "tests_total": 5
-    },
-    "placement": true
+    }
   },
   {
     "id": "dbg-merge-off-by-one-02",
@@ -642,8 +1293,7 @@
       "mutated_line": "    j = 1",
       "tests_failed": 4,
       "tests_total": 5
-    },
-    "placement": true
+    }
   },
   {
     "id": "dbg-merge-swap-and-or-01",
@@ -732,8 +1382,7 @@
       "mutated_line": "    best_count = 1",
       "tests_failed": 2,
       "tests_total": 5
-    },
-    "placement": true
+    }
   },
   {
     "id": "dbg-most-common-wrong-operator-01",
@@ -756,6 +1405,163 @@
       "tests_failed": 4,
       "tests_total": 5
     }
+  },
+  {
+    "id": "dbg-multiset-intersection-flip-comparison-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Return the multiset intersection in right-list order. Each value can appear only as often as in both lists. Tap the buggy line.",
+    "code": "def multiset_intersection(left, right):\n    counts = {}\n    for value in left:\n        counts[value] = counts.get(value, 0) + 1\n    common = []\n    for value in right:\n        if counts.get(value, 0) >= 0:\n            common.append(value)\n            counts[value] -= 1\n    return common",
+    "language": "python",
+    "test_output": "multiset_intersection([], [1]): raised KeyError\nmultiset_intersection([1, 1, 2], [1, 2, 1, 1]): expected [1, 2, 1], got [1, 2, 1, 1]\nmultiset_intersection([3, 2], [2, 3, 2]): expected [2, 3], got [2, 3, 2]",
+    "answer": 7,
+    "explanation": "Line 7 should be `if counts.get(value, 0) > 0:`, but the comparison was flipped. That is why multiset_intersection([], [1]) fails.",
+    "difficulty_rating": 995,
+    "provenance": {
+      "source_function": "pipeline/corpus/multiset_intersection.py::multiset_intersection",
+      "mutation_operator": "flip_comparison",
+      "original_line": "        if counts.get(value, 0) > 0:",
+      "mutated_line": "        if counts.get(value, 0) >= 0:",
+      "tests_failed": 4,
+      "tests_total": 8
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-multiset-intersection-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Return the multiset intersection in right-list order. Each value can appear only as often as in both lists. Tap the buggy line.",
+    "code": "def multiset_intersection(left, right):\n    counts = {}\n    for value in left:\n        counts[value] = counts.get(value, 0) + 1\n    common = []\n    for value in right:\n        if counts.get(value, 0) > 1:\n            common.append(value)\n            counts[value] -= 1\n    return common",
+    "language": "python",
+    "test_output": "multiset_intersection([1, 1, 2], [1, 2, 1, 1]): expected [1, 2, 1], got [1]\nmultiset_intersection([3, 2], [2, 3, 2]): expected [2, 3], got []\nmultiset_intersection([-1, 0, -1], [-1, -1, 0]): expected [-1, -1, 0], got [-1]",
+    "answer": 7,
+    "explanation": "Line 7 should be `if counts.get(value, 0) > 0:`, but a number is off by one. That is why multiset_intersection([1, 1, 2], [1, 2, 1, 1]) fails.",
+    "difficulty_rating": 1145,
+    "provenance": {
+      "source_function": "pipeline/corpus/multiset_intersection.py::multiset_intersection",
+      "mutation_operator": "off_by_one",
+      "original_line": "        if counts.get(value, 0) > 0:",
+      "mutated_line": "        if counts.get(value, 0) > 1:",
+      "tests_failed": 3,
+      "tests_total": 8
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-multiset-intersection-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Return the multiset intersection in right-list order. Each value can appear only as often as in both lists. Tap the buggy line.",
+    "code": "def multiset_intersection(left, right):\n    counts = {}\n    for value in left:\n        counts[value] = counts.get(value, 0) - 1\n    common = []\n    for value in right:\n        if counts.get(value, 0) > 0:\n            common.append(value)\n            counts[value] -= 1\n    return common",
+    "language": "python",
+    "test_output": "multiset_intersection([1, 1, 2], [1, 2, 1, 1]): expected [1, 2, 1], got []\nmultiset_intersection([3, 2], [2, 3, 2]): expected [2, 3], got []\nmultiset_intersection([-1, 0, -1], [-1, -1, 0]): expected [-1, -1, 0], got []",
+    "answer": 4,
+    "explanation": "Line 4 should be `counts[value] = counts.get(value, 0) + 1`, but it uses the wrong operator. That is why multiset_intersection([1, 1, 2], [1, 2, 1, 1]) fails.",
+    "difficulty_rating": 1045,
+    "provenance": {
+      "source_function": "pipeline/corpus/multiset_intersection.py::multiset_intersection",
+      "mutation_operator": "wrong_operator",
+      "original_line": "        counts[value] = counts.get(value, 0) + 1",
+      "mutated_line": "        counts[value] = counts.get(value, 0) - 1",
+      "tests_failed": 4,
+      "tests_total": 8
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-nested-sum-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Sum integers in arbitrarily nested lists; empty lists contribute 0. Tap the buggy line.",
+    "code": "def nested_sum(items):\n    total = 1\n    for item in items:\n        if isinstance(item, list):\n            total += nested_sum(item)\n        else:\n            total += item\n    return total",
+    "language": "python",
+    "test_output": "nested_sum([]): expected 0, got 1\nnested_sum([1]): expected 1, got 2\nnested_sum([1, [2, 3], 4]): expected 10, got 12",
+    "answer": 2,
+    "explanation": "Line 2 should be `total = 0`, but a number is off by one. That is why nested_sum([]) fails.",
+    "difficulty_rating": 1100,
+    "provenance": {
+      "source_function": "pipeline/corpus/nested_sum.py::nested_sum",
+      "mutation_operator": "off_by_one",
+      "original_line": "    total = 0",
+      "mutated_line": "    total = 1",
+      "tests_failed": 8,
+      "tests_total": 8
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-nested-sum-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Sum integers in arbitrarily nested lists; empty lists contribute 0. Tap the buggy line.",
+    "code": "def nested_sum(items):\n    total = 0\n    for item in items:\n        if isinstance(item, list):\n            total -= nested_sum(item)\n        else:\n            total += item\n    return total",
+    "language": "python",
+    "test_output": "nested_sum([1, [2, 3], 4]): expected 10, got 0\nnested_sum([-3, [2, -1]]): expected -2, got -4\nnested_sum([[1], [2], [3]]): expected 6, got -6",
+    "answer": 5,
+    "explanation": "Line 5 should be `total += nested_sum(item)`, but it uses the wrong operator. That is why nested_sum([1, [2, 3], 4]) fails.",
+    "difficulty_rating": 1000,
+    "provenance": {
+      "source_function": "pipeline/corpus/nested_sum.py::nested_sum",
+      "mutation_operator": "wrong_operator",
+      "original_line": "            total += nested_sum(item)",
+      "mutated_line": "            total -= nested_sum(item)",
+      "tests_failed": 4,
+      "tests_total": 8
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-nested-sum-wrong-operator-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Sum integers in arbitrarily nested lists; empty lists contribute 0. Tap the buggy line.",
+    "code": "def nested_sum(items):\n    total = 0\n    for item in items:\n        if isinstance(item, list):\n            total += nested_sum(item)\n        else:\n            total -= item\n    return total",
+    "language": "python",
+    "test_output": "nested_sum([1]): expected 1, got -1\nnested_sum([1, [2, 3], 4]): expected 10, got -10\nnested_sum([-3, [2, -1]]): expected -2, got 2",
+    "answer": 7,
+    "explanation": "Line 7 should be `total += item`, but it uses the wrong operator. That is why nested_sum([1]) fails.",
+    "difficulty_rating": 1000,
+    "provenance": {
+      "source_function": "pipeline/corpus/nested_sum.py::nested_sum",
+      "mutation_operator": "wrong_operator",
+      "original_line": "            total += item",
+      "mutated_line": "            total -= item",
+      "tests_failed": 6,
+      "tests_total": 8
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
   },
   {
     "id": "dbg-palindrome-off-by-one-01",
@@ -909,8 +1715,7 @@
       "mutated_line": "    if n != 0:",
       "tests_failed": 5,
       "tests_total": 5
-    },
-    "placement": true
+    }
   },
   {
     "id": "dbg-power-wrong-base-case-02",
@@ -932,8 +1737,7 @@
       "mutated_line": "    if n % 2 != 0:",
       "tests_failed": 4,
       "tests_total": 5
-    },
-    "placement": true
+    }
   },
   {
     "id": "dbg-power-wrong-base-case-03",
@@ -1024,6 +1828,427 @@
     }
   },
   {
+    "id": "dbg-prefix-sums-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Return prefix totals with an initial zero (empty input returns [0]). Tap the buggy line.",
+    "code": "def prefix_sums(nums):\n    result = [0]\n    total = 1\n    for value in nums:\n        total += value\n        result.append(total)\n    return result",
+    "language": "python",
+    "test_output": "prefix_sums([2, 1]): expected [0, 2, 3], got [0, 3, 4]\nprefix_sums([3, 1, 2]): expected [0, 3, 4, 6], got [0, 4, 5, 7]\nprefix_sums([5, 4, 3, 2, 1]): expected [0, 5, 9, 12, 14, 15], got [0, 6, 10, 13, 15, 16]",
+    "answer": 3,
+    "explanation": "Line 3 should be `total = 0`, but a number is off by one. That is why prefix_sums([2, 1]) fails.",
+    "difficulty_rating": 1090,
+    "provenance": {
+      "source_function": "pipeline/corpus/prefix_sums.py::prefix_sums",
+      "mutation_operator": "off_by_one",
+      "original_line": "    total = 0",
+      "mutated_line": "    total = 1",
+      "tests_failed": 8,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-prefix-sums-off-by-one-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Return prefix totals with an initial zero (empty input returns [0]). Tap the buggy line.",
+    "code": "def prefix_sums(nums):\n    result = [1]\n    total = 0\n    for value in nums:\n        total += value\n        result.append(total)\n    return result",
+    "language": "python",
+    "test_output": "prefix_sums([]): expected [0], got [1]\nprefix_sums([2, 1]): expected [0, 2, 3], got [1, 2, 3]\nprefix_sums([3, 1, 2]): expected [0, 3, 4, 6], got [1, 3, 4, 6]",
+    "answer": 2,
+    "explanation": "Line 2 should be `result = [0]`, but a number is off by one. That is why prefix_sums([]) fails.",
+    "difficulty_rating": 1090,
+    "provenance": {
+      "source_function": "pipeline/corpus/prefix_sums.py::prefix_sums",
+      "mutation_operator": "off_by_one",
+      "original_line": "    result = [0]",
+      "mutated_line": "    result = [1]",
+      "tests_failed": 9,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-prefix-sums-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "arrays-strings",
+    "format": "tap_line",
+    "prompt": "Return prefix totals with an initial zero (empty input returns [0]). Tap the buggy line.",
+    "code": "def prefix_sums(nums):\n    result = [0]\n    total = 0\n    for value in nums:\n        total -= value\n        result.append(total)\n    return result",
+    "language": "python",
+    "test_output": "prefix_sums([2, 1]): expected [0, 2, 3], got [0, -2, -3]\nprefix_sums([3, 1, 2]): expected [0, 3, 4, 6], got [0, -3, -4, -6]\nprefix_sums([5, 4, 3, 2, 1]): expected [0, 5, 9, 12, 14, 15], got [0, -5, -9, -12, -14, -15]",
+    "answer": 5,
+    "explanation": "Line 5 should be `total += value`, but it uses the wrong operator. That is why prefix_sums([2, 1]) fails.",
+    "difficulty_rating": 990,
+    "provenance": {
+      "source_function": "pipeline/corpus/prefix_sums.py::prefix_sums",
+      "mutation_operator": "wrong_operator",
+      "original_line": "        total += value",
+      "mutated_line": "        total -= value",
+      "tests_failed": 7,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-recursive-search-wrong-base-case-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Recursively search sorted distinct values between inclusive lo and hi. An empty interval returns -1. Tap the buggy line.",
+    "code": "def recursive_search(nums, target, lo, hi):\n    if lo >= hi:\n        return -1\n    mid = (lo + hi) // 2\n    if nums[mid] == target:\n        return mid\n    if nums[mid] < target:\n        return recursive_search(nums, target, mid + 1, hi)\n    return recursive_search(nums, target, lo, mid - 1)",
+    "language": "python",
+    "test_output": "recursive_search([1], 1, 0, 0): expected 0, got -1\nrecursive_search([1, 3, 5, 7], 7, 0, 3): expected 3, got -1\nrecursive_search([1, 3, 5, 7], 1, 0, 3): expected 0, got -1",
+    "answer": 2,
+    "explanation": "Line 2 should be `if lo > hi:`, but the base case is wrong. That is why recursive_search([1], 1, 0, 0) fails.",
+    "difficulty_rating": 1310,
+    "provenance": {
+      "source_function": "pipeline/corpus/recursive_search.py::recursive_search",
+      "mutation_operator": "wrong_base_case",
+      "original_line": "    if lo > hi:",
+      "mutated_line": "    if lo >= hi:",
+      "tests_failed": 3,
+      "tests_total": 8
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-recursive-search-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Recursively search sorted distinct values between inclusive lo and hi. An empty interval returns -1. Tap the buggy line.",
+    "code": "def recursive_search(nums, target, lo, hi):\n    if lo > hi:\n        return -1\n    mid = (lo - hi) // 2\n    if nums[mid] == target:\n        return mid\n    if nums[mid] < target:\n        return recursive_search(nums, target, mid + 1, hi)\n    return recursive_search(nums, target, lo, mid - 1)",
+    "language": "python",
+    "test_output": "recursive_search([1, 3, 5, 7], 7, 0, 3): raised RecursionError\nrecursive_search([1, 3, 5, 7], 1, 0, 3): expected 0, got -1\nrecursive_search([1, 3, 5, 7], 3, 1, 2): expected 1, got -1",
+    "answer": 4,
+    "explanation": "Line 4 should be `mid = (lo + hi) // 2`, but it uses the wrong operator. That is why recursive_search([1, 3, 5, 7], 7, 0, 3) fails.",
+    "difficulty_rating": 1310,
+    "provenance": {
+      "source_function": "pipeline/corpus/recursive_search.py::recursive_search",
+      "mutation_operator": "wrong_operator",
+      "original_line": "    mid = (lo + hi) // 2",
+      "mutated_line": "    mid = (lo - hi) // 2",
+      "tests_failed": 3,
+      "tests_total": 8
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-recursive-search-wrong-return-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "recursion",
+    "format": "tap_line",
+    "prompt": "Recursively search sorted distinct values between inclusive lo and hi. An empty interval returns -1. Tap the buggy line.",
+    "code": "def recursive_search(nums, target, lo, hi):\n    if lo > hi:\n        return -1\n    mid = (lo + hi) // 2\n    if nums[mid] == target:\n        return mid\n    if nums[mid] < target:\n        return recursive_search(nums, target, mid + 1, hi)\n    return recursive_search(nums, target, lo, mid - 2)",
+    "language": "python",
+    "test_output": "recursive_search([1, 3, 5, 7], 1, 0, 3): expected 0, got -1",
+    "answer": 9,
+    "explanation": "Line 9 should be `return recursive_search(nums, target, lo, mid - 1)`, but it returns the wrong value. That is why recursive_search([1, 3, 5, 7], 1, 0, 3) fails.",
+    "difficulty_rating": 1310,
+    "provenance": {
+      "source_function": "pipeline/corpus/recursive_search.py::recursive_search",
+      "mutation_operator": "wrong_return",
+      "original_line": "    return recursive_search(nums, target, lo, mid - 1)",
+      "mutated_line": "    return recursive_search(nums, target, lo, mid - 2)",
+      "tests_failed": 1,
+      "tests_total": 8
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-search-rotated-flip-comparison-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "Search a rotated ascending list of distinct integers. Return its index, or -1 if absent. Tap the buggy line.",
+    "code": "def search_rotated(nums, target):\n    lo = 0\n    hi = len(nums) - 1\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[lo] <= nums[mid]:\n            if nums[lo] <= target < nums[mid]:\n                hi = mid - 1\n            else:\n                lo = mid + 1\n        elif nums[mid] < target <= nums[hi]:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1",
+    "language": "python",
+    "test_output": "search_rotated([4], 4): expected 0, got -1\nsearch_rotated([4, 5, 6, 7, 0, 1, 2], 0): expected 4, got -1\nsearch_rotated([3, 1], 1): expected 1, got -1",
+    "answer": 4,
+    "explanation": "Line 4 should be `while lo <= hi:`, but the comparison was flipped. That is why search_rotated([4], 4) fails.",
+    "difficulty_rating": 1340,
+    "provenance": {
+      "source_function": "pipeline/corpus/search_rotated.py::search_rotated",
+      "mutation_operator": "flip_comparison",
+      "original_line": "    while lo <= hi:",
+      "mutated_line": "    while lo < hi:",
+      "tests_failed": 4,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-search-rotated-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "Search a rotated ascending list of distinct integers. Return its index, or -1 if absent. Tap the buggy line.",
+    "code": "def search_rotated(nums, target):\n    lo = 1\n    hi = len(nums) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[lo] <= nums[mid]:\n            if nums[lo] <= target < nums[mid]:\n                hi = mid - 1\n            else:\n                lo = mid + 1\n        elif nums[mid] < target <= nums[hi]:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1",
+    "language": "python",
+    "test_output": "search_rotated([4], 4): expected 0, got -1",
+    "answer": 2,
+    "explanation": "Line 2 should be `lo = 0`, but a number is off by one. That is why search_rotated([4], 4) fails.",
+    "difficulty_rating": 1490,
+    "provenance": {
+      "source_function": "pipeline/corpus/search_rotated.py::search_rotated",
+      "mutation_operator": "off_by_one",
+      "original_line": "    lo = 0",
+      "mutated_line": "    lo = 1",
+      "tests_failed": 1,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-search-rotated-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "Search a rotated ascending list of distinct integers. Return its index, or -1 if absent. Tap the buggy line.",
+    "code": "def search_rotated(nums, target):\n    lo = 0\n    hi = len(nums) + 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[lo] <= nums[mid]:\n            if nums[lo] <= target < nums[mid]:\n                hi = mid - 1\n            else:\n                lo = mid + 1\n        elif nums[mid] < target <= nums[hi]:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1",
+    "language": "python",
+    "test_output": "search_rotated([], 2): raised IndexError\nsearch_rotated([4], 4): raised IndexError\nsearch_rotated([4], 2): raised IndexError",
+    "answer": 3,
+    "explanation": "Line 3 should be `hi = len(nums) - 1`, but it uses the wrong operator. That is why search_rotated([], 2) fails.",
+    "difficulty_rating": 1390,
+    "provenance": {
+      "source_function": "pipeline/corpus/search_rotated.py::search_rotated",
+      "mutation_operator": "wrong_operator",
+      "original_line": "    hi = len(nums) - 1",
+      "mutated_line": "    hi = len(nums) + 1",
+      "tests_failed": 6,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-shell-sort-flip-comparison-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Shell sort should return an ascending sorted copy for any integer list. Tap the buggy line.",
+    "code": "def shell_sort(nums):\n    result = nums[:]\n    gap = len(result) // 2\n    while gap > 0:\n        for index in range(gap, len(result)):\n            value = result[index]\n            cursor = index\n            while cursor > gap and result[cursor - gap] > value:\n                result[cursor] = result[cursor - gap]\n                cursor -= gap\n            result[cursor] = value\n        gap = gap // 2\n    return result",
+    "language": "python",
+    "test_output": "shell_sort([2, 1]): expected [1, 2], got [2, 1]\nshell_sort([3, 1, 2]): expected [1, 2, 3], got [3, 1, 2]\nshell_sort([5, 4, 3, 2, 1]): expected [1, 2, 3, 4, 5], got [5, 1, 2, 3, 4]",
+    "answer": 8,
+    "explanation": "Line 8 should be `while cursor >= gap and result[cursor - gap] > value:`, but the comparison was flipped. That is why shell_sort([2, 1]) fails.",
+    "difficulty_rating": 1150,
+    "provenance": {
+      "source_function": "pipeline/corpus/shell_sort.py::shell_sort",
+      "mutation_operator": "flip_comparison",
+      "original_line": "            while cursor >= gap and result[cursor - gap] > value:",
+      "mutated_line": "            while cursor > gap and result[cursor - gap] > value:",
+      "tests_failed": 6,
+      "tests_total": 10
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-shell-sort-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Shell sort should return an ascending sorted copy for any integer list. Tap the buggy line.",
+    "code": "def shell_sort(nums):\n    result = nums[:]\n    gap = len(result) // 2\n    while gap > 1:\n        for index in range(gap, len(result)):\n            value = result[index]\n            cursor = index\n            while cursor >= gap and result[cursor - gap] > value:\n                result[cursor] = result[cursor - gap]\n                cursor -= gap\n            result[cursor] = value\n        gap = gap // 2\n    return result",
+    "language": "python",
+    "test_output": "shell_sort([2, 1]): expected [1, 2], got [2, 1]\nshell_sort([3, 1, 2]): expected [1, 2, 3], got [3, 1, 2]\nshell_sort([-3, 0, -1, 2]): expected [-3, -1, 0, 2], got [-3, 0, -1, 2]",
+    "answer": 4,
+    "explanation": "Line 4 should be `while gap > 0:`, but a number is off by one. That is why shell_sort([2, 1]) fails.",
+    "difficulty_rating": 1300,
+    "provenance": {
+      "source_function": "pipeline/corpus/shell_sort.py::shell_sort",
+      "mutation_operator": "off_by_one",
+      "original_line": "    while gap > 0:",
+      "mutated_line": "    while gap > 1:",
+      "tests_failed": 5,
+      "tests_total": 10
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-shell-sort-swap-and-or-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Shell sort should return an ascending sorted copy for any integer list. Tap the buggy line.",
+    "code": "def shell_sort(nums):\n    result = nums[:]\n    gap = len(result) // 2\n    while gap > 0:\n        for index in range(gap, len(result)):\n            value = result[index]\n            cursor = index\n            while cursor >= gap or result[cursor - gap] > value:\n                result[cursor] = result[cursor - gap]\n                cursor -= gap\n            result[cursor] = value\n        gap = gap // 2\n    return result",
+    "language": "python",
+    "test_output": "shell_sort([2, 1]): raised IndexError\nshell_sort([3, 1, 2]): raised IndexError\nshell_sort([5, 4, 3, 2, 1]): raised IndexError",
+    "answer": 8,
+    "explanation": "Line 8 should be `while cursor >= gap and result[cursor - gap] > value:`, but `and` and `or` were swapped. That is why shell_sort([2, 1]) fails.",
+    "difficulty_rating": 1250,
+    "provenance": {
+      "source_function": "pipeline/corpus/shell_sort.py::shell_sort",
+      "mutation_operator": "swap_and_or",
+      "original_line": "            while cursor >= gap and result[cursor - gap] > value:",
+      "mutated_line": "            while cursor >= gap or result[cursor - gap] > value:",
+      "tests_failed": 8,
+      "tests_total": 10
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-shell-sort-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "sorting",
+    "format": "tap_line",
+    "prompt": "Shell sort should return an ascending sorted copy for any integer list. Tap the buggy line.",
+    "code": "def shell_sort(nums):\n    result = nums[:]\n    gap = len(result) // 2\n    while gap > 0:\n        for index in range(gap, len(result)):\n            value = result[index]\n            cursor = index\n            while cursor >= gap and result[cursor - gap] > value:\n                result[cursor] = result[cursor + gap]\n                cursor -= gap\n            result[cursor] = value\n        gap = gap // 2\n    return result",
+    "language": "python",
+    "test_output": "shell_sort([2, 1]): raised IndexError\nshell_sort([3, 1, 2]): expected [1, 2, 3], got [1, 2, 2]\nshell_sort([5, 4, 3, 2, 1]): raised IndexError",
+    "answer": 9,
+    "explanation": "Line 9 should be `result[cursor] = result[cursor - gap]`, but it uses the wrong operator. That is why shell_sort([2, 1]) fails.",
+    "difficulty_rating": 1200,
+    "provenance": {
+      "source_function": "pipeline/corpus/shell_sort.py::shell_sort",
+      "mutation_operator": "wrong_operator",
+      "original_line": "                result[cursor] = result[cursor - gap]",
+      "mutated_line": "                result[cursor] = result[cursor + gap]",
+      "tests_failed": 7,
+      "tests_total": 10
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-subarray-sum-count-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Count nonempty contiguous subarrays whose sum equals target, including negative values. Tap the buggy line.",
+    "code": "def subarray_sum_count(nums, target):\n    seen = {0: 1}\n    total = 1\n    count = 0\n    for value in nums:\n        total += value\n        count += seen.get(total - target, 0)\n        seen[total] = seen.get(total, 0) + 1\n    return count",
+    "language": "python",
+    "test_output": "subarray_sum_count([1], 1): expected 1, got 0\nsubarray_sum_count([1], 2): expected 0, got 1\nsubarray_sum_count([0, 0], 0): expected 3, got 1",
+    "answer": 3,
+    "explanation": "Line 3 should be `total = 0`, but a number is off by one. That is why subarray_sum_count([1], 1) fails.",
+    "difficulty_rating": 1435,
+    "provenance": {
+      "source_function": "pipeline/corpus/subarray_sum_count.py::subarray_sum_count",
+      "mutation_operator": "off_by_one",
+      "original_line": "    total = 0",
+      "mutated_line": "    total = 1",
+      "tests_failed": 7,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ],
+    "placement": true
+  },
+  {
+    "id": "dbg-subarray-sum-count-off-by-one-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Count nonempty contiguous subarrays whose sum equals target, including negative values. Tap the buggy line.",
+    "code": "def subarray_sum_count(nums, target):\n    seen = {0: 1}\n    total = 0\n    count = 1\n    for value in nums:\n        total += value\n        count += seen.get(total - target, 0)\n        seen[total] = seen.get(total, 0) + 1\n    return count",
+    "language": "python",
+    "test_output": "subarray_sum_count([], 0): expected 0, got 1\nsubarray_sum_count([1], 1): expected 1, got 2\nsubarray_sum_count([1], 2): expected 0, got 1",
+    "answer": 4,
+    "explanation": "Line 4 should be `count = 0`, but a number is off by one. That is why subarray_sum_count([], 0) fails.",
+    "difficulty_rating": 1435,
+    "provenance": {
+      "source_function": "pipeline/corpus/subarray_sum_count.py::subarray_sum_count",
+      "mutation_operator": "off_by_one",
+      "original_line": "    count = 0",
+      "mutated_line": "    count = 1",
+      "tests_failed": 9,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-subarray-sum-count-wrong-operator-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "hash-maps",
+    "format": "tap_line",
+    "prompt": "Count nonempty contiguous subarrays whose sum equals target, including negative values. Tap the buggy line.",
+    "code": "def subarray_sum_count(nums, target):\n    seen = {0: 1}\n    total = 0\n    count = 0\n    for value in nums:\n        total -= value\n        count += seen.get(total - target, 0)\n        seen[total] = seen.get(total, 0) + 1\n    return count",
+    "language": "python",
+    "test_output": "subarray_sum_count([1], 1): expected 1, got 0\nsubarray_sum_count([1, 1, 1], 2): expected 2, got 0\nsubarray_sum_count([3, 4, 7, 2, -3, 1, 4, 2], 7): expected 4, got 0",
+    "answer": 6,
+    "explanation": "Line 6 should be `total += value`, but it uses the wrong operator. That is why subarray_sum_count([1], 1) fails.",
+    "difficulty_rating": 1335,
+    "provenance": {
+      "source_function": "pipeline/corpus/subarray_sum_count.py::subarray_sum_count",
+      "mutation_operator": "wrong_operator",
+      "original_line": "        total += value",
+      "mutated_line": "        total -= value",
+      "tests_failed": 4,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
     "id": "dbg-two-sum-flip-comparison-01",
     "version": 1,
     "track": "debugging",
@@ -1065,8 +2290,7 @@
       "mutated_line": "    while left <= right:",
       "tests_failed": 1,
       "tests_total": 5
-    },
-    "placement": true
+    }
   },
   {
     "id": "dbg-two-sum-sorted-flip-comparison-02",
@@ -1110,8 +2334,7 @@
       "mutated_line": "    left = 1",
       "tests_failed": 2,
       "tests_total": 5
-    },
-    "placement": true
+    }
   },
   {
     "id": "dbg-two-sum-sorted-off-by-one-02",
@@ -1133,8 +2356,7 @@
       "mutated_line": "    right = len(nums) - 2",
       "tests_failed": 3,
       "tests_total": 5
-    },
-    "placement": true
+    }
   },
   {
     "id": "dbg-two-sum-sorted-wrong-operator-01",
@@ -1201,5 +2423,83 @@
       "tests_failed": 3,
       "tests_total": 5
     }
+  },
+  {
+    "id": "dbg-upper-bound-flip-comparison-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "In a sorted list, return the first index whose value exceeds target, or len(nums). Tap the buggy line.",
+    "code": "def upper_bound(nums, target):\n    lo = 0\n    hi = len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid\n    return lo",
+    "language": "python",
+    "test_output": "upper_bound([1], 1): expected 1, got 0\nupper_bound([1, 2, 2, 2, 4], 2): expected 4, got 1\nupper_bound([2, 2], 2): expected 2, got 0",
+    "answer": 6,
+    "explanation": "Line 6 should be `if nums[mid] <= target:`, but the comparison was flipped. That is why upper_bound([1], 1) fails.",
+    "difficulty_rating": 995,
+    "provenance": {
+      "source_function": "pipeline/corpus/upper_bound.py::upper_bound",
+      "mutation_operator": "flip_comparison",
+      "original_line": "        if nums[mid] <= target:",
+      "mutated_line": "        if nums[mid] < target:",
+      "tests_failed": 3,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-upper-bound-off-by-one-01",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "In a sorted list, return the first index whose value exceeds target, or len(nums). Tap the buggy line.",
+    "code": "def upper_bound(nums, target):\n    lo = 1\n    hi = len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] <= target:\n            lo = mid + 1\n        else:\n            hi = mid\n    return lo",
+    "language": "python",
+    "test_output": "upper_bound([], 1): expected 0, got 1\nupper_bound([1], 0): expected 0, got 1",
+    "answer": 2,
+    "explanation": "Line 2 should be `lo = 0`, but a number is off by one. That is why upper_bound([], 1) fails.",
+    "difficulty_rating": 1145,
+    "provenance": {
+      "source_function": "pipeline/corpus/upper_bound.py::upper_bound",
+      "mutation_operator": "off_by_one",
+      "original_line": "    lo = 0",
+      "mutated_line": "    lo = 1",
+      "tests_failed": 2,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
+  },
+  {
+    "id": "dbg-upper-bound-off-by-one-02",
+    "version": 1,
+    "track": "debugging",
+    "topic": "binary-search",
+    "format": "tap_line",
+    "prompt": "In a sorted list, return the first index whose value exceeds target, or len(nums). Tap the buggy line.",
+    "code": "def upper_bound(nums, target):\n    lo = 0\n    hi = len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] <= target:\n            lo = mid + 2\n        else:\n            hi = mid\n    return lo",
+    "language": "python",
+    "test_output": "upper_bound([1], 1): expected 1, got 2\nupper_bound([1], 2): expected 1, got 2\nupper_bound([1, 2, 4], 3): expected 2, got 3",
+    "answer": 7,
+    "explanation": "Line 7 should be `lo = mid + 1`, but a number is off by one. That is why upper_bound([1], 1) fails.",
+    "difficulty_rating": 1145,
+    "provenance": {
+      "source_function": "pipeline/corpus/upper_bound.py::upper_bound",
+      "mutation_operator": "off_by_one",
+      "original_line": "            lo = mid + 1",
+      "mutated_line": "            lo = mid + 2",
+      "tests_failed": 5,
+      "tests_total": 9
+    },
+    "tags": [
+      "research-2026-11",
+      "verified-code"
+    ]
   }
 ]
