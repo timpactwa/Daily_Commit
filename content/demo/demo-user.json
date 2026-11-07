@@ -5,16 +5,16 @@
     "best": 6
   },
   "ratings": {
-    "caching": 1340,
-    "scaling": 1270,
-    "databases": 1190,
     "async-messaging": 1140,
-    "reliability": 1230,
-    "arrays-strings": 1250,
-    "binary-search": 1180,
+    "reliability": 1190,
+    "databases": 1200,
+    "scaling": 1215,
+    "caching": 1230,
     "recursion": 1060,
-    "sorting": 1280,
-    "hash-maps": 1300
+    "binary-search": 1100,
+    "arrays-strings": 1120,
+    "sorting": 1135,
+    "hash-maps": 1145
   },
   "history": [
     {
