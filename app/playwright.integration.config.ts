@@ -5,7 +5,7 @@ export default defineConfig({
   timeout: 30000,
   workers: 1,
   use: {
-    baseURL: "http://127.0.0.1:8000",
+    baseURL: process.env.DAILY_COMMIT_TEST_URL || "http://127.0.0.1:8000",
     ...devices["Pixel 7"],
     channel: process.env.PLAYWRIGHT_CHANNEL || undefined,
     trace: "retain-on-failure",
