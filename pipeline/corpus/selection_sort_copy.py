@@ -1,4 +1,4 @@
-def selection_sort(nums):
+def selection_sort_copy(nums):
     result = nums[:]
     n = len(result)
     i = 0

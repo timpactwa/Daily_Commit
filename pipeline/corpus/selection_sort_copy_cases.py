@@ -1,5 +1,5 @@
 TOPIC = 'sorting'
-FUNCTION = 'selection_sort'
+FUNCTION = 'selection_sort_copy'
 EDITION = 'continuation-2026-11'
 QUESTION_LIMIT = 5
 DIFFICULTY_OFFSET = -50

@@ -51,7 +51,7 @@ Checkpoint 3 passed: 264 bank questions (268 with fixtures), 218 Python tests, a
 
 ## Batch 4
 
-Debugging functions: `selection_sort`, `merge_sorted_unique`. Five variants each.
+Debugging functions: `selection_sort_copy`, `merge_sorted_unique`. Five variants each.
 
 | Primary source | Question IDs |
 | --- | --- |
@@ -62,4 +62,7 @@ Debugging functions: `selection_sort`, `merge_sorted_unique`. Five variants each
 | [Google SRE toil](https://sre.google/sre-book/eliminating-toil/) | sd-reliability-continuation-027, sd-reliability-continuation-028 |
 
 Checkpoint 4 passed: 284 practice-bank questions (288 with fixtures), 223 Python tests, app build and 12 phone/desktop checks.
+
+
+After integrating F2 from main: 478 Python tests, app build and 12 browser checks pass. Practice source selection_sort_copy is distinct from the ranked corpus. The 30 ranked questions and ten learning modules remain separate; original practice payloads remain protected by the baseline audit.
 

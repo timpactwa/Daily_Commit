@@ -13,7 +13,9 @@ EDITION = 'continuation-2026-11'
 
 
 def questions():
-    return [q for p in (ROOT / 'content').glob('*/*.json') if p.parent.name != 'demo'
+    # Learning modules and ranked manifests are separate content shapes/pools.
+    return [q for topic_dir in ('system-design', 'debugging')
+            for p in (ROOT / 'content' / topic_dir).glob('*.json')
             for q in json.loads(p.read_text(encoding='utf-8'))]
 
 
@@ -94,7 +96,7 @@ def oracle(name, args):
         text, = args
         prefixes = [text[:i].count('(') - text[:i].count(')') for i in range(len(text) + 1)]
         return min(prefixes) >= 0 and prefixes[-1] == 0
-    if name == 'selection_sort':
+    if name == 'selection_sort_copy':
         return sorted(args[0])
     if name == 'merge_sorted_unique':
         return sorted(set(args[0]) | set(args[1]))
@@ -155,12 +157,12 @@ def test_recursive_count_and_parentheses_exhaustive_short_inputs():
 
 def test_new_sorts_exhaustive_duplicates_negatives_and_empty_inputs():
     functions = {name: fn for name, fn, _ in originals()}
-    if 'selection_sort' not in functions:
+    if 'selection_sort_copy' not in functions:
         return
     for length in range(6):
         for values in itertools.product((-2, 0, 3), repeat=length):
             xs = list(values)
-            assert functions['selection_sort'](xs) == sorted(xs)
+            assert functions['selection_sort_copy'](xs) == sorted(xs)
             assert xs == list(values)
     inputs = [list(values) for length in range(4)
               for values in itertools.combinations_with_replacement((-2, 0, 3), length)]
