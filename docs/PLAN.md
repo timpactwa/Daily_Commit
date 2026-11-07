@@ -92,7 +92,8 @@ Key decisions:
 - **Placement:** 10 questions, one per topic, difficulty mix 2 easy / 4 medium / 4 hard. Each answer also moves the other 4 topics in its track by 30% of the change, so starting levels spread realistically (~1000 to 1450) even from the 4-question demo version.
 - **Miss pressure:** `W = R - 100 * misses_in_latest_lesson` (current or most recent lesson, finished or not) guarantees one deliberate miss visibly shifts the preview.
 - **No repeated code:** at most one question per debugging source function per lesson, none within 3 days.
-- **Debugging seed difficulty:** `base[operator] + 10 * (function_lines - 8)`, base `flip_comparison 1100, wrong_operator 1150, wrong_base_case 1150, wrong_return 1150, swap_and_or 1200, off_by_one 1250`.
+- **Debugging seed difficulty:** `base[operator] + 10 * (function_lines - 8)`, base `flip_comparison 975, wrong_operator 1025, wrong_base_case 1025, wrong_return 1025, swap_and_or 1075, off_by_one 1125`.
+- **Question bank difficulty (both tracks):** aim for 850 to 1350, centered near 1050. Lessons target `R - 150`, so a typical student around 1200 needs questions near 1050. Simulation (`python -m engine.simulate`) showed a bank centered at 1200 runs lessons at ~50% success vs ~65% when centered at 1050. Placement questions keep their own easy/medium/hard tags (1000/1200/1400).
 
 ---
 
@@ -166,8 +167,8 @@ AGENTS.md  CLAUDE.md  README.md
 | C5 | Mutation operators via `ast` | Rushi | T4 | 90m | P | off_by_one, flip_comparison, wrong_base_case, wrong_operator, wrong_return, swap_and_or; each changes exactly one existing line, same line count; unit tested |
 | C6 | Filter + dedupe + leak check | Rushi | T4 | 45m | P | Keep only mutants where a case fails; drop timeouts; drop mutants with identical failure text; drop any question whose `test_output` contains a code line |
 | C7 | Corpus to 10 functions (2 per debugging topic) | Rushi | S5 | 75m | P | Every original passes its table; >= 4 cases each incl. an edge case |
-| C8 | Emitter + `pipeline build` + seed difficulty | Rushi | C5, C6 | 60m | B | `content/debugging/questions.json` has >= 30 valid questions across all 5 topics, provenance filled, >= 3 tagged `placement` per topic at mixed difficulty |
-| C9 | SD questions to 50 (10/topic, >= 6 reorder, >= 6 tap_node, 3 placement per topic: easy/medium/hard) | Jordan | T5 | 2 x 90m | P | Validates; peer checked by Rushi; difficulty spread 900 to 1500 |
+| C8 | Emitter + `pipeline build` + seed difficulty | Rushi | C5, C6 | 60m | B | `content/debugging/questions.json` has >= 30 valid questions across all 5 topics, provenance filled, >= 3 tagged `placement` per topic at mixed difficulty; non-placement seeds mostly 850 to 1350, median near 1050 |
+| C9 | SD questions to 50 (10/topic, >= 6 reorder, >= 6 tap_node, 3 placement per topic: easy/medium/hard) | Jordan | T5 | 2 x 90m | P | Validates; peer checked by Rushi; difficulty 850 to 1350, median near 1050 (placement-tagged ones at 1000/1200/1400) |
 | C10 | TapNode diagram format | Liam | T3 | 75m | P | Renders flow diagram from nodes/edges; falls back to mcq list if layout fails |
 
 ### M3 Polish (target: 7:30 AM Sun)

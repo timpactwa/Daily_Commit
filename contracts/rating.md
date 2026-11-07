@@ -14,6 +14,7 @@ Every rated answer updates two numbers: the student's rating for that question's
 | `K_Q_MIN` | 8 | Question K floor |
 | `R_MIN`, `R_MAX` | 600, 2200 | Clamp for all ratings |
 | `TARGET_GAP` | 150 | Lesson aims for questions ~150 below the student (~70% expected success) |
+| `DIFFICULTY_TOLERANCE` | 150 | Max distance from target before a slot moves to another topic |
 | `SPILLOVER` | 0.3 | Placement only: share of a topic's change applied to the other topics in its track |
 
 ## Formula
@@ -68,6 +69,7 @@ Owned by `/engine`; documented here so the app and content owners know what to e
 1. **Weakness score** per topic: `W = R_topic - 100 * misses_in_latest_lesson(topic)`, where the latest lesson is the current or most recent lesson, completed or not. Lowest W = weakest. The miss pressure term makes one deliberate miss visibly shift the next lesson, even before the lesson is finished.
 2. **Slots:** 2 focus items from weakest topic, 1 from second weakest, 2 mix items (guarantee both tracks appear), 1 review item (most recent missed question answered on an earlier day; if none, another focus item).
 3. **Pick per slot:** target `Q* = R_topic - TARGET_GAP`. Candidates are questions in that topic not answered in the last 3 days and not already in the lesson. Debugging candidates also exclude any question whose `provenance.source_function` is already in this lesson or was shown to the user in the last 3 days (no seeing the same code twice). Rank by `|Q - Q*|`, choose randomly among the best 3 with seed `hash(user_id, date)` so a lesson is stable for the day.
+   **Tolerance:** a slot first only accepts questions within `DIFFICULTY_TOLERANCE = 150` of `Q*`. If a topic has none (its near-target questions are used up), the slot moves to the next topic in line; only if no topic has one does it take the closest question anywhere. Exception: a topic missed in the latest lesson always gets one item regardless of tolerance, so a miss visibly shifts the next lesson. Simulation (`python -m engine.simulate`) shows this keeps real success near 60% and steady instead of ~49% and sliding.
 4. **Order:** start with the easiest item, end with a mix item (finish on a likely win).
 5. A lesson is generated once per (user, date) and stored. The preview endpoint runs the same selection against current ratings for tomorrow without storing.
 
