@@ -34,18 +34,28 @@ jobs:
           done
           pytest "${modules[@]}"
   app:
-    # Bootstrap: S3 precedes the app shell. Every PR builds once S4 lands.
-    if: hashFiles('app/package-lock.json') != ''
     name: App build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check app bootstrap
+        id: shell
+        shell: bash
+        run: |
+          if [ -f app/package-lock.json ]; then
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'App build starts when the S4 shell lands.'
+          fi
       - uses: actions/setup-node@v4
+        if: steps.shell.outputs.ready == 'true'
         with:
           node-version: '22'
           cache: npm
           cache-dependency-path: app/package-lock.json
       - run: npm ci
+        if: steps.shell.outputs.ready == 'true'
         working-directory: app
       - run: npm run build
+        if: steps.shell.outputs.ready == 'true'
         working-directory: app
