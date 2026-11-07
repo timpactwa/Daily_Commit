@@ -95,3 +95,11 @@ def test_small_pool_does_not_crash():
     tiny = [Candidate("a", "caching", "system-design", 1100.0), Candidate("b", "binary-search", "debugging", 1250.0, "f")]
     picks = build_lesson(ratings(), tiny, seed="s")
     assert {p.question_id for p in picks} == {"a", "b"}
+
+
+def test_short_lesson_mix_topics_distinct_with_one_track():
+    sd_only = [c for c in pool() if c.track == "system-design"]
+    for seed in range(20):
+        picks = build_lesson(ratings(async_messaging=1100), sd_only, seed=str(seed), size=3)
+        assert len(picks) == 3
+        assert len({p.topic for p in picks}) == 3

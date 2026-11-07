@@ -114,8 +114,13 @@ def build_lesson(
             fill_first([t for t in order if topic_track[t] == track], "focus")
         rest = [t for t in order if t not in {p.topic for p in picks}]
         rng.shuffle(rest)
-        while len(picks) < size and fill_first(rest, "mix"):
-            pass
+        while len(picks) < size:
+            used = fill_first(rest, "mix")
+            if used is None:
+                break
+            rest.remove(used)  # one mix item per topic
+        while len(picks) < size and fill_first(order, "focus"):
+            pass  # tiny pools: top up from any topic
     else:
         weakest = fill_first(order, "focus")
         if weakest:
