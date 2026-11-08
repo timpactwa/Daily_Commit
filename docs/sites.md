@@ -7,7 +7,7 @@ headers are forwarded; Sites identity and cookies stay on Sites.
 Expanded guides are bundled server-side, with checkpoint answers withheld until
 graded. Sites provisions D1 using the `DB` binding. Copy `sites/drizzle/` to the Site
 checkout's `drizzle/` before packaging. Guide completion is stored separately from
-Railway, scoped to both the signed-in Site visitor and verified app user. Daily
+Railway, scoped to the verified app user. Daily
 practice and ranked ratings continue to use the existing account.
 
 The dedicated Sites checkout contains the source from this repository and a
@@ -17,7 +17,12 @@ Keep that returned ID unchanged. Do not include `static` for this Worker build.
 Build `app/` normally, then run `node sites/build.mjs` from the repository root.
 Run `node --test sites/worker.test.mjs sites/practice.test.mjs` to check proxy boundaries and saved guide
 progress before publishing through the Sites source and deployment workflow.
-The live Site is owner-private unless its audience is explicitly changed.
+The Site's audience is managed through Sites access settings. Learning and practice
+records are scoped to the app user verified by `/v1/me`, so public visitors can use
+guest profiles or existing app accounts without a ChatGPT sign-in. Requests with
+no app session or an invalid session cannot access those records. Existing
+ChatGPT-scoped progress is imported for its original signed-in visitor on first
+access without overwriting newer app-scoped progress.
 
 Daily practice mastery runs in the Sites Worker using `sites/practice.mjs` and the
 `sites_practice_sessions` D1 table. A normal six-question practice requires four

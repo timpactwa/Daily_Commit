@@ -43,15 +43,29 @@ export function createWorker({ assets = ASSETS, modules = MODULES, bank = BANK, 
     }
     return response;
   }
-  const practice = createPracticeHandler({ upstream, bank, json, ApiError });
+  async function identifyAppUser(request, env) {
+    if (!request.headers.get('authorization') && !request.headers.get('x-user-id')) throw new ApiError(401, 'unknown_user', 'Start a practice profile or sign in first');
+    const me = await upstream(request, '/v1/me', 'GET');
+    const user = await me.json();
+    if (!me.ok) throw new ApiError(me.status, user.error?.code ?? 'session_expired', user.error?.message ?? 'Sign in again');
+    if (typeof user.user_id !== 'string') throw new ApiError(502, 'server', 'The profile could not be verified');
+    const owner = JSON.stringify(['app', user.user_id]);
+    const siteUser = request.headers.get('oai-authenticated-user-id');
+    if (siteUser) {
+      const legacy = JSON.stringify([siteUser, user.user_id]);
+      const busy = await env.DB.prepare('SELECT 1 FROM sites_practice_sessions WHERE owner_id = ? AND locked_until > ? LIMIT 1').bind(legacy, Date.now()).all();
+      if (busy.results.length) throw new ApiError(409, 'practice_busy', 'Your last answer is still saving. Try again.');
+      // Preserve existing private-Site progress, then use the verified app session
+      // for public visitors and signed-in visitors alike. Repeated imports never overwrite.
+      await env.DB.prepare('INSERT OR IGNORE INTO sites_learning_progress (owner_id, topic, section_id) SELECT ?, topic, section_id FROM sites_learning_progress WHERE owner_id = ?').bind(owner, legacy).run();
+      await env.DB.prepare('INSERT OR IGNORE INTO sites_practice_sessions (owner_id, lesson_id, day, data, completed) SELECT ?, lesson_id, day, data, completed FROM sites_practice_sessions WHERE owner_id = ?').bind(owner, legacy).run();
+    }
+    return owner;
+  }
+  const practice = createPracticeHandler({ upstream, bank, json, ApiError, identify: identifyAppUser });
 
   async function learn(request, env, path) {
-    const siteUser = request.headers.get('oai-authenticated-user-id');
-    if (!siteUser) throw new ApiError(401, 'session_expired', 'Sign in to this Site to save your learning progress.');
-    const me = await upstream(request, '/v1/me', 'GET');
-    if (!me.ok) return new Response(me.body, { status: me.status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
-    const user = await me.json();
-    const owner = JSON.stringify([siteUser, user.user_id]);
+    const owner = await identifyAppUser(request, env);
     const { results } = await env.DB.prepare('SELECT topic, section_id FROM sites_learning_progress WHERE owner_id = ?').bind(owner).all();
     const byTopic = new Map();
     for (const row of results) {
@@ -107,6 +121,7 @@ export function createWorker({ assets = ASSETS, modules = MODULES, bank = BANK, 
           const data = await response.json();
           if (response.ok) {
             if (path === '/v1/demo/reset' || path === '/v1/demo/switch') {
+              await env.DB.prepare('DELETE FROM sites_practice_sessions WHERE owner_id = ?').bind(JSON.stringify(['app', 'demo'])).run();
               const viewer = request.headers.get('oai-authenticated-user-id');
               if (viewer) await env.DB.prepare('DELETE FROM sites_practice_sessions WHERE owner_id = ?').bind(JSON.stringify([viewer, 'demo'])).run();
             }
