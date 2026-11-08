@@ -30,9 +30,16 @@ export function createWorker({ assets = ASSETS, modules = MODULES, upstreamFetch
       const value = request.headers.get(name);
       if (value) headers.set(name, value);
     }
-    return upstreamFetch(new Request(ORIGIN + path, { method, headers,
+    const response = await upstreamFetch(new Request(ORIGIN + path, { method, headers,
       body: method === 'POST' ? await request.arrayBuffer() : undefined,
-      redirect: 'error', signal: AbortSignal.timeout(20000) }));
+      redirect: 'manual', signal: AbortSignal.timeout(20000) }));
+    // Workers supports manual/follow redirects. Block redirects explicitly so app
+    // credentials and submitted answers can never be forwarded to another origin.
+    if (response.status >= 300 && response.status < 400) {
+      await response.body?.cancel();
+      throw new ApiError(502, 'server', 'The API connection could not be completed. Please try again.');
+    }
+    return response;
   }
 
   async function learn(request, env, path) {

@@ -35,7 +35,7 @@ export function Question({
         <section className="test-output term" aria-label="Failing tests">
           <div className="term-bar">
             <span className="fail-dot" aria-hidden="true">●</span>
-            <p className="eyebrow">FAILING TESTS · START HERE</p>
+            <p className="eyebrow">FAILING TESTS</p>
           </div>
           <pre>{q.test_output}</pre>
         </section>
@@ -117,9 +117,6 @@ function fileName(code: string) {
 function TermBar({ title }: { title: string }) {
   return (
     <div className="term-bar" aria-hidden="true">
-      <span className="tdot red" />
-      <span className="tdot amber" />
-      <span className="tdot green" />
       <span className="term-title">{title}</span>
       <span className="term-lang">python</span>
     </div>
