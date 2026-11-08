@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { AnswerResult, PublicQuestion, ResponseValue } from "../api";
 import { Explanation } from "./Explanation";
+import { CountUp } from "../ui";
 import { learningFor } from "../learning/feedback";
 
 function answerText(question: PublicQuestion, value: ResponseValue) {
@@ -133,8 +134,7 @@ export function FeedbackSheet({
       )}
       <p className="feedback-rating">
         <span className="delta">
-          {result.rating.delta >= 0 ? "+" : ""}
-          {result.rating.delta} Elo
+          <CountUp to={result.rating.delta} format={(n) => `${n >= 0 ? "+" : ""}${n} Elo`} />
         </span>{" "}
         · One answer helps tune your next lesson.
       </p>
