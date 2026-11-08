@@ -31,7 +31,8 @@ export function RankedHome() {
           <>
             <div className="card ranked-level-summary">
               <strong>Your ranked level: Level {ranked_level}</strong>
-              <p>{ranked_rating} Elo · Average of your topic ratings. Suggestions follow your ranked level. All difficulties are open.</p>
+              <p>{ranked_rating} Elo</p>
+              <p className="small muted">Elo is a skill rating based on your answers and question difficulty.</p>
             </div>
             {!has_account && (
               <div className="card account-banner">
@@ -66,7 +67,6 @@ function TierCard({ tier: t, canStart }: { tier: RankedTier; canStart: boolean }
         {a?.status === "finished" && <span className="pill learned">TAKEN</span>}
       </div>
       <p>{t.description}</p>
-      <p className="tier-requirement">Suggested for Levels {t.min_level}–{t.max_level}</p>
       <p className="small muted">
         {t.question_count} questions · {Math.round(t.time_limit_s / 60)} min · {t.takers} {t.takers === 1 ? "player" : "players"}
       </p>
