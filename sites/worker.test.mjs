@@ -124,3 +124,25 @@ test('upstream redirects are rejected without following or exposing their target
     } finally { DB.close(); }
   }
 });
+
+for (const [rating, expectedLevel, suggested] of [[600,1,'beginner'], [1000,2,'beginner'], [1399,3,'beginner'], [1400,4,'intermediate'], [1650,5,'intermediate'], [1899,5,'intermediate'], [1900,6,'advanced'], [2099,6,'advanced'], [2100,7,'advanced'], [2200,7,'advanced']]) {
+  test(`ranked suggestions at ${rating} Elo keep all difficulties open`, async () => {
+    const starts = [];
+    const { call, DB } = setup(async request => {
+      const path = new URL(request.url).pathname;
+      if (path === '/v1/ranked') return Response.json({ has_account: true, tiers: ['beginner','intermediate','advanced'].map(id => ({ id, title: 'Old title', suggested: false, attempt: null })) });
+      if (path === '/v1/progress') return Response.json({ topics: [{ rating }] });
+      starts.push(path);
+      return Response.json({ tier: path.split('/')[3], title: 'Old title', status: 'in_progress' });
+    });
+    try {
+      const listing = await (await call('/v1/ranked')).json();
+      assert.equal(listing.ranked_level, expectedLevel);
+      assert.deepEqual(listing.tiers.filter(t => t.suggested).map(t => t.id), [suggested]);
+      assert.deepEqual(listing.tiers.map(t => t.title), ['Easy','Intermediate','Advanced']);
+      assert.deepEqual(listing.tiers.map(t => [t.min_level, t.max_level]), [[1,3],[4,5],[6,7]]);
+      for (const tier of listing.tiers) assert.equal((await call(`/v1/ranked/${tier.id}/start`, {})).status, 200);
+      assert.equal(starts.length, 3);
+    } finally { DB.close(); }
+  });
+}

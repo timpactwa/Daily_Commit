@@ -188,7 +188,7 @@ export const api = {
     call<LearnCheckResult>("POST", `/v1/learn/${encodeURIComponent(topic)}/check`, { section_id, response }),
 
   // Ranked tests
-  getRanked: () => call<{ has_account: boolean; tiers: RankedTier[] }>("GET", "/v1/ranked"),
+  getRanked: () => call<{ has_account: boolean; ranked_level: number; ranked_rating: number; tiers: RankedTier[] }>("GET", "/v1/ranked"),
   startRanked: (tier: TierId) => call<RankedSession>("POST", `/v1/ranked/${tier}/start`),
   resumeRanked: (tier: TierId) => call<RankedSession>("GET", `/v1/ranked/${tier}/attempt`),
   answerRanked: (tier: TierId, question_id: string, response: ResponseValue) =>

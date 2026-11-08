@@ -27,8 +27,12 @@ export function RankedHome() {
         Ten standardized questions on a clock. Each test can be taken once, so the leaderboard stays fair.
       </p>
       <Resource resource={resource}>
-        {({ has_account, tiers }) => (
+        {({ has_account, ranked_level, ranked_rating, tiers }) => (
           <>
+            <div className="card ranked-level-summary">
+              <strong>Your ranked level: Level {ranked_level}</strong>
+              <p>{ranked_rating} Elo · Average of your topic ratings. Suggestions follow your ranked level. All difficulties are open.</p>
+            </div>
             {!has_account && (
               <div className="card account-banner">
                 <strong>Create an account to compete.</strong>
@@ -55,13 +59,14 @@ function TierCard({ tier: t, canStart }: { tier: RankedTier; canStart: boolean }
   const navigate = useNavigate();
   const a = t.attempt;
   return (
-    <article className={`card tier-card tier-${t.id}`}>
+    <article className={`card tier-card tier-${t.id}`} aria-label={`${t.title} ranked test`}>
       <div className="split">
         <strong className="tier-title">{t.title}</strong>
         {t.suggested && !a && <span className="pill">SUGGESTED</span>}
         {a?.status === "finished" && <span className="pill learned">TAKEN</span>}
       </div>
       <p>{t.description}</p>
+      <p className="tier-requirement">Suggested for Levels {t.min_level}–{t.max_level}</p>
       <p className="small muted">
         {t.question_count} questions · {Math.round(t.time_limit_s / 60)} min · {t.takers} {t.takers === 1 ? "player" : "players"}
       </p>

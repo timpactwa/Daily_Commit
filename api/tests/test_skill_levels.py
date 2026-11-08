@@ -39,6 +39,8 @@ def test_progress_and_ranked_suggestion_use_higher_thresholds(client, placed_use
     assert all(t["level"] == "level-4" and t["next_level_rating"] == 1650 for t in response["topics"])
     with db.transaction() as conn:
         conn.execute("UPDATE user_topics SET rating = 1650 WHERE user_id = ?", (uid,))
+        assert suggested_tier(conn, uid) == "intermediate"
+        conn.execute("UPDATE user_topics SET rating = 1900 WHERE user_id = ?", (uid,))
         assert suggested_tier(conn, uid) == "advanced"
 
 
