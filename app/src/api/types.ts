@@ -232,6 +232,9 @@ export interface LessonItem {
   answered: boolean;
   correct: boolean | null;
   question: PublicQuestion;
+  attempts_used?: number;
+  attempt_limit?: number;
+  tried_responses?: ResponseValue[];
 }
 
 export interface Lesson {
@@ -240,6 +243,7 @@ export interface Lesson {
   status: "in_progress" | "completed";
   focus_topics: string[];
   items: LessonItem[];
+  mastery?: { required: number; correct: number; answered: number; total: number; can_complete: boolean; round: number };
 }
 
 export interface AnswerRequest {
@@ -250,6 +254,10 @@ export interface AnswerRequest {
 }
 
 export interface AnswerResult {
+  practice_retry?: boolean;
+  retry_available?: false;
+  attempts_used?: number;
+  attempt_limit?: number;
   correct: boolean;
   score: number;
   correct_answer: ResponseValue;
@@ -257,6 +265,14 @@ export interface AnswerResult {
   rating: { topic: string; before: number; after: number; delta: number };
   question_rating: { before: number; after: number };
   provenance?: Provenance;
+  lesson_progress: { answered: number; total: number };
+}
+
+export interface RetryAnswerResult {
+  correct: false;
+  retry_available: true;
+  attempts_used: number;
+  attempt_limit: number;
   lesson_progress: { answered: number; total: number };
 }
 
@@ -298,6 +314,8 @@ export type ErrorCode =
   | "not_found"
   | "not_placed"
   | "already_answered"
+  | "not_passed"
+  | "practice_busy"
   | "invalid_response"
   | "session_expired"
   | "username_taken"

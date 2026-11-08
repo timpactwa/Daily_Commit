@@ -1,5 +1,69 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
+import { BANK } from "../../sites/generated.mjs";
+import type { PublicQuestion, ResponseValue } from "../src/api";
+
+async function choosePracticeAnswer(page: import("@playwright/test").Page, q: PublicQuestion, value: ResponseValue) {
+  if (q.format === "tap_line") await page.getByRole("button", { name: new RegExp(`^Line ${value}:`) }).click();
+  else if (q.format === "reorder") {
+    for (const id of value as string[]) {
+      const text = q.options!.find(o => o.id === id)!.text;
+      await page.locator(".reorder .options button").filter({ hasText: text }).click();
+    }
+  } else if (q.format === "tap_node") {
+    await page.locator(".diagram-node").filter({ hasText: q.diagram!.nodes.find(n => n.id === value)!.label }).click();
+  } else await page.locator(".question .options button").nth(q.options!.findIndex(o => o.id === value)).click();
+}
+
+test("six-question practice blocks three correct, saves second tries, and passes a four-correct retry", async ({ page, request }) => {
+  test.setTimeout(120000);
+  const user = await (await request.post('/v1/users', { data: { display_name: 'Mastery QA' } })).json();
+  const headers = { 'X-User-Id': user.user_id };
+  const placement = await (await request.get('/v1/placement?limit=4', { headers })).json();
+  const placed = await request.post('/v1/placement', { headers, data: { responses: placement.questions.map((q: PublicQuestion) => ({ question_id: q.id, response: BANK[q.id].answer })) } });
+  expect(placed.ok()).toBeTruthy();
+  await page.addInitScript(id => localStorage.setItem('dc.user_id', id), user.user_id);
+  const lesson = await (await request.get('/v1/lessons/today', { headers })).json();
+  expect(lesson.items).toHaveLength(6); expect(lesson.mastery.required).toBe(4);
+  await page.goto('/#/lesson');
+  async function finishQuestion(item: typeof lesson.items[number], right: boolean, checkReload = false) {
+    const q = item.question as PublicQuestion, answer = BANK[q.id].answer;
+    const wrong = q.format === 'tap_line' ? q.code!.split('\n').map((_,i) => i + 1).filter(i => i !== answer)
+      : q.format === 'reorder' ? [[...(answer as string[])].reverse()]
+      : (q.options ?? q.diagram!.nodes).map(o => o.id).filter(id => id !== answer);
+    const choices = right ? [answer] : wrong.slice(0, item.attempt_limit);
+    for (let attempt = 0; attempt < choices.length; attempt++) {
+      await choosePracticeAnswer(page, q, choices[attempt]);
+      await page.getByRole('button', { name: 'Check answer' }).click();
+      if (!right && attempt + 1 < choices.length) {
+        await expect(page.getByRole('status')).toContainText('one try left');
+        await expect(page.getByRole('region', { name: 'Answer feedback' })).toHaveCount(0);
+        if (checkReload) {
+          await page.reload();
+          await expect(page.getByRole('status')).toContainText('one try left');
+          const saved = await (await request.get('/v1/lessons/today', { headers })).json();
+          expect(saved.items.find((i: typeof item) => i.question.id === q.id).attempts_used).toBe(1);
+        }
+      }
+    }
+    await expect(page.getByRole('region', { name: 'Answer feedback' })).toBeVisible();
+    await page.getByRole('button', { name: 'Continue', exact: false }).click();
+  }
+  for (let i = 0; i < lesson.items.length; i++) await finishQuestion(lesson.items[i], i < 3, true);
+  await expect(page.getByText('KEEP PRACTICING', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Finish lesson' })).toHaveCount(0);
+  expect((await request.post(`/v1/lessons/${lesson.lesson_id}/complete`, { headers, data: {} })).status()).toBe(409);
+  const future = await (await request.get('/v1/lessons/today', { headers: { ...headers, 'X-Client-Date': '2027-01-01' } })).json();
+  expect(future.lesson_id).toBe(lesson.lesson_id);
+  await page.screenshot({ path: 'test-results/mastery-needs-retry.png', fullPage: true });
+  const before = await (await request.get('/v1/progress', { headers })).json();
+  await page.getByRole('button', { name: 'Retry practice' }).click();
+  for (let i = 0; i < lesson.items.length; i++) await finishQuestion(lesson.items[i], i < 4);
+  const after = await (await request.get('/v1/progress', { headers })).json();
+  expect(after.topics).toEqual(before.topics);
+  await page.getByRole('button', { name: 'Finish lesson' }).click();
+  await expect(page.getByText('4 of 6 answers correct.', { exact: false })).toBeVisible();
+});
 
 test("ranked suggests one difficulty by level and leaves every test available", async ({ page }) => {
   test.setTimeout(60000);
@@ -82,12 +146,7 @@ test("built PWA against real API: demo, feedback, completion, progress, offline 
     await expect(
       page.getByRole("heading", { name: q.prompt, exact: true }),
     ).toBeVisible();
-    if (q.format === "tap_line")
-      await page.getByRole("button", { name: /^Line 1:/ }).click();
-    else if (q.format === "reorder") {
-      for (let i = 0; i < q.options.length; i++)
-        await page.locator(".reorder .options button").first().click();
-    } else await page.locator(".options button").first().click();
+    await choosePracticeAnswer(page, q, BANK[q.id].answer);
     await page.getByRole("button", { name: "Check answer" }).click();
     await expect(
       page.getByRole("region", { name: "Answer feedback" }),

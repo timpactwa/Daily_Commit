@@ -2,7 +2,7 @@
 // Fixtures mirror contracts/examples/questions.json (copied because Vite won't
 // serve files outside /app). Grading and Elo follow contracts/rating.md, simplified.
 import type { Transport } from "./client";
-import type { PublicQuestion, ResponseValue } from "./types";
+import type { AnswerResult, PublicQuestion, ResponseValue } from "./types";
 
 type FullQuestion = PublicQuestion & { answer: ResponseValue; explanation: string; provenance?: object };
 
@@ -108,7 +108,7 @@ interface MockUser {
   history: Record<string, number[]>;
   answered: Record<string, { n: number; correct: number }>;
   streak: { current: number; best: number; last: string | null };
-  lesson: { lesson_id: string; date: string; status: "in_progress" | "completed"; results: Record<string, boolean> } | null;
+  lesson: { lesson_id: string; date: string; status: "in_progress" | "completed"; results: Record<string, boolean>; tries: Record<string, ResponseValue[]>; feedback: Record<string, AnswerResult>; round: number } | null;
 }
 
 const users = new Map<string, MockUser>();
@@ -147,6 +147,7 @@ const levelInfo = (r: number) => {
   return { next_level: next?.[0] ?? null, next_level_rating: next?.[1] ?? null,
     level_progress: next ? Math.max(0, Math.min(100, Math.floor((r - skillBands[index][1]) / (next[1] - skillBands[index][1]) * 100))) : 100 };
 };
+const attemptLimit = (q: PublicQuestion) => q.format === "reorder" ? 1 : (q.format === "tap_line" ? q.code!.split("\n").filter(s => s.trim()).length : q.options?.length ?? 0) > 2 ? 2 : 1;
 const readiness = (r: number) => Math.max(0, Math.min(100, Math.round(((r - 900) / 700) * 100)));
 const expected = (r: number, q: number) => 1 / (1 + 10 ** ((q - r) / 400));
 
@@ -227,15 +228,17 @@ export const mockTransport: Transport = async (method, path, body, headers) => {
 
   if (route === "GET /v1/lessons/today") {
     if (!u.placed) return fail(409, "not_placed", "Take the placement test first");
-    if (!u.lesson || u.lesson.date !== today)
-      u.lesson = { lesson_id: `l_${today}_${u.user_id}`, date: today, status: "in_progress", results: {} };
+    if (!u.lesson || (u.lesson.date !== today && u.lesson.status === "completed"))
+      u.lesson = { lesson_id: `l_${today}_${u.user_id}`, date: today, status: "in_progress", results: {}, tries: {}, feedback: {}, round: 1 };
     const L = u.lesson;
     return ok({
       lesson_id: L.lesson_id, date: L.date, status: L.status,
       focus_topics: ["binary-search", "caching"],
+      mastery: { required: Math.ceil(QUESTIONS.length * 2 / 3), total: QUESTIONS.length, answered: Object.keys(L.results).length, correct: Object.values(L.results).filter(Boolean).length, can_complete: Object.keys(L.results).length === QUESTIONS.length && Object.values(L.results).filter(Boolean).length >= Math.ceil(QUESTIONS.length * 2 / 3), round: L.round },
       items: QUESTIONS.map((q, i) => ({
         position: i + 1, kind: i < 2 ? "focus" : "mix",
         answered: q.id in L.results, correct: L.results[q.id] ?? null, question: toPublic(q),
+        attempts_used: L.tries[q.id]?.length ?? 0, attempt_limit: attemptLimit(q), tried_responses: q.id in L.results ? [] : L.tries[q.id] ?? [],
       })),
     });
   }
@@ -244,30 +247,53 @@ export const mockTransport: Transport = async (method, path, body, headers) => {
     const q = QUESTIONS.find((x) => x.id === b.question_id);
     if (!q || !u.lesson || u.lesson.lesson_id !== b.lesson_id) return fail(404, "not_found", "Lesson or question not found");
     if (q.id in u.lesson.results) return fail(409, "already_answered", "Already answered in this lesson");
+    const L = u.lesson;
+    const choices = (L.tries[q.id] ??= []);
+    if (choices.some(c => JSON.stringify(c) === JSON.stringify(b.response))) return ok({ correct: false, retry_available: true, attempts_used: choices.length, attempt_limit: attemptLimit(q), lesson_progress: { answered: Object.keys(L.results).length, total: QUESTIONS.length } });
     const s = score(q, b.response as ResponseValue);
+    const cached = L.feedback[q.id];
     const before = u.ratings[q.topic];
     const e = expected(before, q.difficulty_rating);
-    const after = before + 48 * (s - e);
+    const after = cached ? before : before + 48 * (s - e);
     const qBefore = q.difficulty_rating;
-    q.difficulty_rating = Math.round(qBefore - 32 * (s - e));
-    u.ratings[q.topic] = after;
-    (u.history[q.topic] ??= []).push(Math.round(after));
-    const a = (u.answered[q.topic] ??= { n: 0, correct: 0 });
-    a.n++;
-    a.correct += s === 1 ? 1 : 0;
-    u.lesson.results[q.id] = s === 1;
-    return ok({
+    if (!cached) {
+      q.difficulty_rating = Math.round(qBefore - 32 * (s - e));
+      u.ratings[q.topic] = after;
+      (u.history[q.topic] ??= []).push(Math.round(after));
+      const a = (u.answered[q.topic] ??= { n: 0, correct: 0 });
+      a.n++;
+      a.correct += s === 1 ? 1 : 0;
+    }
+    const result: AnswerResult = {
       correct: s === 1, score: s, correct_answer: q.answer, explanation: q.explanation,
       rating: { topic: q.topic, before: Math.round(before), after: Math.round(after), delta: Math.round(after) - Math.round(before) },
       question_rating: { before: qBefore, after: q.difficulty_rating },
-      ...(q.provenance ? { provenance: q.provenance } : {}),
-      lesson_progress: { answered: Object.keys(u.lesson.results).length, total: QUESTIONS.length },
-    });
+      ...(q.provenance ? { provenance: q.provenance as AnswerResult["provenance"] } : {}),
+      lesson_progress: { answered: Object.keys(L.results).length, total: QUESTIONS.length },
+    };
+    L.feedback[q.id] ??= result;
+    choices.push(b.response as ResponseValue);
+    if (s === 1 || choices.length >= attemptLimit(q)) {
+      L.results[q.id] = s === 1;
+      result.lesson_progress.answered = Object.keys(L.results).length;
+      return ok({ ...result, practice_retry: L.round > 1, retry_available: false, attempts_used: choices.length, attempt_limit: attemptLimit(q) });
+    }
+    return ok({ correct: false, retry_available: true, attempts_used: choices.length, attempt_limit: attemptLimit(q), lesson_progress: result.lesson_progress });
+  }
+
+  const retry = route.match(/^POST \/v1\/lessons\/(.+)\/retry$/);
+  if (retry) {
+    const L = u.lesson;
+    if (!L || L.lesson_id !== decodeURIComponent(retry[1])) return fail(404, "not_found", "Lesson not found");
+    if (Object.keys(L.results).length !== QUESTIONS.length || Object.values(L.results).filter(Boolean).length >= Math.ceil(QUESTIONS.length * 2 / 3)) return fail(409, "invalid_response", "Finish practice before retrying");
+    L.results = {}; L.tries = {}; L.round++;
+    return mockTransport("GET", "/v1/lessons/today", undefined, headers);
   }
 
   const complete = route.match(/^POST \/v1\/lessons\/(.+)\/complete$/);
   if (complete) {
     if (!u.lesson || u.lesson.lesson_id !== decodeURIComponent(complete[1])) return fail(404, "not_found", "Lesson not found");
+    if (Object.keys(u.lesson.results).length !== QUESTIONS.length || Object.values(u.lesson.results).filter(Boolean).length < Math.ceil(QUESTIONS.length * 2 / 3)) return fail(409, "not_passed", "Pass this practice before finishing");
     let extended = false;
     if (u.streak.last !== today) {
       u.streak.current = u.streak.last === addDays(today, -1) ? u.streak.current + 1 : 1;

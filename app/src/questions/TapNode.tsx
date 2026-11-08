@@ -5,11 +5,13 @@ export function TapNode({
   value,
   onChange,
   disabled,
+  excludedIds = [],
 }: {
   question: PublicQuestion;
   value?: string;
   onChange: (id: string) => void;
   disabled: boolean;
+  excludedIds?: string[];
 }) {
   const arrowId = useId().replaceAll(":", "");
   const diagram = question.diagram;
@@ -108,7 +110,7 @@ export function TapNode({
               style={{ left: p.x, top: p.y }}
               className={`diagram-node ${value === node.id ? "selected" : ""}`}
               aria-pressed={value === node.id}
-              disabled={disabled}
+              disabled={disabled || excludedIds.includes(node.id)}
               onClick={() => onChange(node.id)}
             >
               <span className="node-kind">{node.kind ?? "service"}</span>

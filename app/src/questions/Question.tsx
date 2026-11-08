@@ -8,6 +8,7 @@ export function Question({
   onChange,
   disabled = false,
   outcome,
+  excludedResponses = [],
 }: {
   question: PublicQuestion;
   value?: ResponseValue;
@@ -15,6 +16,7 @@ export function Question({
   disabled?: boolean;
   /** Set after grading: animates the chosen answer (pop + confetti, or shake). Display only. */
   outcome?: "correct" | "incorrect";
+  excludedResponses?: ResponseValue[];
 }) {
   const mark = outcome === "correct" ? " ok" : outcome === "incorrect" ? " bad" : "";
   const select = (v: ResponseValue) => {
@@ -47,7 +49,7 @@ export function Question({
             <div className="code" aria-label="Select the buggy line">
               {q.code.split("\n").map((line, i) => (
                 <button
-                  disabled={disabled}
+                  disabled={disabled || excludedResponses.includes(i + 1)}
                   aria-pressed={value === i + 1}
                   className={value === i + 1 ? `code-line selected${mark}` : "code-line"}
                   onClick={() => select(i + 1)}
@@ -73,6 +75,7 @@ export function Question({
           value={typeof value === "string" ? value : undefined}
           onChange={select}
           disabled={disabled}
+          excludedIds={excludedResponses.filter((r): r is string => typeof r === "string")}
         />
       )}{" "}
       {q.format === "reorder" && (
@@ -88,7 +91,7 @@ export function Question({
           {q.options?.map((option, i) => (
             <div className="option-wrap" key={option.id}>
               <button
-                disabled={disabled}
+                disabled={disabled || excludedResponses.includes(option.id)}
                 className={value === option.id ? `option selected${mark}` : "option"}
                 aria-pressed={value === option.id}
                 onClick={() => select(option.id)}

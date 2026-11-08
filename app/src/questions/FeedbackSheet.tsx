@@ -136,7 +136,9 @@ export function FeedbackSheet({
         <span className="delta">
           <CountUp to={result.rating.delta} format={(n) => `${n >= 0 ? "+" : ""}${n} Elo`} />
         </span>{" "}
-        · One answer helps tune your next lesson.
+        {result.practice_retry ? "· Practice retry: counts toward passing; Elo is unchanged."
+          : (result.attempts_used ?? 1) > 1 ? "· This try counts toward passing. Elo uses your first answer."
+          : "· One answer helps tune your next lesson."}
       </p>
       <button className="primary full" onClick={onContinue}>
         Continue →
