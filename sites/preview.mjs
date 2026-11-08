@@ -7,6 +7,7 @@ import { createWorker } from './worker.mjs';
 
 const db = new DatabaseSync(':memory:');
 db.exec(readFileSync(new URL('./drizzle/0000_learning_progress.sql', import.meta.url), 'utf8'));
+db.exec(readFileSync(new URL('./drizzle/0001_practice_mastery.sql', import.meta.url), 'utf8'));
 const DB = { prepare(sql) { return { bind(...values) { return {
   async all() { return { results: db.prepare(sql).all(...values) }; },
   async run() { return db.prepare(sql).run(...values); },

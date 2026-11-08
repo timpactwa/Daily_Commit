@@ -1,5 +1,6 @@
 // Sites hosts the latest UI and guides; the existing API retains accounts and daily/ranked data.
-import { ASSETS, MODULES } from './generated.mjs';
+import { ASSETS, MODULES, BANK } from './generated.mjs';
+import { createPracticeHandler } from './practice.mjs';
 
 const ORIGIN = 'https://daily-commit-production.up.railway.app';
 const bands = [600, 1000, 1200, 1400, 1650, 1900, 2100];
@@ -23,8 +24,8 @@ const progress = (m, done) => {
 const publicModule = (m, done) => ({ ...m, sections: m.sections.map(s => ({ ...s,
   check: { prompt: s.check.prompt, options: s.check.options } })), progress: progress(m, done) });
 
-export function createWorker({ assets = ASSETS, modules = MODULES, upstreamFetch = fetch } = {}) {
-  async function upstream(request, path, method = request.method) {
+export function createWorker({ assets = ASSETS, modules = MODULES, bank = BANK, upstreamFetch = fetch } = {}) {
+  async function upstream(request, path, method = request.method, body) {
     const headers = new Headers({ Accept: 'application/json' });
     // Never send the Site's identity, cookies, or platform service credentials to Railway.
     for (const name of ['authorization', 'x-user-id', 'x-client-date', 'content-type']) {
@@ -32,7 +33,7 @@ export function createWorker({ assets = ASSETS, modules = MODULES, upstreamFetch
       if (value) headers.set(name, value);
     }
     const response = await upstreamFetch(new Request(ORIGIN + path, { method, headers,
-      body: method === 'POST' ? await request.arrayBuffer() : undefined,
+      body: method === 'POST' ? body === undefined ? await request.arrayBuffer() : JSON.stringify(body) : undefined,
       redirect: 'manual', signal: AbortSignal.timeout(20000) }));
     // Workers supports manual/follow redirects. Block redirects explicitly so app
     // credentials and submitted answers can never be forwarded to another origin.
@@ -42,6 +43,7 @@ export function createWorker({ assets = ASSETS, modules = MODULES, upstreamFetch
     }
     return response;
   }
+  const practice = createPracticeHandler({ upstream, bank, json, ApiError });
 
   async function learn(request, env, path) {
     const siteUser = request.headers.get('oai-authenticated-user-id');
@@ -92,13 +94,22 @@ export function createWorker({ assets = ASSETS, modules = MODULES, upstreamFetch
   return {
     async fetch(request, env) {
       try {
-        const url = new URL(request.url), path = url.pathname;
+        const url = new URL(request.url);
+        let path;
+        try { path = decodeURIComponent(url.pathname); } catch { throw new ApiError(400, 'invalid_response', 'Invalid request path'); }
+        if (path.startsWith('/v1/') && /[?#%\\]/.test(path)) throw new ApiError(400, 'invalid_response', 'Invalid request path');
+        if (path.startsWith('/v1/') && path.endsWith('/')) path = path.slice(0, -1);
         if (request.method !== 'GET' && request.method !== 'POST' && request.method !== 'HEAD') throw new ApiError(405, 'invalid_response', 'Unsupported method');
         if (path === '/v1/learn' || path.startsWith('/v1/learn/')) return await learn(request, env, path);
+        if ((request.method === 'GET' && path === '/v1/lessons/today') || (request.method === 'POST' && (path === '/v1/answers' || /^\/v1\/lessons\/[^/]+\/(complete|retry)$/.test(path)))) return await practice(request, env, path);
         if (path.startsWith('/v1/') || path === '/health') {
           const response = await upstream(request, path + url.search);
           const data = await response.json();
           if (response.ok) {
+            if (path === '/v1/demo/reset' || path === '/v1/demo/switch') {
+              const viewer = request.headers.get('oai-authenticated-user-id');
+              if (viewer) await env.DB.prepare('DELETE FROM sites_practice_sessions WHERE owner_id = ?').bind(JSON.stringify([viewer, 'demo'])).run();
+            }
             if (path === '/v1/progress') {
               data.skill_levels = metadata;
               data.topics = data.topics.map(t => ({ ...t, ...skill(t.rating) }));

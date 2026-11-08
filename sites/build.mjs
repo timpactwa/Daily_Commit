@@ -18,11 +18,24 @@ await collect(path.join(root, 'app/dist'));
 if (!assets['/index.html']) throw new Error('Build app/ before packaging the Site');
 const files = (await readdir(path.join(root, 'content/learn'))).filter(f => f.endsWith('.json')).sort();
 const modules = await Promise.all(files.map(async f => JSON.parse(await readFile(path.join(root, 'content/learn', f), 'utf8'))));
-const generated = `export const ASSETS = ${JSON.stringify(assets)};\nexport const MODULES = ${JSON.stringify(modules)};\n`;
+const bank = {};
+async function collectQuestions(directory) {
+  for (const item of (await readdir(directory, { withFileTypes: true })).sort((a,b) => a.name.localeCompare(b.name))) {
+    const name = path.join(directory, item.name);
+    if (item.isDirectory()) await collectQuestions(name);
+    else if (item.name.endsWith('.json')) {
+      const data = JSON.parse(await readFile(name, 'utf8'));
+      if (Array.isArray(data)) for (const q of data) if (q.id && q.answer !== undefined) bank[q.id] = q;
+    }
+  }
+}
+await collectQuestions(path.join(root, 'content'));
+const generated = `export const ASSETS = ${JSON.stringify(assets)};\nexport const MODULES = ${JSON.stringify(modules)};\nexport const BANK = ${JSON.stringify(bank)};\n`;
 await writeFile(path.join(root, 'sites/generated.mjs'), generated);
 const source = await readFile(path.join(root, 'sites/worker.mjs'), 'utf8');
+const practiceSource = (await readFile(path.join(root, 'sites/practice.mjs'), 'utf8')).replaceAll('export function', 'function');
 await mkdir(path.join(root, 'dist/server'), { recursive: true });
-await writeFile(path.join(root, 'dist/server/index.js'), source.replace("import { ASSETS, MODULES } from './generated.mjs';", generated.replaceAll('export const', 'const')));
+await writeFile(path.join(root, 'dist/server/index.js'), source.replace("import { ASSETS, MODULES, BANK } from './generated.mjs';", generated.replaceAll('export const', 'const')).replace("import { createPracticeHandler } from './practice.mjs';", practiceSource));
 await mkdir(path.join(root, 'dist/.openai'), { recursive: true });
 try {
   await writeFile(path.join(root, 'dist/.openai/hosting.json'), await readFile(path.join(root, '.openai/hosting.json')));

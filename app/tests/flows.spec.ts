@@ -164,6 +164,10 @@ test("wrong and partly ordered answers teach the reasoning and preserve the lear
 }) => {
   await createAndPlace(page);
   await page.getByRole("link", { name: "Make today’s commit" }).click();
+  await page.getByRole("button", { name: "Write-through cache with no TTL" }).click();
+  await page.getByRole("button", { name: "Check answer" }).click();
+  await expect(page.getByRole("status")).toContainText("one try left");
+  await expect(page.getByRole("region", { name: "Answer feedback" })).toHaveCount(0);
   await page
     .getByRole("button", { name: "No cache; add read replicas" })
     .click();

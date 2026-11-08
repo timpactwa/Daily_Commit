@@ -6,7 +6,7 @@
 import type {
   AnswerRequest, AnswerResult, AuthResult, CompleteResult, ErrorCode, Features, Leaderboard,
   LearnCheckResult, LearnModule, LearnSummary, Lesson, PlacementAnswer, PlacementResult, Preview,
-  Progress, PublicQuestion, RankedResult, RankedSession, RankedTier, ResponseValue, TierId, Topic, User,
+  Progress, PublicQuestion, RankedResult, RankedSession, RankedTier, ResponseValue, RetryAnswerResult, TierId, Topic, User,
 } from "./types";
 import { mockTransport } from "./mock";
 
@@ -133,7 +133,8 @@ export const api = {
     call<PlacementResult>("POST", "/v1/placement", { responses }),
 
   getLessonToday: () => call<Lesson>("GET", "/v1/lessons/today"),
-  submitAnswer: (req: AnswerRequest) => call<AnswerResult>("POST", "/v1/answers", req),
+  submitAnswer: (req: AnswerRequest) => call<AnswerResult | RetryAnswerResult>("POST", "/v1/answers", req),
+  retryLesson: (lesson_id: string) => call<Lesson>("POST", `/v1/lessons/${encodeURIComponent(lesson_id)}/retry`),
   completeLesson: (lesson_id: string) =>
     call<CompleteResult>("POST", `/v1/lessons/${encodeURIComponent(lesson_id)}/complete`),
   getNextPreview: () => call<Preview>("GET", "/v1/lessons/next/preview"),
