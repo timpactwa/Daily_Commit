@@ -91,3 +91,36 @@ test('Worker serves real built assets and does not fall back to HTML for missing
     assert.equal((await worker.fetch(new Request('https://example.test/missing.js'), { DB })).status, 404);
   } finally { DB.close(); }
 });
+
+test('onboarding uses a Workers-compatible request and preserves the submitted JSON', async () => {
+  const { call, DB } = setup(async request => {
+    assert.equal(request.redirect, 'manual');
+    assert.equal(request.method, 'POST');
+    assert.equal(request.url, 'https://daily-commit-production.up.railway.app/v1/users');
+    assert.deepEqual(await request.json(), { display_name: 'Runtime QA' });
+    return Response.json({ user_id: 'created-user', display_name: 'Runtime QA', placed: false }, { status: 201 });
+  });
+  try {
+    const response = await call('/v1/users', { display_name: 'Runtime QA' });
+    assert.equal(response.status, 201);
+    assert.equal((await response.json()).user_id, 'created-user');
+  } finally { DB.close(); }
+});
+
+test('upstream redirects are rejected without following or exposing their target', async () => {
+  for (const status of [301, 302, 303, 307, 308]) {
+    let calls = 0;
+    const { call, DB } = setup(async request => {
+      calls++;
+      assert.equal(request.redirect, 'manual');
+      return new Response(null, { status, headers: { Location: 'https://other.example/private' } });
+    });
+    try {
+      const response = await call('/v1/users', { display_name: 'Runtime QA' });
+      assert.equal(response.status, 502);
+      assert.equal(response.headers.get('location'), null);
+      assert.equal(calls, 1);
+      assert.equal((await response.json()).error.code, 'server');
+    } finally { DB.close(); }
+  }
+});
