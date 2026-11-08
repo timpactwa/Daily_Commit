@@ -4,7 +4,7 @@
   "track": "system-design",
   "title": "Caching: Keep Hot Data Close",
   "summary": "Learn cache-aside reads, safe invalidation, eviction policies and HTTP/CDN caching so you can speed up read-heavy systems without serving bad data.",
-  "minutes": 7,
+  "minutes": 12,
   "sections": [
     {
       "id": "cache-aside",
@@ -12,7 +12,9 @@
       "body": [
         "A cache is a small, fast copy of data that lives in front of a slower store. The most common way to use one is the **cache-aside** pattern, where your application code manages the cache itself.",
         "On a read, the app checks the cache first. A hit returns immediately. On a miss, the app reads the database, puts the result in the cache, and returns it. Because only requested items get cached, the pattern works well when you cannot predict which data will be needed.",
-        "Caching helps most for data that is read often and changes rarely. It helps little when most requests miss, because you pay for the cache lookup and still hit the database. It is also a poor fit for sensitive data in a cache shared by many users."
+        "Caching helps most for data that is read often and changes rarely. It helps little when most requests miss, because you pay for the cache lookup and still hit the database. It is also a poor fit for sensitive data in a cache shared by many users.",
+        "**Follow the work, not just the latency.** If a cache hit takes 2 ms and a database read takes 80 ms, a 90% hit rate gives an approximate average of 2 + 0.1 × 80 = 10 ms before other overhead. The remaining misses still see the database path, so a good average does not guarantee a good tail latency. Measure hit rate, miss latency and downstream load together.",
+        "**Protect a hot miss.** After a popular key expires, many readers may all load the same database row. Coalesce those requests so one rebuilds the entry while others wait or receive an acceptable stale copy. Randomizing expiry across keys reduces synchronized refreshes, but one extremely popular key still needs coordination. Test cold-start behavior as well as steady-state cache hits."
       ],
       "example": {
         "title": "Homepage for a news site",
@@ -22,10 +24,22 @@
       "check": {
         "prompt": "In cache-aside, what does the application do when it reads a key and the cache has no entry?",
         "options": [
-          { "id": "a", "text": "Return an error so the client retries later" },
-          { "id": "b", "text": "Read from the database, store the result in the cache, then return it" },
-          { "id": "c", "text": "Wait for the cache to load the value on its own" },
-          { "id": "d", "text": "Write an empty value to the database" }
+          {
+            "id": "a",
+            "text": "Return an error so the client retries later"
+          },
+          {
+            "id": "b",
+            "text": "Read from the database, store the result in the cache, then return it"
+          },
+          {
+            "id": "c",
+            "text": "Wait for the cache to load the value on its own"
+          },
+          {
+            "id": "d",
+            "text": "Write an empty value to the database"
+          }
         ],
         "answer": "b",
         "explanation": "With cache-aside the application loads the item from the data store on a miss and adds it to the cache before returning it. The cache does not fill itself."
@@ -37,7 +51,9 @@
       "body": [
         "The hard part of caching is keeping copies correct. In cache-aside, a write goes to the database first and then **invalidates** (deletes) the cached item. The next read misses and reloads the fresh value.",
         "Order matters. If you delete the cache entry before updating the database, a reader can slip in between, reload the old row, and put stale data back in the cache. Update the store, then delete the key.",
-        "Cache-aside does not guarantee consistency. Another process may change the database without touching the cache, and readers can briefly see old data after a write. A **TTL** (expiration time) is your safety net: it bounds how long a stale entry can live. Too short and you keep reloading from the database, too long and data goes stale. If readers must see their own writes immediately, consider write-through caching, which updates the store and cache in the same write."
+        "Cache-aside does not guarantee immediate consistency. A TTL limits the lifetime of a cached entry and provides a recovery path when invalidation is missed. Concurrent fills can still race with writes. When freshness is essential, use a consistency protocol appropriate to the operation rather than assuming that a cache write policy alone makes the whole system atomic.",
+        "**A write order is not a complete consistency protocol.** Updating the database before deleting the cache avoids one common race. A reader that started earlier can still finish late and repopulate an old value after the delete. Version checks, coordinated cache fills or reading from the source can be necessary when stale reads are unacceptable. State the guarantee your application actually needs before choosing a cache strategy.",
+        "**Choose a freshness budget.** A product description might tolerate a minute of delay, while an available inventory count may need a stronger check at checkout. Include every cache layer in that budget: a refreshed server cache cannot revoke an old browser response automatically. TTL limits the lifetime of an individual entry, not every possible race or the total time that stale data can circulate."
       ],
       "example": {
         "title": "Updating a profile name",
@@ -45,14 +61,23 @@
         "code": "write:  db.update(user)  then  cache.delete(\"user:42\")\nread:   cache.get(\"user:42\") or load_from_db_and_cache()"
       },
       "check": {
-        "prompt": "Your app updates a row and also needs to invalidate its cache entry. Which order avoids re-caching stale data?",
+        "prompt": "Which write order reduces the delete-before-write stale-cache race?",
         "options": [
-          { "id": "a", "text": "Delete the cache entry first, then update the database" },
-          { "id": "b", "text": "Update the cache only and let the database catch up later" },
-          { "id": "c", "text": "Update the database first, then delete the cache entry" }
+          {
+            "id": "a",
+            "text": "Delete the cache entry first, then update the database"
+          },
+          {
+            "id": "b",
+            "text": "Update the cache only and let the database catch up later"
+          },
+          {
+            "id": "c",
+            "text": "Update the database first, then delete the cache entry"
+          }
         ],
         "answer": "c",
-        "explanation": "If you delete first, a concurrent reader can miss, read the old row and put it back in the cache. Updating the database first means any reload after the delete sees the new value."
+        "explanation": "Update the database, then invalidate. This reduces the delete-before-write race, but a reader already in flight can still repopulate an old value. Stronger consistency needs additional coordination."
       }
     },
     {
@@ -61,7 +86,9 @@
       "body": [
         "A cache is smaller than the database behind it, so it must decide what to throw away when it fills up. In Redis you set a memory limit with `maxmemory` and choose a `maxmemory-policy`.",
         "Common choices: `allkeys-lru` evicts the least recently used keys, `allkeys-lfu` evicts the least frequently used, and `allkeys-random` picks at random. The `volatile-*` policies only consider keys that have a TTL. With `noeviction`, Redis refuses new writes with an error once the limit is hit, although reads still work.",
-        "Redis docs suggest `allkeys-lru` as a good default when a subset of keys is accessed far more than the rest, which is typical. Evicting a cache entry is usually safe, since the data can be reloaded from the database later. You can watch hits and misses (`keyspace_hits` and `keyspace_misses`) to tell whether your policy is working."
+        "Redis docs suggest `allkeys-lru` as a good default when a subset of keys is accessed far more than the rest, which is typical. Evicting a cache entry is usually safe, since the data can be reloaded from the database later. You can watch hits and misses (`keyspace_hits` and `keyspace_misses`) to tell whether your policy is working.",
+        "**Separate expiry from eviction.** Expiry removes an entry because its permitted lifetime ended. Eviction makes room because memory is constrained, even if the entry is fresh. A fresh item can therefore disappear, and every read path must handle that miss. Never make a cache the only copy of something that must survive an eviction or restart.",
+        "**Compare workloads before choosing a policy.** Recency helps when recently read items are likely to be read again. Frequency can help when long-lived popular items compete with one-off scans. Neither policy makes a cache large enough to hold every working set. Compare hit rate and reload cost under realistic traffic instead of treating the policy name as a guarantee."
       ],
       "example": {
         "title": "Product catalog cache",
@@ -70,10 +97,22 @@
       "check": {
         "prompt": "A small set of hot keys gets most of the traffic and you have no other requirements. Which eviction policy is a sensible default?",
         "options": [
-          { "id": "a", "text": "noeviction" },
-          { "id": "b", "text": "allkeys-lru" },
-          { "id": "c", "text": "volatile-ttl on keys without a TTL" },
-          { "id": "d", "text": "Evict the most recently used keys first" }
+          {
+            "id": "a",
+            "text": "noeviction"
+          },
+          {
+            "id": "b",
+            "text": "allkeys-lru"
+          },
+          {
+            "id": "c",
+            "text": "volatile-ttl on keys without a TTL"
+          },
+          {
+            "id": "d",
+            "text": "Evict the most recently used keys first"
+          }
         ],
         "answer": "b",
         "explanation": "LRU keeps recently used (hot) keys and drops cold ones, which fits a skewed access pattern. noeviction errors on new writes when full, and volatile policies do nothing for keys with no TTL."
@@ -85,7 +124,9 @@
       "body": [
         "Caching also happens before a request reaches your servers. A **private cache** belongs to one client, like the browser cache. A **shared cache**, such as a CDN or reverse proxy, serves many users, so personalized responses must not be stored there.",
         "The `Cache-Control` header sets the rules. `max-age=N` means the response is fresh for N seconds. `no-cache` lets a cache store the response but forces it to revalidate with the server before reuse. `no-store` means do not store it at all. These two are often confused.",
-        "When a stored response goes stale, the cache can send a conditional request with the `ETag`. If nothing changed, the server replies `304 Not Modified` with no body. For static files, put a version or hash in the file name (cache busting) and give them a very long `max-age`, so a deploy just changes the URL."
+        "When a stored response goes stale, the cache can send a conditional request with the `ETag`. If nothing changed, the server replies `304 Not Modified` with no body. For static files, put a version or hash in the file name (cache busting) and give them a very long `max-age`, so a deploy just changes the URL.",
+        "**Include response variation in the cache key.** Two requests for the same URL may need different representations, such as different languages. Appropriate Vary headers tell HTTP caches which request headers matter. Personalized responses require additional care: accidentally serving one user's response from a shared cache is a correctness and privacy failure, not just a freshness problem.",
+        "**Validate a deploy from a fresh client.** Versioned assets can have long lifetimes because their URL changes with their contents. Keep the HTML entry point revalidatable so it discovers those new URLs. When troubleshooting an old interface, inspect which asset URL the live HTML references before blaming the API or repeatedly clearing unrelated data."
       ],
       "example": {
         "title": "Shipping a front-end bundle",
@@ -95,10 +136,22 @@
       "check": {
         "prompt": "What does `Cache-Control: no-cache` tell a cache to do?",
         "options": [
-          { "id": "a", "text": "Never store the response anywhere" },
-          { "id": "b", "text": "Store the response but revalidate with the server before each reuse" },
-          { "id": "c", "text": "Keep the response forever without checking" },
-          { "id": "d", "text": "Store the response only in a CDN" }
+          {
+            "id": "a",
+            "text": "Never store the response anywhere"
+          },
+          {
+            "id": "b",
+            "text": "Store the response but revalidate with the server before each reuse"
+          },
+          {
+            "id": "c",
+            "text": "Keep the response forever without checking"
+          },
+          {
+            "id": "d",
+            "text": "Store the response only in a CDN"
+          }
         ],
         "answer": "b",
         "explanation": "no-cache allows storage but requires revalidation before reuse. no-store is the directive that prevents storing."
@@ -106,8 +159,20 @@
     }
   ],
   "sources": [
-    { "title": "Cache-Aside Pattern", "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside", "publisher": "Microsoft (Azure Architecture Center)" },
-    { "title": "Key eviction", "url": "https://redis.io/docs/latest/develop/reference/eviction/", "publisher": "Redis" },
-    { "title": "HTTP caching", "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching", "publisher": "MDN Web Docs (Mozilla)" }
+    {
+      "title": "Cache-Aside Pattern",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside",
+      "publisher": "Microsoft (Azure Architecture Center)"
+    },
+    {
+      "title": "Key eviction",
+      "url": "https://redis.io/docs/latest/develop/reference/eviction/",
+      "publisher": "Redis"
+    },
+    {
+      "title": "HTTP caching",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching",
+      "publisher": "MDN Web Docs (Mozilla)"
+    }
   ]
 }

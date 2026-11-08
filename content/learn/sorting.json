@@ -4,7 +4,7 @@
   "track": "debugging",
   "title": "Sorting: Comparisons, Shifts and Merges",
   "summary": "Understand insertion sort and merge sort well enough to spot the flipped comparison or missing step.",
-  "minutes": 6,
+  "minutes": 10,
   "sections": [
     {
       "id": "insertion-sort",
@@ -12,7 +12,9 @@
       "body": [
         "Insertion sort grows a sorted prefix one element at a time. For each new `key`, it looks backward through the sorted part, **shifts** every larger value one slot to the right, and drops the key into the gap that opens up.",
         "It is simple and in place. Already-sorted input takes O(n) comparisons, but reverse-sorted input takes O(n squared), which is also its average cost, so it suits small or nearly sorted data.",
-        "The inner `while` has two jobs: stay in range (`j >= 0`) and decide whether to keep shifting (`result[j] > key`). Forgetting `j -= 1` hangs the loop, and writing the key to the wrong slot overwrites data."
+        "The inner `while` has two jobs: stay in range (`j >= 0`) and decide whether to keep shifting (`result[j] > key`). Forgetting `j -= 1` hangs the loop, and writing the key to the wrong slot overwrites data.",
+        "**Track the sorted prefix.** Before inserting the element at index i, positions before i are already sorted. Save the key, shift larger values right and place the saved key into the gap. Forgetting to save it can overwrite the value before it is inserted. The invariant tells you what must be true after every outer-loop iteration.",
+        "**Compare input shapes.** Already-sorted data needs few shifts, while reverse order can make each new key travel across the whole prefix. That explains insertion sort's efficient best case and quadratic worst case. Count comparisons and shifts on [1, 2, 3] and [3, 2, 1] instead of treating one runtime measurement as the algorithm's universal cost."
       ],
       "example": {
         "title": "Trace [3, 1, 2]",
@@ -49,7 +51,9 @@
       "body": [
         "One flipped comparison reverses the whole sort. In insertion sort, `result[j] > key` means keep shifting while the left value is bigger, which yields ascending order. Change it to `<` and larger values stop smaller ones from moving, so you get descending order.",
         "Equality matters too. Python's own sort is **stable**: items with equal keys stay in their original order. Insertion sort is stable only if it stops at equal values. Using `>=` makes equal items hop over each other.",
-        "Stability is practical: sort by a secondary key first, then by the primary key, and ties keep the earlier ordering."
+        "Stability is practical: sort by a secondary key first, then by the primary key, and ties keep the earlier ordering.",
+        "**Equality can carry information.** Imagine sorting records with both a score and an original arrival order. A stable sort preserves arrival order among equal scores. In insertion sort, shifting only values strictly greater than the key preserves that order; shifting equal values can reverse it.",
+        "**Validate the intended ordering.** Ascending and descending order need opposite comparisons, but both must also preserve every input item. A result can look monotonic after accidentally dropping a duplicate. Use labelled equal-key records to check stability, and use value counts to check that no element vanished during a shift or swap."
       ],
       "example": {
         "title": "Flipped comparison",
@@ -86,7 +90,9 @@
       "body": [
         "Merge sort splits a list into halves, sorts each half, and **merges** the two sorted halves. Every level of merging costs linear time, and there are about log n levels, so the total is O(n log n). It typically needs O(n) extra memory.",
         "The merge step keeps one index per input list. Compare the two front items and copy the smaller one. Using `<=` when comparing takes from the left list on ties, which keeps the sort stable.",
-        "Once one list runs out, the other still has items. They are already sorted and all at least as large as everything copied, so you append them. Forgetting those leftovers, or advancing the wrong index, are the classic merge bugs."
+        "Once one list runs out, the other still has items. They are already sorted and all at least as large as everything copied, so you append them. Forgetting those leftovers, or advancing the wrong index, are the classic merge bugs.",
+        "**The front elements summarize the remaining inputs.** Because both inputs are sorted, the smallest remaining value must be one of their front values. After appending that value, advance only its input pointer. Advancing both pointers would silently discard an unchosen element.",
+        "**Do not forget the tail.** When one input is exhausted, the other may still contain valid values. They are already sorted and can be appended directly. Test an empty left input, an empty right input, interleaving values and duplicates. Each case checks a different part of the merge contract."
       ],
       "example": {
         "title": "Merging with leftovers",
@@ -115,6 +121,39 @@
         ],
         "answer": "a",
         "explanation": "1 and 2 are both smaller than 3, so they are copied first. Then a runs out and the loop ends before b is touched, leaving [3, 4] uncopied."
+      }
+    },
+    {
+      "id": "verify-a-sort",
+      "heading": "Testing order and preserving every item",
+      "body": [
+        "A correct sorting result satisfies two independent conditions: the elements appear in the requested order, and the result contains exactly the original elements with the same multiplicities. Checking only that values increase can miss an implementation that silently drops a duplicate.",
+        "For ordinary integer lists, compare frequency tables to verify preservation and adjacent pairs to verify ascending order. This checks nondecreasing order, so equal adjacent values are allowed. A stability requirement needs a separate test using labelled records with equal sort keys; counts and numeric order alone cannot establish stability.",
+        "Build a small test matrix: empty input, one item, already sorted input, reverse order, repeated values and negative values. Compare the function's result with Python's sorted() as an oracle for the basic value-order contract. Also check whether the function is supposed to mutate its input or return a new list."
+      ],
+      "example": {
+        "title": "Two independent checks",
+        "text": "Original [2, 1, 1] and result [1, 2] pass the order check but fail the frequency check because one 1 disappeared.",
+        "code": "from collections import Counter\ndef valid_sort(original, result):\n    preserved = Counter(original) == Counter(result)\n    ordered = all(result[i - 1] <= result[i] for i in range(1, len(result)))\n    return preserved and ordered"
+      },
+      "check": {
+        "prompt": "A sort turns [2, 1, 1] into [1, 2]. What failed?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Order only"
+          },
+          {
+            "id": "b",
+            "text": "Nothing: the output is increasing"
+          },
+          {
+            "id": "c",
+            "text": "Preservation of input multiplicities"
+          }
+        ],
+        "answer": "c",
+        "explanation": "The output is ordered, but one occurrence of 1 was lost. A correct sort must satisfy both ordering and preservation."
       }
     }
   ],

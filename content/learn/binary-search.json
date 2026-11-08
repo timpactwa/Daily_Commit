@@ -4,14 +4,16 @@
   "track": "debugging",
   "title": "Binary Search: Bounds, Midpoint, Loop Condition",
   "summary": "Cut a sorted list in half each step, and learn the exact loop, bound and midpoint choices that make it correct.",
-  "minutes": 7,
+  "minutes": 11,
   "sections": [
     {
       "id": "the-idea",
       "heading": "The idea and the standard loop",
       "body": [
         "Binary search finds a target in a **sorted** array by comparing it with the middle element and throwing away the half that cannot contain it. Repeat on what is left. If the range becomes empty, the target is not there. It takes O(log n) comparisons and O(1) extra space.",
-        "The common version keeps two inclusive bounds, `lo` and `hi`, and loops `while lo <= hi`. With `<=`, a range of exactly one element is still checked. If `nums[mid]` is too small, the answer must be to the right, so `lo = mid + 1`. Otherwise `hi = mid - 1`. The `+1` and `-1` matter because `mid` was already ruled out."
+        "The common version keeps two inclusive bounds, `lo` and `hi`, and loops `while lo <= hi`. With `<=`, a range of exactly one element is still checked. If `nums[mid]` is too small, the answer must be to the right, so `lo = mid + 1`. Otherwise `hi = mid - 1`. The `+1` and `-1` matter because `mid` was already ruled out.",
+        "**State the invariant.** Before each iteration, every location that could contain the target is inside the current interval. Comparing with the midpoint eliminates a half only because the array is sorted. If data can change during the search, that reasoning may no longer hold. The input condition is part of the algorithm, not a minor implementation detail.",
+        "**Explain the logarithm with a count.** A range of about a thousand elements shrinks to roughly 500, 250, 125 and so on, requiring only around ten halvings. Linear search might inspect every element. That advantage depends on being able to access a midpoint efficiently; sorting a one-off unsorted input just to search it may cost more than a single scan."
       ],
       "example": {
         "title": "Trace a search",
@@ -48,7 +50,9 @@
       "body": [
         "Whether you write `<=` or `<` depends on what `hi` means. If `hi = len(nums) - 1`, it is an inclusive bound, so the loop must run while `lo <= hi`. If `hi = len(nums)`, it is an exclusive bound, and the loop runs while `lo < hi`.",
         "Mixing the two styles is a classic bug. Take the inclusive version and change `<=` to `<`: the loop quits when one candidate is left, so it never examines it. That last candidate is often the answer.",
-        "Wikipedia notes that programmers who implement binary search incorrectly most often go wrong in the exit conditions, so pick one style and stay consistent."
+        "Wikipedia notes that programmers who implement binary search incorrectly most often go wrong in the exit conditions, so pick one style and stay consistent.",
+        "**Draw the interval before copying a template.** Inclusive [lo, hi] contains a candidate when lo equals hi. Half-open [lo, hi) is empty at equality. The same less-than comparison can therefore be correct in one implementation and wrong in another. The meaning of the endpoints decides the condition.",
+        "**Use a minimal counterexample.** Searching [4] for 4 isolates the one-candidate case without any other branching. Also test a target smaller than every value and larger than every value. Trace when the range becomes empty and what the function returns after the loop, rather than checking only successful searches near the middle."
       ],
       "example": {
         "title": "The one-element miss",
@@ -85,7 +89,9 @@
       "body": [
         "The midpoint is `(lo + hi) // 2`. Some references write `lo + (hi - lo) // 2` instead, because in languages with fixed-size integers `lo + hi` can overflow on huge arrays. Python integers do not overflow, so both are fine here, but the safer form is a good habit.",
         "The dangerous bug is updating a bound with `mid` when it should be `mid + 1` or `mid - 1`. In the inclusive version, `lo = mid` can leave the range unchanged. With two elements, `mid` equals `lo`, so setting `lo = mid` repeats the same state forever: an **infinite loop**.",
-        "Rule of thumb: in the inclusive style, both updates skip `mid`. Only the exclusive style (next section) is allowed to set `hi = mid`."
+        "Rule of thumb: in the inclusive style, both updates skip `mid`. Only the exclusive style (next section) is allowed to set `hi = mid`.",
+        "**Prove progress separately from correctness.** Keeping the target inside the interval is not enough if an update leaves that interval unchanged. Write down the range length before and after each branch. An inclusive search that rules out mid should move past it; a lower-bound search may keep mid while moving the opposite endpoint.",
+        "**Check both branches with two elements.** Small ranges reveal midpoint rounding effects. With lo = 0 and hi = 1, integer division chooses mid = 0, so assigning lo = mid makes no progress. Changing the loop guard alone may hide one infinite loop while skipping valid candidates. Repair the update according to the interval invariant."
       ],
       "example": {
         "title": "An infinite loop",
@@ -122,7 +128,9 @@
       "body": [
         "Sometimes you want where a value would go, not just whether it exists. This is the **lower bound**: the first index whose value is at least the target. Python's `bisect_left` returns exactly this position, before any equal items, and `bisect_right` returns the position after them.",
         "This version uses an exclusive `hi = len(nums)` and `while lo < hi`. If `nums[mid] < target`, move `lo = mid + 1`. Otherwise `hi = mid` (mid could still be the answer). It returns `lo`, which is also the count of items smaller than the target, and works when the target is missing.",
-        "Changing `<` to `<=` in the comparison turns it into the upper bound, landing after the duplicates."
+        "Changing `<` to `<=` in the comparison turns it into the upper bound, landing after the duplicates.",
+        "**An insertion point is not necessarily a match.** bisect_left can return an index whose value is greater than the target, or len(values) when every value is smaller. To test exact membership, first check that the index is in bounds and then compare the value at that index. Avoid indexing before verifying that the position exists.",
+        "**Use both boundaries to count duplicates.** For [1, 2, 2, 2, 4], the left insertion point for 2 is 1 and the right point is 4. Their difference is three occurrences. This turns the boundary distinction into a useful operation while reinforcing why an exact-search function and an insertion-point function need different return semantics."
       ],
       "example": {
         "title": "First index at least target",
