@@ -3,7 +3,7 @@ from datetime import date
 
 from fastapi import APIRouter, Depends
 
-from api import db, repo
+from api import db, repo, skill_levels
 from api.deps import client_date, current_user, today_for
 from api.routes.users import streak_payload
 from engine import elo
@@ -35,7 +35,7 @@ def progress(
             "topic": topic,
             "track": track,
             "rating": round(r["rating"]),
-            "level": elo.level(r["rating"]),
+            **skill_levels.describe(r["rating"]),
             "readiness": elo.readiness(r["rating"]),
             "answered": r["answers"],
             "accuracy": round(r["correct"] / r["answers"], 2) if r["answers"] else 0.0,
@@ -46,4 +46,5 @@ def progress(
         "streak": streak_payload(user, today_for(user, base)),
         "overall_readiness": overall,
         "topics": topics,
+        "skill_levels": skill_levels.metadata(),
     }

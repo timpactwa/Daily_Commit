@@ -136,7 +136,17 @@ function demoUser(today: string): MockUser {
 
 // ---- helpers ---------------------------------------------------------------
 
-const level = (r: number) => (r < 1150 ? "beginner" : r < 1300 ? "intermediate" : "advanced");
+const skillBands = [
+  ["level-1", 600], ["level-2", 1000], ["level-3", 1200], ["level-4", 1400],
+  ["level-5", 1650], ["level-6", 1900], ["level-7", 2100],
+] as const;
+const level = (r: number) => [...skillBands].reverse().find(([, minimum]) => r >= minimum)?.[0] ?? "level-1";
+const levelInfo = (r: number) => {
+  const index = skillBands.findIndex(([name]) => name === level(r));
+  const next = skillBands[index + 1];
+  return { next_level: next?.[0] ?? null, next_level_rating: next?.[1] ?? null,
+    level_progress: next ? Math.max(0, Math.min(100, Math.floor((r - skillBands[index][1]) / (next[1] - skillBands[index][1]) * 100))) : 100 };
+};
 const readiness = (r: number) => Math.max(0, Math.min(100, Math.round(((r - 900) / 700) * 100)));
 const expected = (r: number, q: number) => 1 / (1 + 10 ** ((q - r) / 400));
 
@@ -285,9 +295,10 @@ export const mockTransport: Transport = async (method, path, body, headers) => {
     const topics = TOPICS.map(([t, track]) => {
       const r = u.ratings[t];
       const a = u.answered[t] ?? { n: 0, correct: 0 };
-      return { topic: t, track, rating: Math.round(r), level: level(r), readiness: readiness(r), answered: a.n, accuracy: a.n ? a.correct / a.n : 0, history: u.history[t] ?? [Math.round(r)] };
+      return { topic: t, track, rating: Math.round(r), level: level(r), ...levelInfo(r), readiness: readiness(r), answered: a.n, accuracy: a.n ? a.correct / a.n : 0, history: u.history[t] ?? [Math.round(r)] };
     });
-    return ok({ streak: streak(), overall_readiness: Math.round(topics.reduce((s, t) => s + t.readiness, 0) / topics.length), topics });
+    return ok({ streak: streak(), overall_readiness: Math.round(topics.reduce((s, t) => s + t.readiness, 0) / topics.length), topics,
+      skill_levels: skillBands.map(([id, min_rating], i) => ({ id, min_rating, max_rating: skillBands[i + 1] ? skillBands[i + 1][1] - 1 : 2200 })) });
   }
 
   if (route === "POST /v1/demo/advance-day") return ok({ date: addDays(today, 1) });

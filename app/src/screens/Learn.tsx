@@ -8,6 +8,12 @@ const TRACKS = [
   { id: "debugging", label: "⌘ DEBUGGING" },
 ] as const;
 
+function openChapter(id: string) {
+  const chapter = document.getElementById(`chapter-${id}`);
+  chapter?.focus({ preventScroll: true });
+  chapter?.scrollIntoView({ block: "start" });
+}
+
 export function LearnList() {
   const resource = useResource(api.getModules);
   return (
@@ -17,7 +23,7 @@ export function LearnList() {
         Read it. Check it. Own it<span className="green">.</span>
       </h1>
       <p className="intro">
-        Short guides for every topic, with worked examples and a quick check after each part.
+        Follow a topic from the foundations to real problems. Four in-depth chapters, worked examples, and a checkpoint after each part. Your place is saved.
       </p>
       <Resource resource={resource}>
         {({ modules }) => (
@@ -81,6 +87,12 @@ function ModuleReader({ module: m }: { module: LearnModule }) {
       </p>
       <h1>{m.title}</h1>
       <p className="intro">{m.summary}</p>
+      <div className="module-journey card">
+        <div className="split"><h2>Your chapter path</h2><span>{passed.length} / {m.sections.length} complete</span></div>
+        <ol className="module-outline" aria-label="Module chapters">{m.sections.map((s, i) => <li key={s.id} className={passed.includes(s.id) ? "chapter-complete" : i < unlocked ? "chapter-current" : "chapter-locked"}>
+          <button disabled={i >= unlocked} onClick={() => openChapter(s.id)} aria-label={`${s.heading}, ${passed.includes(s.id) ? "completed" : i < unlocked ? "available" : "locked"}`}><span className="chapter-node" aria-hidden="true">{passed.includes(s.id) ? "✓" : i + 1}</span><span>{s.heading}<small>{passed.includes(s.id) ? "Completed · revisit" : i < unlocked ? "Continue learning" : "Pass the previous checkpoint to unlock"}</small></span></button>
+        </li>)}</ol>
+      </div>
       {m.sections.slice(0, unlocked).map((s, i) => (
         <Section
           key={s.id}
@@ -89,6 +101,7 @@ function ModuleReader({ module: m }: { module: LearnModule }) {
           index={i}
           alreadyPassed={passed.includes(s.id)}
           onPassed={(r) => setPassed(r.passed)}
+          nextSectionId={m.sections[i + 1]?.id}
         />
       ))}
       {!completed && unlocked < m.sections.length && (
@@ -130,12 +143,14 @@ function Section({
   index,
   alreadyPassed,
   onPassed,
+  nextSectionId,
 }: {
   topic: string;
   section: LearnSection;
   index: number;
   alreadyPassed: boolean;
   onPassed: (r: LearnCheckResult) => void;
+  nextSectionId?: string;
 }) {
   const [choice, setChoice] = useState<string>();
   const [result, setResult] = useState<LearnCheckResult>();
@@ -164,7 +179,7 @@ function Section({
   }
 
   return (
-    <section className="card module-section">
+    <section className="card module-section" id={`chapter-${s.id}`} tabIndex={-1}>
       <p className="eyebrow">PART {index + 1}</p>
       <h2>{s.heading}</h2>
       {s.body.map((para, i) => (
@@ -221,6 +236,7 @@ function Section({
             <Rich text={result.explanation} />
           </p>
         )}
+        {done && nextSectionId && <button className="primary full" onClick={() => openChapter(nextSectionId)}>Continue to next chapter →</button>}
         {!!error && <ErrorNotice error={error} retry={check} />}
       </div>
     </section>

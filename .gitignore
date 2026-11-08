@@ -11,6 +11,8 @@ api/data/
 # Node
 node_modules/
 app/dist/
+dist/
+sites/generated.mjs
 
 # Env / OS
 .env

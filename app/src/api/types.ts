@@ -3,7 +3,7 @@
 
 export type Track = "system-design" | "debugging";
 export type Format = "mcq" | "tap_line" | "reorder" | "tap_node" | "predict_output";
-export type Level = "beginner" | "intermediate" | "advanced";
+export type Level = "level-1" | "level-2" | "level-3" | "level-4" | "level-5" | "level-6" | "level-7";
 export type LessonItemKind = "focus" | "mix" | "review";
 
 export interface Option {
@@ -275,6 +275,9 @@ export interface TopicProgress {
   track: Track;
   rating: number;
   level: Level;
+  next_level?: Level | null;
+  next_level_rating?: number | null;
+  level_progress?: number;
   readiness: number;
   answered: number;
   accuracy: number;
@@ -285,6 +288,7 @@ export interface Progress {
   streak: Streak;
   overall_readiness: number;
   topics: TopicProgress[];
+  skill_levels?: { id: Level; min_rating: number; max_rating: number }[];
 }
 
 export type ErrorCode =

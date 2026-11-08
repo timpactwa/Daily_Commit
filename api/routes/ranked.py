@@ -120,7 +120,8 @@ def session(conn: sqlite3.Connection, t: dict, attempt: sqlite3.Row) -> dict:
 
 def suggested_tier(conn: sqlite3.Connection, user_id: str) -> str:
     rs = list(repo.ratings(conn, user_id).values())
-    return elo.level(sum(rs) / len(rs)) if rs else "beginner"
+    average = sum(rs) / len(rs) if rs else 600
+    return "beginner" if average < 1200 else "intermediate" if average < 1650 else "advanced"
 
 
 # ---- endpoints ---------------------------------------------------------------

@@ -5,7 +5,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
-from api import db, repo
+from api import db, repo, skill_levels
 from api.deps import client_date, current_user, demo_mode, today_for
 from api.errors import invalid_response
 from api.routes.answers import ResponseValue, record_answer
@@ -26,7 +26,7 @@ class PlacementIn(BaseModel):
 
 def topic_levels(ratings: dict[str, float]) -> list[dict]:
     return [
-        {"topic": t, "rating": round(r), "level": elo.level(r), "readiness": elo.readiness(r)}
+        {"topic": t, "rating": round(r), "level": skill_levels.describe(r)["level"], "readiness": elo.readiness(r)}
         for t in repo.TOPIC_TRACK
         if (r := ratings.get(t)) is not None
     ]

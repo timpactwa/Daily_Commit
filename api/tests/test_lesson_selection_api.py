@@ -132,12 +132,12 @@ def test_progress(big):
     big.post("/v1/answers", headers=h, json={"lesson_id": lesson["lesson_id"], "question_id": q["id"],
                                               "response": "a" if q["format"] == "mcq" else 2})
     p = big.get("/v1/progress", headers=h).json()
-    assert set(p) == {"streak", "overall_readiness", "topics"}
+    assert set(p) == {"streak", "overall_readiness", "topics", "skill_levels"}
     assert len(p["topics"]) == 10 and 0 <= p["overall_readiness"] <= 100
     t = next(t for t in p["topics"] if t["topic"] == q["topic"])
     assert t["answered"] == 1 and t["accuracy"] == 1.0
     assert len(t["history"]) == 2 and t["history"][-1] == t["rating"]  # placement + lesson answer
-    assert set(t) == {"topic", "track", "rating", "level", "readiness", "answered", "accuracy", "history"}
+    assert set(t) == {"topic", "track", "rating", "level", "readiness", "answered", "accuracy", "history", "next_level", "next_level_rating", "level_progress"}
 
 
 def test_demo_placement_defaults_to_four(big, monkeypatch):

@@ -183,7 +183,7 @@ function TopicCard({ topic }: { topic: TopicProgress }) {
         {state === "unrated" ? (
           <span className="level new">New</span>
         ) : (
-          <span className={`level ${topic.level}`}>{topic.level}</span>
+          <span className={`level ${topic.level}`}>{topicName(topic.level)}</span>
         )}
       </div>
       <div className="split">
@@ -224,6 +224,8 @@ function TopicCard({ topic }: { topic: TopicProgress }) {
           </>
         )}
       </div>
+      {state !== "unrated" && topic.next_level && topic.next_level_rating && <p className="rating-hint next-skill-level">Next: <strong>{topicName(topic.next_level)}</strong> at {topic.next_level_rating} Elo · {Math.max(1, Math.ceil(topic.next_level_rating - topic.rating))} to go</p>}
+      {state !== "unrated" && topic.level === "level-7" && <p className="rating-hint next-skill-level">Top skill band reached. Keep testing your understanding.</p>}
     </article>
   );
 }
@@ -257,6 +259,11 @@ export function Progress() {
               </p>
             </div>
           </div>
+          {data.skill_levels && <section className="skill-ladder card" aria-label="Skill level requirements">
+            <h2>A longer path to mastery</h2>
+            <p>Your topic rating determines your skill band. Level 5 starts at 1650 Elo; placement gives a starting estimate, and practice builds evidence over time.</p>
+            <ol>{data.skill_levels.map(band => <li key={band.id}><span className={`level ${band.id}`}>{topicName(band.id)}</span><span>{band.min_rating}–{band.max_rating} Elo</span></li>)}</ol>
+          </section>}
           {(["system-design", "debugging"] as const).map((track) => (
             <section className="track-section" key={track}>
               <h2>

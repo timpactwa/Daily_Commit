@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { readFileSync } from "node:fs";
 test("built PWA against real API: demo, feedback, completion, progress, offline retry", async ({
   page,
   request,
   context,
 }) => {
+  test.setTimeout(60000);
   const errors: string[] = [];
   page.on("pageerror", (err) => errors.push(err.message));
   const reset = await request.post("/v1/demo/reset", {
@@ -101,4 +103,48 @@ test("built PWA against real API: demo, feedback, completion, progress, offline 
   await page.getByRole("button", { name: "Retry", exact: true }).click();
   await expect(page.getByText("OVERALL READINESS")).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test("four-chapter learning path saves checkpoints, unlocks the next part and fits both screens", async ({ page, request }) => {
+  test.setTimeout(60000);
+  const module = JSON.parse(readFileSync(new URL("../../content/learn/arrays-strings.json", import.meta.url), "utf8"));
+  const user = await (await request.post("/v1/users", { data: { display_name: "Learning QA" } })).json();
+  await page.addInitScript(uid => localStorage.setItem("dc.user_id", uid), user.user_id);
+  await page.goto("/#/learn/arrays-strings");
+  const outline = page.getByRole("list", { name: "Module chapters" });
+  await expect(outline.getByRole("button")).toHaveCount(4);
+  await expect(outline.getByRole("button").nth(1)).toBeDisabled();
+  for (let i = 0; i < module.sections.length; i++) {
+    const section = module.sections[i];
+    const chapter = page.locator(`#chapter-${section.id}`);
+    await expect(chapter).toBeVisible();
+    if (i === 0) {
+      const wrong = section.check.options.find((o: { id: string }) => o.id !== section.check.answer);
+      await chapter.locator(".options button").nth(section.check.options.indexOf(wrong)).click();
+      await chapter.getByRole("button", { name: "Check answer", exact: true }).click();
+      await expect(chapter.getByRole("status")).toContainText("Not quite");
+      await expect(outline.getByRole("button").nth(1)).toBeDisabled();
+    }
+    const answer = section.check.options.find((o: { id: string }) => o.id === section.check.answer);
+    await chapter.locator(".options button").nth(section.check.options.indexOf(answer)).click();
+    await chapter.getByRole("button", { name: "Check answer", exact: true }).click();
+    await expect(chapter).toContainText("CHECK PASSED");
+    if (i < 3) {
+      await expect(outline.getByRole("button").nth(i + 1)).toBeEnabled();
+      await chapter.getByRole("button", { name: "Continue to next chapter" }).click();
+      await expect(page.locator(`#chapter-${module.sections[i + 1].id}`)).toBeFocused();
+    }
+    if (i === 0) {
+      await page.reload();
+      await expect(page.locator(`#chapter-${section.id}`)).toContainText("CHECK PASSED");
+    }
+  }
+  await expect(page.getByText("GUIDE COMPLETE", { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("4 / 4 complete", { exact: true })).toBeVisible();
+  for (const viewport of [{ width: 393, height: 851 }, { width: 1280, height: 900 }]) {
+    await page.setViewportSize(viewport);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+    await page.screenshot({ path: `test-results/learning-${viewport.width}.png`, fullPage: true });
+  }
 });

@@ -31,6 +31,15 @@ export function Question({
       </div>
       {q.scenario && <p className="scenario">{q.scenario}</p>}
       <h2>{q.prompt}</h2>
+      {q.test_output && (
+        <section className="test-output term" aria-label="Failing tests">
+          <div className="term-bar">
+            <span className="fail-dot" aria-hidden="true">●</span>
+            <p className="eyebrow">FAILING TESTS · START HERE</p>
+          </div>
+          <pre>{q.test_output}</pre>
+        </section>
+      )}
       {q.code &&
         (q.format === "tap_line" ? (
           <div className="term">
@@ -58,15 +67,6 @@ export function Question({
             <pre className="code">{q.code}</pre>
           </div>
         ))}
-      {q.test_output && (
-        <div className="test-output term">
-          <div className="term-bar">
-            <span className="fail-dot" aria-hidden="true">●</span>
-            <p className="eyebrow">FAILING TESTS</p>
-          </div>
-          <pre>{q.test_output}</pre>
-        </div>
-      )}
       {q.format === "tap_node" && (
         <TapNode
           question={q}
