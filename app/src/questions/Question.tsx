@@ -117,9 +117,6 @@ function fileName(code: string) {
 function TermBar({ title }: { title: string }) {
   return (
     <div className="term-bar" aria-hidden="true">
-      <span className="tdot red" />
-      <span className="tdot amber" />
-      <span className="tdot green" />
       <span className="term-title">{title}</span>
       <span className="term-lang">python</span>
     </div>

@@ -829,18 +829,6 @@ progress::-moz-progress-bar {
   font: 500 13px var(--font-body);
   color: var(--text-3);
 }
-.tdot {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: var(--line-strong);
-}
-.tdot.red { background: var(--fail); }
-.tdot.amber { background: var(--ember); }
-.tdot.green { background: var(--pass); }
-.term-title {
-  margin-left: 8px;
-}
 .term-lang {
   margin-left: auto;
   color: var(--text-4);
