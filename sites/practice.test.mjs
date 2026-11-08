@@ -41,7 +41,7 @@ function fixture(completed = false) {
     if (path.endsWith('/complete')) { calls.completes++; return Response.json({ summary: { correct: 0, total: 6 }, rating_changes: [], streak: { current: 1, best: 1, today_done: true, extended: true } }); }
     throw new Error(`Unexpected upstream route ${path}`);
   } });
-  const call = (path, body, user = 'alice') => worker.fetch(new Request(`https://example.test${path}`, { method: body === undefined ? 'GET' : 'POST', headers: { 'x-user-id': user, 'oai-authenticated-user-id': 'site-viewer', 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) }), { DB });
+  const call = (path, body, user = 'alice', siteUser = 'site-viewer') => worker.fetch(new Request(`https://example.test${path}`, { method: body === undefined ? 'GET' : 'POST', headers: { 'x-user-id': user, ...(siteUser ? { 'oai-authenticated-user-id': siteUser } : {}), 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) }), { DB });
   const answer = (id, response) => call('/v1/answers', { lesson_id: 'lesson_2026-11-08', question_id: id, response, time_ms: 100 });
   return { call, answer, calls, nextDay: () => { day = '2026-11-09'; }, close: () => db.close() };
 }
@@ -126,5 +126,18 @@ test('previously completed lessons stay complete without awarding another streak
     const result = await (await f.call('/v1/lessons/lesson_2026-11-08/complete',{})).json();
     assert.equal(result.streak.extended, false);
     assert.equal(f.calls.completes, 0);
+  } finally { f.close(); }
+});
+
+test('public practice works without ChatGPT identity and persists in the app profile', async () => {
+  const f = fixture();
+  try {
+    const lesson = await (await f.call('/v1/lessons/today',undefined,'alice',null)).json();
+    assert.equal(lesson.mastery.required,4);
+    const first = await (await f.call('/v1/answers',{lesson_id:lesson.lesson_id,question_id:'mcq',response:'a'},'alice',null)).json();
+    assert.equal(first.retry_available,true);
+    const resumed = await (await f.call('/v1/lessons/today',undefined,'alice','signed-in-visitor')).json();
+    assert.equal(resumed.items[0].attempts_used,1);
+    assert.equal((await f.call(`/v1/lessons/${lesson.lesson_id}/complete`,{},'bob',null)).status,404);
   } finally { f.close(); }
 });

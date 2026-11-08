@@ -14,12 +14,12 @@ function database() {
     async run() { return db.prepare(sql).run(...values); },
   }; } }; }, close: () => db.close() };
 }
-function setup(upstreamFetch = async () => Response.json({ user_id: 'app-user' })) {
+function setup(upstreamFetch = async request => Response.json({ user_id: request.headers.get('x-user-id') })) {
   const DB = database();
   const worker = createWorker({ upstreamFetch });
-  const call = (path, body, siteUser = 'site-user') => worker.fetch(new Request(`https://example.test${path}`, {
-    method: body === undefined ? 'GET' : 'POST', headers: { 'oai-authenticated-user-id': siteUser,
-      'x-user-id': 'app-user', 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body),
+  const call = (path, body, siteUser = 'site-user', appUser = 'app-user') => worker.fetch(new Request(`https://example.test${path}`, {
+    method: body === undefined ? 'GET' : 'POST', headers: { ...(siteUser ? { 'oai-authenticated-user-id': siteUser } : {}),
+      ...(appUser ? { 'x-user-id': appUser } : {}), 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body),
   }), { DB });
   return { DB, call, worker };
 }
@@ -43,15 +43,47 @@ test('guides hide grading keys, enforce chapter order, and persist completion in
     }
     assert.equal((await (await call(`/v1/learn/${m.topic}`)).json()).progress.completed, true);
     assert.equal((await (await call('/v1/learn')).json()).modules.find(x => x.topic === m.topic).passed, 4);
-    assert.deepEqual((await (await call(`/v1/learn/${m.topic}`, undefined, 'different-visitor')).json()).progress.passed, []);
+    assert.deepEqual((await (await call(`/v1/learn/${m.topic}`, undefined, 'different-visitor', 'different-app-user')).json()).progress.passed, []);
   } finally { DB.close(); }
 });
 
-test('private learning records require both Site identity and a verified app user', async () => {
+test('learning records require a verified app session', async () => {
   const { call, worker, DB } = setup(async () => Response.json({ error: { code: 'unknown_user' } }, { status: 401 }));
   try {
     assert.equal((await worker.fetch(new Request('https://example.test/v1/learn'), { DB })).status, 401);
     assert.equal((await call('/v1/learn')).status, 401);
+  } finally { DB.close(); }
+});
+
+test('public visitors can learn without ChatGPT identity while app users stay isolated', async () => {
+  const { call, DB } = setup();
+  try {
+    const m = MODULES[0], s = m.sections[0];
+    assert.equal((await call('/v1/learn', undefined, null)).status, 200);
+    assert.equal((await call(`/v1/learn/${m.topic}/check`, { section_id: s.id, response: s.check.answer }, null)).status, 200);
+    const same = await (await call(`/v1/learn/${m.topic}`, undefined, 'another-chatgpt-user')).json();
+    assert.deepEqual(same.progress.passed, [s.id]);
+    const different = await (await call(`/v1/learn/${m.topic}`, undefined, null, 'another-app-user')).json();
+    assert.deepEqual(different.progress.passed, []);
+    assert.equal((await call('/v1/learn', undefined, null, null)).status, 401);
+  } finally { DB.close(); }
+});
+
+test('existing private-Site progress imports without replacing newer app progress', async () => {
+  const { call, DB } = setup();
+  try {
+    const m = MODULES[0], s = m.sections[0];
+    await DB.prepare('INSERT INTO sites_learning_progress (owner_id, topic, section_id) VALUES (?, ?, ?)').bind(JSON.stringify(['site-user','app-user']),m.topic,s.id).run();
+    const privateState = JSON.stringify({ marker: 'previous private progress' });
+    await DB.prepare('INSERT INTO sites_practice_sessions (owner_id, lesson_id, day, data) VALUES (?, ?, ?, ?)').bind(JSON.stringify(['site-user','app-user']),'legacy-lesson','2026-11-08',privateState).run();
+    assert.deepEqual((await (await call(`/v1/learn/${m.topic}`)).json()).progress.passed,[s.id]);
+    const owner = JSON.stringify(['app','app-user']);
+    let saved = (await DB.prepare('SELECT data FROM sites_practice_sessions WHERE owner_id = ?').bind(owner).all()).results[0];
+    assert.equal(saved.data,privateState);
+    await DB.prepare('UPDATE sites_practice_sessions SET data = ? WHERE owner_id = ?').bind('newer progress',owner).run();
+    await call(`/v1/learn/${m.topic}`);
+    saved = (await DB.prepare('SELECT data FROM sites_practice_sessions WHERE owner_id = ?').bind(owner).all()).results[0];
+    assert.equal(saved.data,'newer progress');
   } finally { DB.close(); }
 });
 

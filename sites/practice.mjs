@@ -38,19 +38,13 @@ function practiceScore(response, answer) {
   }
   return pairs / (answer.length * (answer.length - 1) / 2);
 }
-export function createPracticeHandler({ upstream, bank, json, ApiError }) {
+export function createPracticeHandler({ upstream, bank, json, ApiError, identify }) {
   const rows = async (DB, sql, ...values) => (await DB.prepare(sql).bind(...values).all()).results;
   async function remote(request, path, method = 'GET', body) {
     const r = await upstream(request, path, method, body);
     const data = await r.json();
     if (!r.ok) throw new ApiError(r.status, data.error?.code ?? 'server', data.error?.message ?? 'Practice is temporarily unavailable');
     return data;
-  }
-  async function identify(request) {
-    const siteUser = request.headers.get('oai-authenticated-user-id');
-    if (!siteUser) throw new ApiError(401, 'session_expired', 'Sign in to this Site to save practice progress');
-    const me = await remote(request, '/v1/me');
-    return JSON.stringify([siteUser, me.user_id]);
   }
   async function current(request, DB, owner) {
     const pending = await rows(DB, 'SELECT * FROM sites_practice_sessions WHERE owner_id = ? AND completed = 0 ORDER BY day LIMIT 1', owner);
@@ -76,7 +70,7 @@ export function createPracticeHandler({ upstream, bank, json, ApiError }) {
       practice_retry: state.round > 1, attempts_used: r.choices.length, attempt_limit: limit, lesson_progress: progress };
   }
   return async function practice(request, env, path) {
-    const owner = await identify(request), DB = env.DB;
+    const owner = await identify(request, env), DB = env.DB;
     if (request.method === 'GET' && path === '/v1/lessons/today') return json(practiceView(JSON.parse((await current(request, DB, owner)).data)));
     let body = {};
     if (path === '/v1/answers') {
