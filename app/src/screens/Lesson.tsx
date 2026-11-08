@@ -114,8 +114,8 @@ function Player({ initial }: { initial: LessonData }) {
         value={count}
         max={lesson.items.length}
       />
-      {lesson.mastery && <p className="small practice-requirement">Pass this practice: {required} of {lesson.items.length} correct. {correct} earned so far.</p>}
-      {item ? (
+      {lesson.mastery && lesson.status !== "completed" && <p className="small practice-requirement">Pass this practice: {required} of {lesson.items.length} correct. {correct} earned so far.</p>}
+      {lesson.status === "completed" ? <div className="card"><p className="eyebrow">PRACTICE COMPLETE</p><h1>This practice is complete.</h1><Link className="primary full" to="/">Back to Today →</Link></div> : item ? (
         <>
           <div className="card">
             {item.attempt_limit && <p className="eyebrow">TRY {(item.attempts_used ?? 0) + 1} OF {item.attempt_limit}</p>}

@@ -97,6 +97,13 @@ export function createPracticeHandler({ upstream, bank, json, ApiError }) {
       if (action?.[2] === 'complete') {
         if (state.completed && state.completion) return json(state.completion);
         const mastery = practiceMastery(state);
+        if (state.completed) {
+          const progress = await remote(request, '/v1/progress');
+          state.completion = { summary: { correct: mastery.correct, total: mastery.total }, rating_changes: [],
+            streak: { ...progress.streak, extended: false }, mastery };
+          await save(DB, owner, id, state, token);
+          return json(state.completion);
+        }
         if (!state.completed && !mastery.can_complete) throw new ApiError(409, 'not_passed', `Get at least ${mastery.required} of ${mastery.total} correct within the allowed tries before finishing.`);
         const result = await remote(request, `/v1/lessons/${encodeURIComponent(id)}/complete`, 'POST');
         state.completed = true;
@@ -136,7 +143,7 @@ export function createPracticeHandler({ upstream, bank, json, ApiError }) {
         const answer = q.correct_answer ?? q.answer;
         const score = practiceScore(body.response, answer);
         const cached = state.grading[body.question_id];
-        const rating = cached?.rating.after ?? (await remote(request, '/v1/progress')).topics.find(t => t.topic === item.question.topic)?.rating ?? 1200;
+        const rating = (await remote(request, '/v1/progress')).topics.find(t => t.topic === item.question.topic)?.rating ?? cached?.rating.after ?? 1200;
         feedback = { correct: score === 1, score, correct_answer: answer, explanation: q.explanation,
           rating: { topic: item.question.topic, before: rating, after: rating, delta: 0 },
           question_rating: { before: item.question.difficulty_rating, after: item.question.difficulty_rating },

@@ -15,7 +15,7 @@ const qs = [
   { id: 'output', format: 'predict_output', options: options.slice(0,3), code: 'print(2)', answer: 'b' },
 ].map(q => ({ ...q, topic: 'caching', difficulty_rating: 1200, explanation: 'The concept explains the correct answer.' }));
 
-function fixture() {
+function fixture(completed = false) {
   const db = new DatabaseSync(':memory:');
   for (const file of ['0000_learning_progress.sql','0001_practice_mastery.sql']) db.exec(readFileSync(new URL(`./drizzle/${file}`, import.meta.url), 'utf8'));
   const DB = { prepare(sql) { return { bind(...args) { return {
@@ -27,7 +27,7 @@ function fixture() {
   const worker = createWorker({ bank: Object.fromEntries(qs.map(q => [q.id,q])), upstreamFetch: async request => {
     const path = new URL(request.url).pathname;
     if (path === '/v1/me') return Response.json({ user_id: request.headers.get('x-user-id') });
-    if (path === '/v1/lessons/today') return Response.json({ lesson_id: `lesson_${day}`, date: day, status: 'in_progress', focus_topics: ['caching'], items: qs.map((q,i) => ({ position: i+1, kind: 'focus', answered: false, correct: null, question: Object.fromEntries(Object.entries(q).filter(([k]) => !['answer','explanation'].includes(k))) })) });
+    if (path === '/v1/lessons/today') return Response.json({ lesson_id: `lesson_${day}`, date: day, status: completed ? 'completed' : 'in_progress', focus_topics: ['caching'], items: qs.map((q,i) => ({ position: i+1, kind: 'focus', answered: completed, correct: completed ? false : null, question: Object.fromEntries(Object.entries(q).filter(([k]) => !['answer','explanation'].includes(k))) })) });
     if (path === '/v1/answers') {
       const body = await request.json(), q = qs.find(q => q.id === body.question_id);
       assert(!answered.has(q.id), 'Elo was requested more than once for a question');
@@ -116,5 +116,15 @@ test('concurrent submissions serialize and cannot duplicate the Elo update', asy
     const responses = await Promise.all([f.answer('mcq','a'),f.answer('mcq','b')]);
     assert.deepEqual(responses.map(r => r.status).sort(),[200,409]);
     assert.equal(f.calls.answers,1);
+  } finally { f.close(); }
+});
+
+test('previously completed lessons stay complete without awarding another streak', async () => {
+  const f = fixture(true);
+  try {
+    assert.equal((await (await f.call('/v1/lessons/today')).json()).status, 'completed');
+    const result = await (await f.call('/v1/lessons/lesson_2026-11-08/complete',{})).json();
+    assert.equal(result.streak.extended, false);
+    assert.equal(f.calls.completes, 0);
   } finally { f.close(); }
 });
