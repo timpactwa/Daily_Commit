@@ -169,6 +169,39 @@ def test_guest_cannot_start(client):
     assert client.post("/v1/ranked/beginner/start", headers=h).json()["error"]["code"] == "account_required"
 
 
+@pytest.mark.parametrize("rating, number, suggested", [
+    (600, 1, "beginner"), (1000, 2, "beginner"), (1200, 3, "beginner"),
+    (1399, 3, "beginner"), (1400, 4, "intermediate"), (1650, 5, "intermediate"),
+    (1899, 5, "intermediate"), (1900, 6, "advanced"), (2099, 6, "advanced"),
+    (2100, 7, "advanced"), (2200, 7, "advanced"),
+])
+def test_ranked_suggestions_follow_levels_without_locking_tests_or_changing_elo(client, rating, number, suggested):
+    from api import db
+    auth, h = account(client)
+    with db.transaction() as conn:
+        conn.execute("UPDATE user_topics SET rating = ? WHERE user_id = ?", (rating, auth["user"]["user_id"]))
+    before = client.get("/v1/progress", headers=h).json()["topics"]
+    listing = client.get("/v1/ranked", headers=h).json()
+    assert listing["ranked_level"] == number and listing["ranked_rating"] == rating
+    assert [t["title"] for t in listing["tiers"]] == ["Easy", "Intermediate", "Advanced"]
+    assert [t["id"] for t in listing["tiers"] if t["suggested"]] == [suggested]
+    assert [(t["min_level"], t["max_level"]) for t in listing["tiers"]] == [(1, 3), (4, 5), (6, 7)]
+    for t in listing["tiers"]:
+        assert client.post(f"/v1/ranked/{t['id']}/start", headers=h).status_code == 200
+    assert client.get("/v1/progress", headers=h).json()["topics"] == before
+
+
+def test_ranked_level_uses_average_topic_ratings(client):
+    from api import db
+    auth, h = account(client)
+    with db.transaction() as conn:
+        conn.execute("UPDATE user_topics SET rating = 1899 WHERE user_id = ?", (auth["user"]["user_id"],))
+        conn.execute("UPDATE user_topics SET rating = 1909 WHERE user_id = ? AND topic = 'caching'", (auth["user"]["user_id"],))
+    listing = client.get("/v1/ranked", headers=h).json()
+    assert listing["ranked_level"] == 6
+    assert [t["id"] for t in listing["tiers"] if t["suggested"]] == ["advanced"]
+
+
 def test_full_attempt_once_only(client):
     _, h = account(client)
     s = client.post("/v1/ranked/beginner/start", headers=h).json()

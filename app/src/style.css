@@ -1998,3 +1998,6 @@ pre.code {
 .level.level-6 { color: var(--volt-text); border-color: var(--volt); }
 .level.level-7 { color: var(--ember-text); border-color: var(--ember); background: rgba(255,176,32,.1); }
 .next-skill-level { font-size: 13px; margin: 14px 0 0; }
+.ranked-level-summary { margin: 24px 0; }
+.ranked-level-summary p { margin-bottom: 0; }
+.tier-requirement { font-weight: 700; color: var(--volt-text); }

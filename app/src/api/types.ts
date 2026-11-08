@@ -156,6 +156,8 @@ export interface RankedTier {
   time_limit_s: number;
   question_count: number;
   suggested: boolean;
+  min_level: number;
+  max_level: number;
   takers: number;
   attempt: AttemptSummary | null;
 }

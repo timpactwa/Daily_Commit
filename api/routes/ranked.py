@@ -14,7 +14,7 @@ from datetime import date
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from api import clock, db, features, repo
+from api import clock, db, features, repo, skill_levels
 from api.deps import client_date, current_user, today_for
 from api.errors import ApiError, invalid_response, not_found
 from api.routes.answers import ResponseValue
@@ -23,6 +23,20 @@ from engine.scoring import InvalidResponse, score
 
 router = APIRouter(prefix="/v1/ranked", dependencies=[Depends(features.require("ranked"))])
 BOARD_SIZE = 50
+SUGGESTIONS = {"beginner": ("Easy", 1, 3), "intermediate": ("Intermediate", 4, 5), "advanced": ("Advanced", 6, 7)}
+
+
+def ranked_profile(conn: sqlite3.Connection, user_id: str) -> dict:
+    ratings = list(repo.ratings(conn, user_id).values())
+    average = sum(round(r) for r in ratings) / len(ratings) if ratings else 600
+    number = int(skill_levels.describe(average)["level"].split("-")[1])
+    return {"ranked_level": number, "ranked_rating": int(average)}
+
+
+def suggestion_fields(tier_id: str, number: int) -> dict:
+    title, minimum, maximum = SUGGESTIONS[tier_id]
+    return {"title": title, "min_level": minimum, "max_level": maximum,
+            "suggested": minimum <= number <= maximum}
 
 
 class RankedAnswerIn(BaseModel):
@@ -111,7 +125,7 @@ def session(conn: sqlite3.Connection, t: dict, attempt: sqlite3.Row) -> dict:
         "SELECT question_id, response FROM ranked_answers WHERE attempt_id = ?", (attempt["id"],)
     )}
     return {
-        "tier": t["id"], "title": t["title"], "status": "in_progress", "time_limit_s": t["time_limit_s"],
+        "tier": t["id"], "title": SUGGESTIONS[t["id"]][0], "status": "in_progress", "time_limit_s": t["time_limit_s"],
         "remaining_ms": remaining_ms(attempt), "total": attempt["total"],
         "questions": [repo.public_question(r, shuffle_seed=f"ranked:{t['id']}") for r in questions_for(conn, t)],
         "answered": answered,
@@ -119,28 +133,27 @@ def session(conn: sqlite3.Connection, t: dict, attempt: sqlite3.Row) -> dict:
 
 
 def suggested_tier(conn: sqlite3.Connection, user_id: str) -> str:
-    rs = list(repo.ratings(conn, user_id).values())
-    average = sum(rs) / len(rs) if rs else 600
-    return "beginner" if average < 1200 else "intermediate" if average < 1650 else "advanced"
+    number = ranked_profile(conn, user_id)["ranked_level"]
+    return "beginner" if number <= 3 else "intermediate" if number <= 5 else "advanced"
 
 
 # ---- endpoints ---------------------------------------------------------------
 
 @router.get("")
 def list_tiers(user: sqlite3.Row = Depends(current_user), conn: sqlite3.Connection = Depends(db.get_conn)):
-    suggest = suggested_tier(conn, user["id"])
+    profile = ranked_profile(conn, user["id"])
     out = []
     for t in tiers(conn):
         takers = conn.execute(
             "SELECT COUNT(*) FROM ranked_attempts WHERE tier = ? AND finished_at IS NOT NULL", (t["id"],)
         ).fetchone()[0]
         out.append({
-            "id": t["id"], "title": t["title"], "description": t["description"],
+            "id": t["id"], **suggestion_fields(t["id"], profile["ranked_level"]), "description": t["description"],
             "time_limit_s": t["time_limit_s"], "question_count": len(t["questions"]),
-            "suggested": t["id"] == suggest, "takers": takers,
+            "takers": takers,
             "attempt": attempt_summary(conn, get_attempt(conn, user["id"], t["id"])),
         })
-    return {"has_account": user["username"] is not None, "tiers": out}
+    return {"has_account": user["username"] is not None, **profile, "tiers": out}
 
 
 @router.post("/{tier_id}/start")
@@ -264,7 +277,7 @@ def result(tier_id: str, user: sqlite3.Row = Depends(current_user), conn: sqlite
             "correct_answer": q["answer"],
             "explanation": q["explanation"],
         })
-    return {"tier": t["id"], "title": t["title"], **attempt_summary(conn, attempt), "review": review}
+    return {"tier": t["id"], "title": SUGGESTIONS[t["id"]][0], **attempt_summary(conn, attempt), "review": review}
 
 
 @router.get("/{tier_id}/leaderboard")
@@ -284,5 +297,5 @@ def leaderboard(tier_id: str, user: sqlite3.Row = Depends(current_user), conn: s
     you = next((entry(i, r) for i, r in enumerate(rows) if r["user_id"] == user["id"]), None)
     if you:
         you["top_percent"] = max(1, -(-you["rank"] * 100 // len(rows)))
-    return {"tier": t["id"], "title": t["title"], "takers": len(rows),
+    return {"tier": t["id"], "title": SUGGESTIONS[t["id"]][0], "takers": len(rows),
             "top": [entry(i, r) for i, r in enumerate(rows[:BOARD_SIZE])], "you": you}

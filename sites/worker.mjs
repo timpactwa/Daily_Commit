@@ -11,6 +11,7 @@ const skill = rating => {
     level_progress: next ? Math.max(0, Math.min(100, Math.floor((rating - bands[i]) / (next - bands[i]) * 100))) : 100 };
 };
 const metadata = bands.map((min_rating, i) => ({ id: `level-${i + 1}`, min_rating, max_rating: (bands[i + 1] ?? 2201) - 1 }));
+const rankedSuggestions = { beginner: ['Easy', 1, 3], intermediate: ['Intermediate', 4, 5], advanced: ['Advanced', 6, 7] };
 const json = (data, status = 200) => Response.json(data, { status, headers: { 'Cache-Control': 'no-store' } });
 class ApiError extends Error {
   constructor(status, code, message) { super(message); this.status = status; this.code = code; }
@@ -105,17 +106,19 @@ export function createWorker({ assets = ASSETS, modules = MODULES, upstreamFetch
             if (path === '/v1/placement' && request.method === 'POST') data.topics = data.topics.map(t => ({ ...t, ...skill(t.rating) }));
             if (path === '/v1/config') data.features.learn = true;
             if (path.startsWith('/v1/ranked')) {
-              const title = id => ({ beginner: 'Level 1', intermediate: 'Level 3', advanced: 'Level 5' })[id];
+              const title = id => rankedSuggestions[id]?.[0];
               if (data.tier) data.title = title(data.tier) ?? data.title;
               if (data.tiers) {
                 const p = await upstream(request, '/v1/progress', 'GET');
-                let suggested;
-                if (p.ok) {
-                  const topics = (await p.json()).topics;
-                  const mean = topics.reduce((sum, t) => sum + t.rating, 0) / topics.length;
-                  suggested = mean < 1200 ? 'beginner' : mean < 1650 ? 'intermediate' : 'advanced';
-                }
-                data.tiers = data.tiers.map(t => ({ ...t, title: title(t.id) ?? t.title, ...(suggested ? { suggested: t.id === suggested } : {}) }));
+                const progress = await p.json();
+                if (!p.ok) return json(progress, p.status);
+                const average = progress.topics.length ? progress.topics.reduce((sum, t) => sum + t.rating, 0) / progress.topics.length : 600;
+                data.ranked_level = level(average) + 1;
+                data.ranked_rating = Math.floor(average);
+                data.tiers = data.tiers.map(t => {
+                  const [title, min_level, max_level] = rankedSuggestions[t.id];
+                  return { ...t, title, min_level, max_level, suggested: min_level <= data.ranked_level && data.ranked_level <= max_level };
+                });
               }
             }
           }

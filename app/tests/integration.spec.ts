@@ -1,5 +1,42 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
+
+test("ranked suggests one difficulty by level and leaves every test available", async ({ page }) => {
+  test.setTimeout(60000);
+  let number = 1;
+  await page.route("**/v1/config", route => route.fulfill({ json: { features: { learn: true, ranked: true, accounts: true } } }));
+  await page.route("**/v1/ranked", route => route.fulfill({ json: {
+    has_account: true, ranked_level: number, ranked_rating: [0,600,1000,1200,1400,1650,1900,2100][number],
+    tiers: [["beginner","Easy",1,3],["intermediate","Intermediate",4,5],["advanced","Advanced",6,7]].map(([id,title,min,max]) => ({
+      id, title, min_level: min, max_level: max, description: "Practice at this difficulty.",
+      time_limit_s: 600, question_count: 10, takers: 0, attempt: null,
+      suggested: number >= Number(min) && number <= Number(max),
+    })),
+  } }));
+  for (const current of [1,3,4,5,6,7]) {
+    number = current;
+    await page.goto("/#/ranked");
+    await page.reload();
+    await expect(page.getByText(`Your ranked level: Level ${number}`, { exact: true })).toBeVisible();
+    const suggested = number <= 3 ? "Easy" : number <= 5 ? "Intermediate" : "Advanced";
+    await expect(page.getByRole("article", { name: `${suggested} ranked test` }).getByText("SUGGESTED", { exact: true })).toBeVisible();
+    await expect(page.getByText("SUGGESTED", { exact: true })).toHaveCount(1);
+    for (const title of ["Easy", "Intermediate", "Advanced"]) {
+      await expect(page.getByRole("article", { name: `${title} ranked test` }).getByRole("button", { name: "Take test", exact: true })).toBeEnabled();
+    }
+    if (number === 6) {
+      const easy = page.getByRole("article", { name: "Easy ranked test" });
+      await easy.getByRole("button", { name: "Take test", exact: true }).click();
+      await expect(easy.getByRole("button", { name: "Start the clock" })).toBeVisible();
+      await easy.getByRole("button", { name: "Not yet", exact: true }).click();
+      for (const viewport of [{ width: 393, height: 851 }, { width: 1280, height: 900 }]) {
+        await page.setViewportSize(viewport);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+        await page.screenshot({ path: `test-results/ranked-level-six-${viewport.width}.png`, fullPage: true });
+      }
+    }
+  }
+});
 test("built PWA against real API: demo, feedback, completion, progress, offline retry", async ({
   page,
   request,
