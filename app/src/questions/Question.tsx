@@ -35,7 +35,7 @@ export function Question({
         <section className="test-output term" aria-label="Failing tests">
           <div className="term-bar">
             <span className="fail-dot" aria-hidden="true">●</span>
-            <p className="eyebrow">FAILING TESTS · START HERE</p>
+            <p className="eyebrow">FAILING TESTS</p>
           </div>
           <pre>{q.test_output}</pre>
         </section>
