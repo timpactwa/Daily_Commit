@@ -4,7 +4,7 @@
   "track": "debugging",
   "title": "Recursion: Base Cases and Progress",
   "summary": "Write recursive functions that stop, shrink the problem each call, and combine results correctly.",
-  "minutes": 6,
+  "minutes": 10,
   "sections": [
     {
       "id": "base-and-step",
@@ -12,7 +12,9 @@
       "body": [
         "A recursive function solves a problem by calling itself on a smaller version of that problem. It needs two parts. The **base case** answers directly without recursing, and acts as the stopping condition. The **recursive case** breaks the input into a smaller piece and combines the result.",
         "Factorial is the standard example: `0! = 1` is the base case, and `n! = n * (n-1)!` is the recursive case. Each call lowers `n` by one, so it must eventually reach 0.",
-        "Notice that the multiplication happens after the inner call returns. That is why the calls pile up and then unwind, multiplying on the way back."
+        "Notice that the multiplication happens after the inner call returns. That is why the calls pile up and then unwind, multiplying on the way back.",
+        "**Choose a decreasing measure.** For factorial on nonnegative integers, n decreases by one until zero. For a recursive list traversal, the remaining suffix gets shorter. If a branch recurses with the same problem size, a correct base case cannot rescue it. State the allowed input domain as well as the stopping value.",
+        "**Trace the waiting work.** factorial(3) cannot finish its multiplication until factorial(2) returns. Each frame keeps its own n and a place to resume. Draw the calls downward and the returned results upward; this separates reaching a base case from correctly combining the results on the way back."
       ],
       "example": {
         "title": "Factorial unwinding",
@@ -49,7 +51,9 @@
       "body": [
         "A missing or incorrect base case is the most common recursion bug. If the stopping condition is never reached, the function recurses without end. Each call uses stack space, and Python caps recursion depth, so you get a `RecursionError` instead of an infinite loop.",
         "There are two typical mistakes. First, the base case is **unreachable**: for example it tests `n == 1`, but the input can start at 0 or go below it. Second, the base case is **wrong**: it returns the wrong value, which poisons every answer built on top of it.",
-        "A good habit is to ask what the smallest legal input is and make sure the base case covers it, then ask whether every recursive call really moves toward that base case."
+        "A good habit is to ask what the smallest legal input is and make sure the base case covers it, then ask whether every recursive call really moves toward that base case.",
+        "**Use the operation's identity.** Multiplication uses one as its neutral value, while summing an empty collection uses zero. Returning the wrong neutral value can make every larger result wrong despite a perfectly decreasing recursive step. Derive the base value from the recurrence rather than memorizing it independently.",
+        "**Test adjacent inputs.** Check the base input itself, one step above it, and a slightly larger input. Those three cases reveal whether the base is reachable, whether its value propagates correctly and whether the recursive branch progresses. Negative or otherwise unsupported inputs need an explicit policy rather than an assumption that the recursion will eventually terminate."
       ],
       "example": {
         "title": "Two broken base cases",
@@ -86,7 +90,9 @@
       "body": [
         "Even with a correct base case, the combine step can be wrong. Common slips: returning the recursive call without using the current value, adding when you should multiply, or forgetting a case entirely.",
         "Fast exponentiation shows this well. To compute `x ** n`, compute `half = power(x, n // 2)`. If `n` is even, the answer is `half * half`. If `n` is odd, one factor of `x` is left over, so the answer is `half * half * x`. The depth is about log n instead of n.",
-        "When a recursive function gives wrong answers, trace a tiny input by hand, writing down what each call returns on the way back up."
+        "When a recursive function gives wrong answers, trace a tiny input by hand, writing down what each call returns on the way back up.",
+        "**Returning is different from calling.** A recursive helper can compute the right value and still lose it if its caller does not return or combine that value. In Python, falling off the end returns None. Inspect every branch that should produce a result, including branches that only forward a recursive answer.",
+        "**Match combination to structure.** A nested sum combines a scalar with the results of smaller lists. Exponentiation by squaring combines one half-power with itself, plus an extra factor for odd exponents. Reusing one combination rule across these different recurrences changes the mathematics. Work through a tiny odd input or a two-level nested list to validate the chosen rule."
       ],
       "example": {
         "title": "Power by halving",
@@ -115,6 +121,39 @@
         ],
         "answer": "b",
         "explanation": "half is power(2, 0) = 1, and 1 * 1 = 1. The correct answer is 2, but the missing factor of x (the leftover from odd n) is lost. That error then spreads to every larger odd power."
+      }
+    },
+    {
+      "id": "memoization",
+      "heading": "Memoization: reuse solved subproblems",
+      "body": [
+        "Some recursive functions solve the same smaller problem repeatedly. A naive Fibonacci computation asks for fib(n - 2) directly and again inside fib(n - 1). Memoization stores a completed result by its subproblem identity, so later calls reuse it rather than rebuilding the same call tree.",
+        "In this example, the integer k fully identifies a subproblem because the function has no other changing input. Cache only a result that is complete, and preserve the base cases. A cache key that omits relevant input can return an answer for the wrong problem. Memoization improves repeated work; it does not repair an incorrect recurrence or guarantee termination.",
+        "For nonnegative n, there are only n + 1 distinct Fibonacci subproblems. Caching turns the repeated expansion into O(n) arithmetic steps under the usual unit-cost model, with O(n) stored values and recursive depth. For very large n, an iterative solution avoids Python's recursion-depth limit; integer arithmetic also becomes more expensive as values grow."
+      ],
+      "example": {
+        "title": "A cache inside one computation",
+        "text": "fib(10) returns 55. Each smaller k is solved once during that call; the cache is local rather than shared across unrelated requests.",
+        "code": "def fib(n):\n    cache = {0: 0, 1: 1}\n    def solve(k):\n        if k not in cache:\n            cache[k] = solve(k - 1) + solve(k - 2)\n        return cache[k]\n    return solve(n)"
+      },
+      "check": {
+        "prompt": "What does memoization remove from this computation?",
+        "options": [
+          {
+            "id": "a",
+            "text": "The need for base cases"
+          },
+          {
+            "id": "b",
+            "text": "Repeated evaluation of the same subproblem"
+          },
+          {
+            "id": "c",
+            "text": "All recursive calls"
+          }
+        ],
+        "answer": "b",
+        "explanation": "Memoization reuses completed subproblem results. Base cases, a correct recurrence and progress toward termination are still necessary."
       }
     }
   ],

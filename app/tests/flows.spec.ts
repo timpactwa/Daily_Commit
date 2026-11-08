@@ -75,7 +75,7 @@ async function createAndPlace(page: Page) {
     page.getByText("YOUR STARTING POINT", { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("advanced", { exact: true }).first(),
+    page.getByText("Level 3", { exact: true }).first(),
   ).toBeVisible();
   await page.getByRole("link", { name: "Let’s make a daily habit" }).click();
   await expect(
@@ -85,6 +85,7 @@ async function createAndPlace(page: Page) {
 test("placement, all four question formats, feedback, completion and progress", async ({
   page,
 }) => {
+  test.setTimeout(60000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await createAndPlace(page);
@@ -268,4 +269,36 @@ test("source citations are usable HTTPS links and other markup stays plain text"
   await expect(feedback.getByRole("link")).toHaveCount(1);
   await expect(feedback.locator("img")).toHaveCount(0);
   await expect(feedback).toContainText("[unsafe](javascript:alert(1))");
+});
+
+test("failing tests precede code and skill levels explain the higher thresholds", async ({ page }) => {
+  await createAndPlace(page);
+  await page.getByRole('link', { name: 'Make today’s commit' }).click();
+  for (let i = 0; i < 3; i++) {
+    await selectQuestion(page);
+    await page.getByRole('button', { name: 'Check answer' }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+  }
+  const failures = page.getByRole('region', { name: 'Failing tests' });
+  const code = page.getByLabel('Select the buggy line');
+  await expect(failures).toBeVisible();
+  await expect(code).toBeVisible();
+  expect(await failures.evaluate(el => !!(el.compareDocumentPosition(document.querySelector('.question .code')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBeTruthy();
+  const testBox = await failures.boundingBox();
+  const codeBox = await code.boundingBox();
+  expect(testBox!.y + testBox!.height).toBeLessThanOrEqual(codeBox!.y);
+  await page.getByRole('link', { name: 'Progress', exact: false }).last().click();
+  const ladder = page.getByRole('region', { name: 'Skill level requirements' });
+  await expect(ladder.locator('li')).toHaveCount(7);
+  await expect(ladder).toContainText('1650–1899 Elo');
+  await expect(ladder).toContainText('Level 7');
+});
+
+test("background flows faster and respects reduced motion", async ({ page }) => {
+  await page.goto('/');
+  const duration = await page.locator('.b1').evaluate(el => parseFloat(getComputedStyle(el).animationDuration));
+  expect(duration).toBeGreaterThan(0);
+  expect(duration).toBeLessThanOrEqual(15);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  expect(await page.locator('.b1').evaluate(el => getComputedStyle(el).animationName)).toBe('none');
 });

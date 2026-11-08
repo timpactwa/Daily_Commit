@@ -3,7 +3,7 @@
   "tiers": [
     {
       "id": "beginner",
-      "title": "Beginner",
+      "title": "Level 1",
       "description": "Core ideas applied to simple scenarios and short functions.",
       "time_limit_s": 600,
       "min_rating": 600,
@@ -23,7 +23,7 @@
     },
     {
       "id": "intermediate",
-      "title": "Intermediate",
+      "title": "Level 3",
       "description": "Tradeoffs, patterns and mid-size functions with subtle bugs.",
       "time_limit_s": 720,
       "min_rating": 1000,
@@ -43,7 +43,7 @@
     },
     {
       "id": "advanced",
-      "title": "Advanced",
+      "title": "Level 5",
       "description": "Failure modes, capacity math and tricky multi-branch code.",
       "time_limit_s": 900,
       "min_rating": 1300,

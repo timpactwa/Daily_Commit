@@ -121,11 +121,11 @@ button:disabled {
   mix-blend-mode: screen;
   will-change: transform;
 }
-.b1 { width: 55%; height: 70%; left: -12%; top: 28%; background: #e8542a; opacity: 0.85; animation: lava1 26s ease-in-out infinite alternate; }
-.b2 { width: 50%; height: 70%; left: 28%; top: -18%; background: #e62bd9; opacity: 0.8; animation: lava2 32s ease-in-out infinite alternate; }
-.b3 { width: 48%; height: 62%; left: 62%; top: 42%; background: #4a3dff; opacity: 0.85; animation: lava3 28s ease-in-out infinite alternate; }
-.b4 { width: 34%; height: 44%; left: 60%; top: -12%; background: #3e8fe0; opacity: 0.55; animation: lava4 36s ease-in-out infinite alternate; }
-.b5 { width: 40%; height: 50%; left: 18%; top: 62%; background: #6a1fb8; opacity: 0.8; animation: lava5 30s ease-in-out infinite alternate; }
+.b1 { width: 55%; height: 70%; left: -12%; top: 28%; background: #e8542a; opacity: 0.85; animation: lava1 12s linear infinite alternate; }
+.b2 { width: 50%; height: 70%; left: 28%; top: -18%; background: #e62bd9; opacity: 0.8; animation: lava2 15s linear infinite alternate; }
+.b3 { width: 48%; height: 62%; left: 62%; top: 42%; background: #4a3dff; opacity: 0.85; animation: lava3 13s linear infinite alternate; }
+.b4 { width: 34%; height: 44%; left: 60%; top: -12%; background: #3e8fe0; opacity: 0.55; animation: lava4 17s linear infinite alternate; }
+.b5 { width: 40%; height: 50%; left: 18%; top: 62%; background: #6a1fb8; opacity: 0.8; animation: lava5 14s linear infinite alternate; }
 @keyframes lava1 { 0% { transform: translate(0, 0) scale(1); } 33% { transform: translate(35%, -28%) scale(1.2); } 66% { transform: translate(12%, 18%) scale(0.85); } 100% { transform: translate(55%, -6%) scale(1.1); } }
 @keyframes lava2 { 0% { transform: translate(0, 0) scale(1); } 30% { transform: translate(-30%, 30%) scale(0.9); } 70% { transform: translate(25%, 40%) scale(1.25); } 100% { transform: translate(-10%, 10%) scale(1); } }
 @keyframes lava3 { 0% { transform: translate(0, 0) scale(1); } 40% { transform: translate(-45%, -30%) scale(1.15); } 100% { transform: translate(-20%, -60%) scale(0.9); } }
@@ -134,7 +134,7 @@ button:disabled {
 .lava-shade {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 80% 70% at 50% 45%, rgba(13, 10, 21, 0.35), rgba(13, 10, 21, 0.82));
+  background: radial-gradient(ellipse 80% 70% at 50% 45%, rgba(13, 10, 21, 0.25), rgba(13, 10, 21, 0.78));
 }
 .grain {
   position: absolute;
@@ -575,15 +575,15 @@ button.primary:not(:disabled):active {
 .level {
   text-transform: capitalize;
 }
-.level.advanced {
+.level.level-5 {
   color: var(--pass-text);
   border-color: #165c47;
 }
-.level.intermediate {
+.level.level-3 {
   color: var(--ember-text);
   border-color: #6b4a0e;
 }
-.level.beginner {
+.level.level-1 {
   color: var(--volt-text);
 }
 .inline-code {
@@ -1986,3 +1986,27 @@ pre.code {
   font-size: 13px;
   color: var(--text-3);
 }
+/* Clear progression for the longer learning paths. */
+.module-journey { margin: 28px 0; }
+.module-journey h2 { margin: 0; font-size: 21px; }
+.module-journey .split { flex-wrap: wrap; gap: 8px; }
+.module-outline { list-style: none; padding: 0; margin: 24px 0 0; }
+.module-outline li { position: relative; padding-bottom: 18px; }
+.module-outline li:not(:last-child)::after { content: ''; position: absolute; left: 25px; top: 54px; height: 20px; border-left: 2px dashed var(--line-hover); }
+.module-outline button { width: 100%; display: flex; align-items: center; gap: 16px; text-align: left; border: 0; box-shadow: none; background: transparent; padding: 6px 0; line-height: 1.4; }
+.module-outline button:not(:disabled):hover { transform: none; box-shadow: none; }
+.module-outline .chapter-node { display: grid; place-items: center; flex: 0 0 52px; height: 48px; border-radius: 50%; color: #fff; background: var(--volt); box-shadow: 0 5px 0 var(--volt-ledge); font: 800 20px var(--font-display); }
+.module-outline .chapter-complete .chapter-node { background: var(--pass-bg); color: var(--pass-text); box-shadow: 0 5px 0 var(--pass-ledge); }
+.module-outline .chapter-locked .chapter-node { background: var(--panel-raised); color: var(--text-3); box-shadow: 0 5px 0 var(--void-deep); }
+.module-outline small { display: block; margin-top: 4px; font: 400 13px/1.4 var(--font-body); color: var(--text-3); }
+.module-section { scroll-margin-top: 20px; }
+.skill-ladder { margin-top: 28px; }
+.skill-ladder h2 { margin-top: 0; }
+.skill-ladder ol { list-style: none; padding: 0; margin: 20px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px 20px; }
+.skill-ladder li { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 10px 0; }
+.skill-ladder li > span:last-child { color: var(--text-3); font: 13px var(--font-code); }
+.level.level-2 { color: var(--volt-text); border-color: var(--line-hover); }
+.level.level-4 { color: var(--ember-text); border-color: #886522; }
+.level.level-6 { color: var(--volt-text); border-color: var(--volt); }
+.level.level-7 { color: var(--ember-text); border-color: var(--ember); background: rgba(255,176,32,.1); }
+.next-skill-level { font-size: 13px; margin: 14px 0 0; }

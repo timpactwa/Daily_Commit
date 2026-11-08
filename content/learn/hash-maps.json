@@ -4,7 +4,7 @@
   "track": "debugging",
   "title": "Hash Maps: Counting and Lookups",
   "summary": "Use dicts for counting and instant lookups, and avoid the default-value and ordering bugs that trip people up.",
-  "minutes": 6,
+  "minutes": 10,
   "sections": [
     {
       "id": "counting",
@@ -12,7 +12,9 @@
       "body": [
         "A hash table maps keys to values. Lookups, inserts and deletes take O(1) time on average (O(n) in the worst case, when many keys collide). That makes it the first tool to reach for when you need to count things or find them fast.",
         "The counting pattern is `counts[x] = counts.get(x, 0) + 1`. The `get` call supplies `0` when the key is missing, whereas `counts[x]` alone would raise `KeyError`. The default must be the identity of the operation: `0` for a sum or count.",
-        "Python also offers `collections.Counter` and `defaultdict(int)`, which do this for you. Counter returns `0` for missing keys instead of raising an error."
+        "Python also offers `collections.Counter` and `defaultdict(int)`, which do this for you. Counter returns `0` for missing keys instead of raising an error.",
+        "**Counts retain information a set discards.** A set can tell you that a value appeared, but not whether it appeared once or five times. Frequency-based tasks such as finding a unique character need the multiplicity. Updating counts[x] from its previous value preserves that information, while assigning one on every visit loses it.",
+        "**Decide when the counts are final.** A character that looks unique early in a scan may appear again later. For first-unique-character, finish the frequency table before scanning the original string for the earliest count of one. This separates aggregation from an order-sensitive decision and avoids returning too soon."
       ],
       "example": {
         "title": "Counting letters",
@@ -49,7 +51,9 @@
       "body": [
         "Checking `x in some_dict` tests for a **key** and is fast on average. Scanning a list for the same thing takes O(n). So a dict lets you replace an inner loop with a single lookup.",
         "Two Sum is the classic case: for each number, compute `need = target - nums[i]` and check whether `need` was seen earlier. Remember the indices you have visited, keyed by value.",
-        "Order matters. Check for the complement first, then store the current number. If you store first, a number can match itself. For `[3, 5]` with target 6, storing 3 first and then looking up 3 would pair index 0 with index 0."
+        "Order matters. Check for the complement first, then store the current number. If you store first, a number can match itself. For `[3, 5]` with target 6, storing 3 first and then looking up 3 would pair index 0 with index 0.",
+        "**Define what the map contains at each step.** In one-pass two-sum, it stores values from earlier positions only. Look up target minus the current value before inserting the current index. Otherwise a single value can incorrectly pair with itself when it equals half the target.",
+        "**Try equal values and absent complements.** For [3, 3] and target 6, the first three is stored and the second finds a different earlier index. For [3] and target 6, there is no valid pair. These two inputs distinguish using equal values from reusing one element, a distinction that large examples can hide."
       ],
       "example": {
         "title": "Two Sum",
@@ -86,7 +90,9 @@
       "body": [
         "Dict keys must be hashable: strings, numbers and tuples of immutables work, but lists do not. Choose the key that matches the question. To find the first unique character you key by character; to group by length you key by length.",
         "Two follow-up bugs are common. A second pass that reads `counts[ch]` is safe only because every key was inserted first. And in a most-frequent search, `>` versus `>=` decides ties. With `>`, the value that reached the top count first wins; with `>=`, the latest one does.",
-        "When a hash-map function returns the wrong item, check the default, the key, and the comparison used for ties."
+        "When a hash-map function returns the wrong item, check the default, the key, and the comparison used for ties.",
+        "**Equality defines a key's meaning.** A key that omits part of the logical identity may combine unrelated items, while including a changing timestamp can prevent intended matches. Python dictionary keys must be hashable; a tuple can represent a compound key if its elements are hashable. Choose the key from the question the lookup is supposed to answer.",
+        "**Write a tie policy explicitly.** When two values have the same count, should the result prefer the first encountered, the smallest, or any valid answer? A strict greater-than update and a greater-than-or-equal update can choose different winners. Test a tie and document the intended rule instead of assuming dictionary ordering establishes the whole policy."
       ],
       "example": {
         "title": "Most common value",
@@ -115,6 +121,39 @@
         ],
         "answer": "a",
         "explanation": "2 gets to count 2 first. When 1 later reaches count 2 it does not beat best_count, so 2 stays."
+      }
+    },
+    {
+      "id": "prefix-frequencies",
+      "heading": "Prefix sums: count earlier states",
+      "body": [
+        "A prefix sum is the total before a position. A subarray from one prefix to another sums to target when their difference equals target. While scanning, look for earlier prefixes equal to current_total minus target. A dictionary of prefix frequencies lets you count those earlier positions without trying every subarray.",
+        "Seed frequency zero with one occurrence to represent the empty prefix before the first element. Look up the needed earlier total before recording the current total, so the current position does not count as its own earlier prefix. Store counts rather than just membership because several earlier positions can have the same total.",
+        "Negative values make a simple 'increase the window until the sum is large' strategy unreliable. Prefix differences still work because they follow an algebraic identity, not an assumption that adding elements increases the total. The dictionary grows with distinct prefix values, trading space for a linear scan."
+      ],
+      "example": {
+        "title": "Count subarrays summing to a target",
+        "text": "For [1, 1, 1] and target 2, the two valid subarrays start at indices 0 and 1. The result is 2.",
+        "code": "def count_subarrays(nums, target):\n    frequency = {0: 1}\n    total = 0\n    result = 0\n    for value in nums:\n        total += value\n        result += frequency.get(total - target, 0)\n        frequency[total] = frequency.get(total, 0) + 1\n    return result"
+      },
+      "check": {
+        "prompt": "Why is frequency initialized with {0: 1}?",
+        "options": [
+          {
+            "id": "a",
+            "text": "To sort negative values"
+          },
+          {
+            "id": "b",
+            "text": "To include subarrays that begin at index zero"
+          },
+          {
+            "id": "c",
+            "text": "To count every empty subarray as a match"
+          }
+        ],
+        "answer": "b",
+        "explanation": "The empty prefix has total zero. Recording it once lets a current prefix equal to target represent a subarray beginning at the start."
       }
     }
   ],

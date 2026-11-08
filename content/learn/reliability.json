@@ -4,7 +4,7 @@
   "track": "system-design",
   "title": "Reliability: Timeouts, Limits and Consistency",
   "summary": "Learn how overload cascades, how deadlines and load shedding contain it, how circuit breakers and rate limits protect services, and what replication trades off.",
-  "minutes": 7,
+  "minutes": 12,
   "sections": [
     {
       "id": "cascading-failure",
@@ -12,7 +12,9 @@
       "body": [
         "A **cascading failure** grows through positive feedback: when one part fails, the chance that other parts fail goes up. The most common cause is overload. If one cluster dies and its traffic shifts to a neighbor already near capacity, the neighbor can also crash or miss deadlines.",
         "Overloaded servers slow down, requests pile up, queues lengthen and health checks fail. Servers that crash and restart get hit with traffic right away and crash again, so the load must fall well below the level that started the problem before they stabilize.",
-        "Two defenses help. **Load shedding** drops some traffic when a server nears overload, for example by returning HTTP 503, so it keeps doing useful work for the rest. **Graceful degradation** lowers the quality of each response, such as searching only a subset of data, so each request costs less. Servers should fail early and cheaply when overloaded."
+        "Two defenses help. **Load shedding** drops some traffic when a server nears overload, for example by returning HTTP 503, so it keeps doing useful work for the rest. **Graceful degradation** lowers the quality of each response, such as searching only a subset of data, so each request costs less. Servers should fail early and cheaply when overloaded.",
+        "**Follow resource ownership.** A slow downstream call occupies a connection, worker or memory allocation in the caller. Enough waiting requests can exhaust those resources and make unrelated features fail. Bound concurrent work and isolate optional dependencies so one failure does not consume the entire service's capacity.",
+        "**Recovery needs spare capacity.** A service can recover technically yet fail immediately when every client retries at once. Limit retry attempts, spread them with jitter and admit traffic gradually. Verify recovery with successful user operations and queue age, not just the fact that a process restarted."
       ],
       "example": {
         "title": "One zone fails",
@@ -22,10 +24,22 @@
       "check": {
         "prompt": "What does load shedding do?",
         "options": [
-          { "id": "a", "text": "Adds more retries so every request eventually succeeds" },
-          { "id": "b", "text": "Rejects some requests as a server nears overload so it can keep serving the rest" },
-          { "id": "c", "text": "Increases the timeout on every request" },
-          { "id": "d", "text": "Moves all traffic to one server" }
+          {
+            "id": "a",
+            "text": "Adds more retries so every request eventually succeeds"
+          },
+          {
+            "id": "b",
+            "text": "Rejects some requests as a server nears overload so it can keep serving the rest"
+          },
+          {
+            "id": "c",
+            "text": "Increases the timeout on every request"
+          },
+          {
+            "id": "d",
+            "text": "Moves all traffic to one server"
+          }
         ],
         "answer": "b",
         "explanation": "Shedding drops a share of traffic early (for example with 503) so the server avoids exhausting resources and keeps useful throughput."
@@ -37,7 +51,9 @@
       "body": [
         "Always set a timeout or deadline on remote calls. With none, or a very high one, stale work keeps using threads and memory long after the caller has given up.",
         "A good deadline is short enough to limit wasted work but long enough for expensive requests to succeed. Services should also pass the remaining time downstream (**deadline propagation**), subtracting time spent at each hop, and skip work whose deadline has already passed.",
-        "Watch for slow failures. Google's SRE book describes a case where 5% of requests hang until a 100 second deadline: they tie up threads and push the overall error rate to about 80%. Failing fast when a backend is unavailable avoids this. Finally, retries should be limited and use backoff with jitter, because naive retries can push an already overloaded backend further over the edge."
+        "Watch for slow failures. Google's SRE book describes a case where 5% of requests hang until a 100 second deadline: they tie up threads and push the overall error rate to about 80%. Failing fast when a backend is unavailable avoids this. Finally, retries should be limited and use backoff with jitter, because naive retries can push an already overloaded backend further over the edge.",
+        "**Work backward from the user's deadline.** If a request must finish within one second, reserve some time for application work and network overhead before choosing a downstream timeout. Separate connection establishment from response time where appropriate, and pass the remaining budget through nested calls rather than resetting it at every hop.",
+        "**Choose a safe response to expiry.** Omitting a recommendations panel can preserve a usable product page. Pretending a timed-out payment succeeded is unsafe because the outcome is unknown. Cancel abandoned work where supported, and record enough context to reconcile side effects whose responses were lost."
       ],
       "example": {
         "title": "A hung dependency",
@@ -46,9 +62,18 @@
       "check": {
         "prompt": "Why is having no timeout on a remote call dangerous?",
         "options": [
-          { "id": "a", "text": "Hung calls hold threads and memory, which can exhaust resources and fail unrelated requests" },
-          { "id": "b", "text": "It makes the remote service run faster" },
-          { "id": "c", "text": "It automatically enables retries" }
+          {
+            "id": "a",
+            "text": "Hung calls hold threads and memory, which can exhaust resources and fail unrelated requests"
+          },
+          {
+            "id": "b",
+            "text": "It makes the remote service run faster"
+          },
+          {
+            "id": "c",
+            "text": "It automatically enables retries"
+          }
         ],
         "answer": "a",
         "explanation": "Without a deadline, slow or hung calls pile up and consume resources, so a problem in one dependency can take down the caller."
@@ -60,7 +85,9 @@
       "body": [
         "A **circuit breaker** wraps calls to a remote service and counts recent failures. In the **closed** state calls go through. When failures pass a threshold it becomes **open**, and calls fail immediately instead of waiting. After a timeout it goes **half-open** and lets a few trial calls through. If they succeed it closes again, and if any fail it reopens. This protects a recovering service from a flood.",
         "A breaker is different from a retry: retry hopes the next attempt works, while a breaker stops attempts that are likely to fail. When open, the app can degrade gracefully, for example by returning cached or default data.",
-        "**Rate limiting** controls how fast requests are sent or accepted. A throttled service returns HTTP 429, often with a `Retry-After` header. Clients should honor it and use a limited number of retries with small random delays, since blind retries create retry storms."
+        "**Rate limiting** controls how fast requests are sent or accepted. A throttled service returns HTTP 429, often with a `Retry-After` header. Clients should honor it and use a limited number of retries with small random delays, since blind retries create retry storms.",
+        "**Use each control for its purpose.** A timeout bounds a single wait. A circuit breaker reduces repeated calls to a failing dependency. A rate limiter controls admission, while a concurrency limit bounds work already in flight. These mechanisms complement one another; replacing all of them with a larger thread pool only postpones overload.",
+        "**Probe recovery carefully.** A half-open breaker should allow a small amount of test traffic before admitting the full load again. If every client probes on the same schedule, recovery can still cause a burst. Watch error rate and latency together, and choose thresholds that reflect the dependency's normal behavior."
       ],
       "example": {
         "title": "Payment provider outage",
@@ -70,10 +97,22 @@
       "check": {
         "prompt": "A circuit breaker is open. What happens to new calls to the protected service?",
         "options": [
-          { "id": "a", "text": "They all go through and are retried three times" },
-          { "id": "b", "text": "They fail immediately without calling the service" },
-          { "id": "c", "text": "They are queued until the service responds" },
-          { "id": "d", "text": "Only calls from admins are blocked" }
+          {
+            "id": "a",
+            "text": "They all go through and are retried three times"
+          },
+          {
+            "id": "b",
+            "text": "They fail immediately without calling the service"
+          },
+          {
+            "id": "c",
+            "text": "They are queued until the service responds"
+          },
+          {
+            "id": "d",
+            "text": "Only calls from admins are blocked"
+          }
         ],
         "answer": "b",
         "explanation": "In the open state requests fail fast, giving the failing service room to recover. After the timeout the breaker becomes half-open and allows a few trial calls."
@@ -85,7 +124,9 @@
       "body": [
         "When data is copied to several servers, you choose how strictly the copies must agree. With **synchronous** replication, a write is not committed until all servers have committed it. A failover then loses no data, and replicas return consistent results, but writes wait on the network and a fully synchronous setup over a slow link can cut performance by more than half.",
         "With **asynchronous** replication, some delay is allowed between a commit and its arrival on other servers. Writes are faster, but a failover can lose recent transactions and replicas may serve slightly stale data. This is an **eventual consistency** style tradeoff.",
-        "In an interview, say which you pick and why. A bank ledger leans toward strong consistency. A like counter or a feed can accept stale reads in exchange for speed and availability. Always state what happens during a failover and what users see."
+        "In an interview, say which you pick and why. A bank ledger leans toward strong consistency. A like counter or a feed can accept stale reads in exchange for speed and availability. Always state what happens during a failover and what users see.",
+        "**Name the guarantee precisely.** Read-your-writes means the author can see their completed updates. It does not imply that every other user sees them immediately. Eventual convergence is useful for some feeds, while an inventory reservation may need a coordinated decision at purchase time. Select the guarantee per operation rather than declaring an entire application simply consistent or inconsistent.",
+        "**Conflicts need domain rules.** Accepting updates in two disconnected regions can preserve availability while creating divergent state. Reconnection alone does not explain how to combine it. Merging a shopping cart's items and reconciling financial balances require different rules. Write down a concurrent-update example and decide which outcomes the application can safely expose."
       ],
       "example": {
         "title": "Two features, two choices",
@@ -94,9 +135,18 @@
       "check": {
         "prompt": "What is the main benefit of synchronous replication compared with asynchronous?",
         "options": [
-          { "id": "a", "text": "Writes are always faster" },
-          { "id": "b", "text": "Failover loses no committed data, at the cost of slower writes" },
-          { "id": "c", "text": "Replicas can never be read" }
+          {
+            "id": "a",
+            "text": "Writes are always faster"
+          },
+          {
+            "id": "b",
+            "text": "Failover loses no committed data, at the cost of slower writes"
+          },
+          {
+            "id": "c",
+            "text": "Replicas can never be read"
+          }
         ],
         "answer": "b",
         "explanation": "Synchronous commit waits for the other servers, so committed data exists on them if the primary fails. The tradeoff is added write latency."
@@ -104,9 +154,25 @@
     }
   ],
   "sources": [
-    { "title": "Addressing Cascading Failures", "url": "https://sre.google/sre-book/addressing-cascading-failures/", "publisher": "Google (Site Reliability Engineering book)" },
-    { "title": "Circuit Breaker Pattern", "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker", "publisher": "Microsoft (Azure Architecture Center)" },
-    { "title": "Rate Limiting Pattern", "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/rate-limiting-pattern", "publisher": "Microsoft (Azure Architecture Center)" },
-    { "title": "High availability, load balancing, and replication (PostgreSQL docs)", "url": "https://www.postgresql.org/docs/current/high-availability.html", "publisher": "PostgreSQL Global Development Group" }
+    {
+      "title": "Addressing Cascading Failures",
+      "url": "https://sre.google/sre-book/addressing-cascading-failures/",
+      "publisher": "Google (Site Reliability Engineering book)"
+    },
+    {
+      "title": "Circuit Breaker Pattern",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker",
+      "publisher": "Microsoft (Azure Architecture Center)"
+    },
+    {
+      "title": "Rate Limiting Pattern",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/rate-limiting-pattern",
+      "publisher": "Microsoft (Azure Architecture Center)"
+    },
+    {
+      "title": "High availability, load balancing, and replication (PostgreSQL docs)",
+      "url": "https://www.postgresql.org/docs/current/high-availability.html",
+      "publisher": "PostgreSQL Global Development Group"
+    }
   ]
 }

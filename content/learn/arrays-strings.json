@@ -4,7 +4,7 @@
   "track": "debugging",
   "title": "Arrays & Strings: Indexing, Pointers, Loops",
   "summary": "Get indexing and slicing right, walk a sequence with two pointers, and avoid the loop-bound bugs interviewers love.",
-  "minutes": 5,
+  "minutes": 11,
   "sections": [
     {
       "id": "indexing-slicing",
@@ -12,7 +12,9 @@
       "body": [
         "Python sequences (lists and strings) start at index `0`. Negative indices count from the right, so `word[-1]` is the last item. Reading an index past the end raises `IndexError`, but a negative index quietly wraps around, which is why bad loop bounds often give wrong answers instead of crashes.",
         "A slice `s[a:b]` includes the item at `a` and excludes the item at `b`. Its length is `b - a` when both are in range. Omitted ends default to the start and end of the sequence, and out-of-range slice ends are clamped instead of raising an error.",
-        "Strings are **immutable**: you cannot assign to `s[0]`. To change one, build a new string from slices. Slicing a list gives you a new (shallow) copy."
+        "Strings are **immutable**: you cannot assign to `s[0]`. To change one, build a new string from slices. Slicing a list gives you a new (shallow) copy.",
+        "**Keep index and value separate.** In [10, 20, 30], the value at index 1 is 20; the value 20 is not a valid index into this list. A loop variable may represent either concept depending on whether you iterate over range(len(values)) or over values directly. Name variables accordingly and trace a short input with unequal values and indices.",
+        "**Know what copying buys you.** A list slice creates a new outer list, but its elements still refer to the same objects. A shallow copy does not recursively duplicate nested lists. Strings are immutable, so building a changed string produces another value. These distinctions explain why mutating a sliced list of lists can still affect objects visible through the original."
       ],
       "example": {
         "title": "Slices and negative indices",
@@ -49,7 +51,9 @@
       "body": [
         "Two pointers means keeping two indices into the same sequence and moving them toward each other (or in the same direction) until they meet. It turns many nested-loop problems into a single pass.",
         "The classic form: `left` starts at `0`, `right` starts at `len(s) - 1`, and you loop while `left < right`. Each iteration inspects the pair, then moves at least one pointer inward. Checking a palindrome, or finding two numbers in a sorted list that add to a target, both work this way.",
-        "The bugs here are mechanical. Start `right` at `len(s)` and you read out of range. Forget to move one pointer and the pair never lines up again. Use `<=` instead of `<` and the middle element gets compared with itself."
+        "The bugs here are mechanical. Start `right` at `len(s)` and you read out of range. Forget to move one pointer and the pair never lines up again. Use `<=` instead of `<` and the middle element gets compared with itself.",
+        "**Justify every move.** In a sorted two-sum search, a sum that is too small can be increased by moving the left pointer right. That argument fails on an unsorted list. In a palindrome check, both pointers instead move inward after a matching pair. Similar-looking loops can therefore have different invariants and stopping rules.",
+        "**Test the smallest ranges.** Empty and one-element inputs reveal whether a pointer starts outside the list or a middle element is handled twice. Two equal values test whether the algorithm can use different positions without reusing the same element. Record left, right and the values inspected after each step; a trace is often more useful than guessing at a comparison operator."
       ],
       "example": {
         "title": "Palindrome check",
@@ -86,7 +90,9 @@
       "body": [
         "Most array bugs are off-by-one errors. `range(n)` produces `0` to `n - 1`, and `range(1, n)` skips index 0. When a loop looks at `nums[i - 1]`, starting at `0` would read index `-1`, which in Python is the last element. No error appears, the answer is just wrong.",
         "Before you trust a loop, test the smallest inputs: an empty list, one item, two items. Ask what the first and last iteration touch. Pick the start so every index you read exists, and the stop so the final item is not skipped.",
-        "Building strings has a similar trap. Because strings are immutable, each `+=` creates a new string. Collecting pieces in a list and calling `\"\".join(pieces)` at the end is the usual habit."
+        "Building strings has a similar trap. Because strings are immutable, each `+=` creates a new string. Collecting pieces in a list and calling `\"\".join(pieces)` at the end is the usual habit.",
+        "**Mark the excluded endpoint.** range(n) visits indices from zero through n minus one. Adding one to its stop value can attempt an out-of-bounds access, while subtracting one can silently skip a needed final element. Before changing a bound, list the exact indices that should be visited on an input of length two or three.",
+        "**Mutation changes the problem.** Removing elements while iterating can shift later positions, so the next iteration may skip an element even when the original range was valid. Iterate over a copy, build a new result or manage the position explicitly according to the algorithm. Do not assume that a bound error is always fixed by changing less-than to less-than-or-equal."
       ],
       "example": {
         "title": "Count increases",
@@ -115,6 +121,39 @@
         ],
         "answer": "a",
         "explanation": "Index -1 wraps to the last element, so the code silently compares the first and last values and can return a wrong count."
+      }
+    },
+    {
+      "id": "sliding-window",
+      "heading": "Sliding windows: keep a useful range",
+      "body": [
+        "A sliding window keeps a contiguous range while its endpoints move through a sequence. For a longest substring without repeated characters, the window must contain each character at most once. Extend the right endpoint to read another character, then move the left endpoint forward when necessary to restore that condition.",
+        "Remember the last index of each character. If the current character was last seen inside the window, the new left boundary is one past that position. Use max(left, previous + 1) so a character seen before the current window cannot move the boundary backward. Compute the window length only after restoring the invariant.",
+        "For 'abba', the second b moves left from 0 to 2. The last a was seen at index 0, outside the current window, so left stays 2 rather than moving back to 1. Both endpoints move only forward. Test repeated runs, all-distinct characters and an empty string to check this reasoning."
+      ],
+      "example": {
+        "title": "Longest distinct substring",
+        "text": "For 'abba', the result is 2. Without max(), the final a can incorrectly enlarge the window to include two b characters.",
+        "code": "def longest_unique(s):\n    left = 0\n    last = {}\n    best = 0\n    for right, ch in enumerate(s):\n        left = max(left, last.get(ch, -1) + 1)\n        last[ch] = right\n        best = max(best, right - left + 1)\n    return best"
+      },
+      "check": {
+        "prompt": "Why is max(left, previous + 1) necessary?",
+        "options": [
+          {
+            "id": "a",
+            "text": "It prevents the left boundary moving backward"
+          },
+          {
+            "id": "b",
+            "text": "It makes every substring sorted"
+          },
+          {
+            "id": "c",
+            "text": "It counts how many times a character occurs"
+          }
+        ],
+        "answer": "a",
+        "explanation": "An occurrence outside the active window must not move left backward. The window endpoints progress monotonically."
       }
     }
   ],

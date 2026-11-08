@@ -4,7 +4,7 @@
   "track": "system-design",
   "title": "Databases: Indexes, Replicas and Shards",
   "summary": "See how indexes speed up lookups, how replication trades safety against latency, and how to pick a shard key that avoids hot spots.",
-  "minutes": 7,
+  "minutes": 12,
   "sections": [
     {
       "id": "indexes",
@@ -12,7 +12,9 @@
       "body": [
         "Without an index, PostgreSQL has to scan a whole table row by row to find matches. An **index** lets it jump to matching rows directly, much like a book's alphabetical index lets you skip to the right pages.",
         "Indexes help queries that filter or join on the indexed column and return only a few rows from a big table, including `UPDATE` and `DELETE` statements with a search condition. The database keeps the index in sync automatically, and the planner uses it when that is cheaper than a sequential scan.",
-        "The price is write cost and storage. Every `INSERT`, `UPDATE` and `DELETE` must also maintain the index, so writes slow down. Building an index on a large table takes time and blocks writes unless you build it concurrently. Index the queries that matter, and drop indexes that are never used."
+        "The price is write cost and storage. Every `INSERT`, `UPDATE` and `DELETE` must also maintain the index, so writes slow down. Building an index on a large table takes time and blocks writes unless you build it concurrently. Index the queries that matter, and drop indexes that are never used.",
+        "**Check what the database actually did.** EXPLAIN shows a proposed plan; EXPLAIN ANALYZE executes the query and adds observed work and timing. Be careful with statements that change data. Look for rows examined, repeated loops and inaccurate estimates, then verify whether the proposed index improves the query under a realistic data distribution.",
+        "**Selectivity matters.** An index is useful when it helps avoid enough table work. A filter matching most rows may be faster as a sequential scan. Composite indexes also depend on the query's filters and ordering; adding separate indexes to every column is not the same as designing one for the access pattern. Include write and storage overhead in your comparison."
       ],
       "example": {
         "title": "Looking up orders by customer",
@@ -22,10 +24,22 @@
       "check": {
         "prompt": "What is the main cost of adding an index to a table?",
         "options": [
-          { "id": "a", "text": "Reads of that table become slower" },
-          { "id": "b", "text": "Inserts, updates and deletes must also maintain the index, so writes get slower" },
-          { "id": "c", "text": "The table can no longer be replicated" },
-          { "id": "d", "text": "Queries can no longer use WHERE clauses" }
+          {
+            "id": "a",
+            "text": "Reads of that table become slower"
+          },
+          {
+            "id": "b",
+            "text": "Inserts, updates and deletes must also maintain the index, so writes get slower"
+          },
+          {
+            "id": "c",
+            "text": "The table can no longer be replicated"
+          },
+          {
+            "id": "d",
+            "text": "Queries can no longer use WHERE clauses"
+          }
         ],
         "answer": "b",
         "explanation": "The index must be kept in sync with the table, which adds work to every write and uses extra storage. Reads on the indexed column usually get faster."
@@ -37,7 +51,9 @@
       "body": [
         "With **primary/standby replication**, one server accepts writes and other servers follow its changes. A **hot standby** can answer read-only queries, so replicas let you spread read traffic and also take over if the primary fails.",
         "The key choice is synchronous or asynchronous. With **synchronous** replication a transaction is not committed until the other servers have committed it, so a failover loses no data, but every write waits on the network. With **asynchronous** replication the standby catches up a little later, which is faster but means a failover can lose the most recent transactions.",
-        "Asynchronous replicas can also return slightly stale results, because changes take a moment to arrive. If a user must immediately see what they just wrote, read that from the primary. Replicas scale reads, not writes: every write still goes to the primary."
+        "Asynchronous replicas can also return slightly stale results, because changes take a moment to arrive. If a user must immediately see what they just wrote, read that from the primary. Replicas scale reads, not writes: every write still goes to the primary.",
+        "**Trace a missing fresh write.** A successful write on the primary may not yet have replayed on an asynchronous replica. A refresh routed to that replica can appear to undo the user's change. Route freshness-sensitive reads appropriately or wait for known replication progress. A fixed delay is only a heuristic because lag can grow during an outage or a heavy workload.",
+        "**Plan the failure boundary.** A replica is not a complete failover plan by itself. Promotion, routing, preventing conflicting primaries and the durability of acknowledged writes all matter. Ask which copy was authoritative when a write succeeded and which copies had received it. Those questions reveal possible data loss much more clearly than simply counting replicas."
       ],
       "example": {
         "title": "Read replica for a dashboard",
@@ -47,9 +63,18 @@
       "check": {
         "prompt": "What is the main risk of asynchronous replication when the primary fails?",
         "options": [
-          { "id": "a", "text": "The most recent commits might not have reached the standby and could be lost" },
-          { "id": "b", "text": "The standby can no longer serve reads" },
-          { "id": "c", "text": "Every write becomes slower" }
+          {
+            "id": "a",
+            "text": "The most recent commits might not have reached the standby and could be lost"
+          },
+          {
+            "id": "b",
+            "text": "The standby can no longer serve reads"
+          },
+          {
+            "id": "c",
+            "text": "Every write becomes slower"
+          }
         ],
         "answer": "a",
         "explanation": "Async replication lets the primary commit before the standby has the change, so a failover can drop the latest transactions. Synchronous replication avoids that but makes writes wait."
@@ -61,7 +86,9 @@
       "body": [
         "When data or write traffic outgrows one server, you can **shard**: split the data into horizontal partitions, each with the same schema but its own subset of rows, on separate servers. Each shard holds the rows that share a value of the **shard key** (also called partition key).",
         "The shard key is the most important choice, because changing it later usually means migrating all the data. A good key is stable, has many distinct values, spreads data and load evenly, and matches your common queries so most requests touch just one shard.",
-        "Avoid keys that keep increasing, like auto-increment ids or timestamps, because new writes all land on the newest shard. Avoid keys with few values, like a boolean or status. Queries that need data from many shards must fan out and wait for the slowest shard, so keep related data together."
+        "Avoid keys that keep increasing, like auto-increment ids or timestamps, because new writes all land on the newest shard. Avoid keys with few values, like a boolean or status. Queries that need data from many shards must fan out and wait for the slowest shard, so keep related data together.",
+        "**Start from a query example.** If most requests load all orders for one tenant, a tenant-based key can keep that request local. A random order ID may spread writes evenly while forcing tenant-wide queries to contact every shard. Good distribution and good query locality are separate goals, and a design must balance both.",
+        "**Test skew explicitly.** A hundred small tenants and one huge tenant are not a balanced workload, even if tenant IDs are evenly hashed. A dedicated shard or a second partitioning dimension may be needed for the largest tenant. Also ask how the key affects cross-tenant reporting, uniqueness checks and transactions before committing to the scheme."
       ],
       "example": {
         "title": "Choosing a key for a chat app",
@@ -70,10 +97,22 @@
       "check": {
         "prompt": "Why is an auto-increment id usually a poor shard key?",
         "options": [
-          { "id": "a", "text": "It has too many distinct values" },
-          { "id": "b", "text": "New rows all go to the newest shard, creating a hot spot" },
-          { "id": "c", "text": "It forces every query to touch all shards equally" },
-          { "id": "d", "text": "It cannot be stored as a number" }
+          {
+            "id": "a",
+            "text": "It has too many distinct values"
+          },
+          {
+            "id": "b",
+            "text": "New rows all go to the newest shard, creating a hot spot"
+          },
+          {
+            "id": "c",
+            "text": "It forces every query to touch all shards equally"
+          },
+          {
+            "id": "d",
+            "text": "It cannot be stored as a number"
+          }
         ],
         "answer": "b",
         "explanation": "Monotonically increasing keys send new writes to the same place, so one shard gets disproportionate load while others sit idle."
@@ -85,7 +124,9 @@
       "body": [
         "There are a few common ways to map a key to a shard. **Range** sharding keeps nearby keys together, which suits range queries but can create hot spots. **Hash** sharding hashes the key to spread load evenly, but range queries get harder and adding a shard with plain `hash(key) mod N` moves most keys. **Lookup** sharding uses a directory table that maps keys to shards, which is flexible but adds a lookup.",
         "Sharding adds lasting complexity: cross-shard transactions are hard, backups and schema changes must be coordinated, and rebalancing is painful. Many systems avoid distributed transactions and accept eventual consistency instead.",
-        "So do not shard too early. If your data fits on one instance, scale vertically. If the problem is read volume rather than writes or size, read replicas and caching are simpler. Shard when data or write throughput truly exceeds what one server can handle."
+        "So do not shard too early. If your data fits on one instance, scale vertically. If the problem is read volume rather than writes or size, read replicas and caching are simpler. Shard when data or write throughput truly exceeds what one server can handle.",
+        "**Partitioning has an operational cost.** Each extra shard adds routing, schema rollout, backup and recovery work. A cross-shard join can become many network requests plus application-side merging. Before introducing that complexity, consider query tuning, batching, replicas for suitable reads or precomputed views for repeated expensive calculations.",
+        "**Match the strategy to its failure mode.** Time ranges make retention and time-based scans convenient but can concentrate writes in the newest range. Hashing often spreads many keys more evenly but gives up simple range locality. Geographic placement helps nearby access, but requests crossing regions and data movement still need explicit handling. No partition key is best for every access pattern."
       ],
       "example": {
         "title": "Reads are the bottleneck",
@@ -94,9 +135,18 @@
       "check": {
         "prompt": "A database is slow mostly because of heavy read traffic, and the data fits on one server. What is usually the better first step than sharding?",
         "options": [
-          { "id": "a", "text": "Add read replicas and caching" },
-          { "id": "b", "text": "Shard by timestamp immediately" },
-          { "id": "c", "text": "Switch every query to a cross-shard transaction" }
+          {
+            "id": "a",
+            "text": "Add read replicas and caching"
+          },
+          {
+            "id": "b",
+            "text": "Shard by timestamp immediately"
+          },
+          {
+            "id": "c",
+            "text": "Switch every query to a cross-shard transaction"
+          }
         ],
         "answer": "a",
         "explanation": "When reads are the bottleneck, replicas and caching offload them without the cross-shard complexity of sharding. Sharding fits data volume or write throughput beyond one server."
@@ -104,8 +154,20 @@
     }
   ],
   "sources": [
-    { "title": "Introduction to indexes (PostgreSQL docs)", "url": "https://www.postgresql.org/docs/current/indexes-intro.html", "publisher": "PostgreSQL Global Development Group" },
-    { "title": "High availability, load balancing, and replication (PostgreSQL docs)", "url": "https://www.postgresql.org/docs/current/high-availability.html", "publisher": "PostgreSQL Global Development Group" },
-    { "title": "Sharding Pattern", "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/sharding", "publisher": "Microsoft (Azure Architecture Center)" }
+    {
+      "title": "Introduction to indexes (PostgreSQL docs)",
+      "url": "https://www.postgresql.org/docs/current/indexes-intro.html",
+      "publisher": "PostgreSQL Global Development Group"
+    },
+    {
+      "title": "High availability, load balancing, and replication (PostgreSQL docs)",
+      "url": "https://www.postgresql.org/docs/current/high-availability.html",
+      "publisher": "PostgreSQL Global Development Group"
+    },
+    {
+      "title": "Sharding Pattern",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/sharding",
+      "publisher": "Microsoft (Azure Architecture Center)"
+    }
   ]
 }

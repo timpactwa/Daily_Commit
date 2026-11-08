@@ -156,7 +156,7 @@ export function PlacementResult() {
                   <strong>{topicName(t.topic)}</strong>
                   <p>{Math.round(t.rating)} Elo</p>
                 </div>
-                <span className={`level ${t.level}`}>{t.level}</span>
+                <span className={`level ${t.level}`}>{topicName(t.level)}</span>
               </div>
             ))}
         </div>

@@ -47,6 +47,10 @@ jobs:
         working-directory: app
       - run: npm run build
         working-directory: app
+      - name: Build and test Sites Worker
+        run: |
+          node sites/build.mjs
+          node --test sites/worker.test.mjs
   browser:
     name: Phone and desktop flows
     runs-on: ubuntu-latest

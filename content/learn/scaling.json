@@ -4,7 +4,7 @@
   "track": "system-design",
   "title": "Scaling and Load Balancing Basics",
   "summary": "Understand vertical versus horizontal scaling, why stateless services scale easily, and how load balancers spread traffic and avoid hot spots.",
-  "minutes": 6,
+  "minutes": 12,
   "sections": [
     {
       "id": "vertical-horizontal",
@@ -12,7 +12,9 @@
       "body": [
         "**Vertical scaling** (scaling up) means giving one machine more CPU, memory or disk. **Horizontal scaling** (scaling out) means adding more instances and spreading the work across them.",
         "Vertical scaling is simple and suits workloads that are hard to split up, but one machine always has an upper limit and remains a single point of failure. Horizontal scaling improves capacity and resilience and fits work that can be divided into pieces that run independently. The cost is more moving parts: you need a way to route requests and to share state.",
-        "Smaller instances that you add and remove with demand are often cheaper than one very large machine. Autoscaling can do this automatically, but set limits so a runaway metric does not create an enormous bill, and leave a buffer of spare capacity for sudden spikes."
+        "Smaller instances that you add and remove with demand are often cheaper than one very large machine. Autoscaling can do this automatically, but set limits so a runaway metric does not create an enormous bill, and leave a buffer of spare capacity for sudden spikes.",
+        "**Locate the saturated resource.** High CPU suggests a different fix from a full network link, slow storage or a database connection limit. Adding API instances cannot widen a shared file server's network connection. Trace one successful request through its dependencies, then compare each component's capacity with the work arriving there.",
+        "**Capacity needs headroom.** If a service runs near its maximum sustainable throughput, small bursts can create queues and long tail latency. Measure the busiest normal period and the capacity left after one instance fails. Scale-out also takes time, so a predictable evening spike may justify preparing instances before traffic arrives."
       ],
       "example": {
         "title": "Photo-sharing API under growth",
@@ -21,9 +23,18 @@
       "check": {
         "prompt": "Which is a real advantage of horizontal scaling over vertical scaling?",
         "options": [
-          { "id": "a", "text": "It needs no routing or coordination between instances" },
-          { "id": "b", "text": "It avoids a single machine as the limit and improves resilience" },
-          { "id": "c", "text": "It works equally well for any application without code changes" }
+          {
+            "id": "a",
+            "text": "It needs no routing or coordination between instances"
+          },
+          {
+            "id": "b",
+            "text": "It avoids a single machine as the limit and improves resilience"
+          },
+          {
+            "id": "c",
+            "text": "It works equally well for any application without code changes"
+          }
         ],
         "answer": "b",
         "explanation": "Adding instances raises capacity beyond one machine and lets the system survive an instance failure. It does need routing and a design that tolerates many copies."
@@ -35,7 +46,9 @@
       "body": [
         "Adding replicas only helps if the application can actually use them. If each server keeps user session data in its own memory, a user must keep hitting the same server. That is called **client affinity** or sticky sessions, and it limits how well load can be spread.",
         "The fix is to make servers **stateless** and move state outside them: a distributed cache, a database or a session service. Then any instance can handle any request, and you can add or remove instances freely.",
-        "Also avoid heavy data locking where you can. Locks hurt concurrency and latency, and optimistic concurrency (check a version when you write instead of locking) scales better. Finally, push slow work, like sending emails or resizing images, to background tasks so request handlers stay fast."
+        "Also avoid heavy data locking where you can. Locks hurt concurrency and latency, and optimistic concurrency (check a version when you write instead of locking) scales better. Finally, push slow work, like sending emails or resizing images, to background tasks so request handlers stay fast.",
+        "**Move state deliberately.** A shared session store lets another API instance serve the next request, but it becomes a dependency with its own capacity and availability requirements. Decide whether a store outage should reject a request, use a safe fallback or briefly use a cached result. Stateless application servers do not make state management disappear.",
+        "**Handle work already in flight.** When replacing an instance, stop assigning it new requests and allow existing requests to finish within a deadline. Background jobs also need durable ownership or retry rules so a terminating process does not silently lose work. Test a rolling replacement while users are active, rather than only testing a fresh empty deployment."
       ],
       "example": {
         "title": "Moving sessions out of the app",
@@ -45,10 +58,22 @@
       "check": {
         "prompt": "Why does keeping session state in each server's memory hurt horizontal scaling?",
         "options": [
-          { "id": "a", "text": "Memory is slower than a database" },
-          { "id": "b", "text": "Users must return to the same server, which limits load spreading and loses state if it fails" },
-          { "id": "c", "text": "Load balancers cannot route HTTP requests" },
-          { "id": "d", "text": "It forces the use of vertical scaling only" }
+          {
+            "id": "a",
+            "text": "Memory is slower than a database"
+          },
+          {
+            "id": "b",
+            "text": "Users must return to the same server, which limits load spreading and loses state if it fails"
+          },
+          {
+            "id": "c",
+            "text": "Load balancers cannot route HTTP requests"
+          },
+          {
+            "id": "d",
+            "text": "It forces the use of vertical scaling only"
+          }
         ],
         "answer": "b",
         "explanation": "In-memory sessions create affinity to one instance. Externalizing state lets any instance serve any request."
@@ -60,7 +85,9 @@
       "body": [
         "A **load balancer** accepts client traffic and routes each request to one of several registered targets. It also runs **health checks**: if a target looks unhealthy it stops getting traffic, and it returns once it recovers.",
         "Routing is decided by an algorithm. Round robin takes targets in turn and is the default for AWS Application Load Balancers. Network Load Balancers pick a target with a hash of connection details such as addresses and ports, so one TCP connection sticks to one target. Some balancers use least outstanding requests.",
-        "Run balancers across more than one availability zone, so that if a zone fails, healthy targets in another zone keep serving. Note that cross-zone settings affect balance: with two targets in one zone and eight in another, and cross-zone turned off, each small-zone target gets 25% of traffic and each big-zone target only 6.25%."
+        "Run balancers across more than one availability zone, so that if a zone fails, healthy targets in another zone keep serving. Note that cross-zone settings affect balance: with two targets in one zone and eight in another, and cross-zone turned off, each small-zone target gets 25% of traffic and each big-zone target only 6.25%.",
+        "**Readiness and health answer different questions.** A process may be alive while still warming its caches or loading configuration. Admit it to the traffic pool only when it is ready to serve. Health checks also need thresholds so a brief transient failure does not cause rapid removal and re-addition of healthy instances.",
+        "**Watch shared dependencies.** If every backend fails a check solely because the same database briefly went down, removing every backend may worsen recovery. Design checks and fallback behavior around whether routing to a different instance can help. A load balancer distributes requests; it does not repair an overloaded shared database."
       ],
       "example": {
         "title": "Zone imbalance",
@@ -70,9 +97,18 @@
       "check": {
         "prompt": "What do health checks let a load balancer do?",
         "options": [
-          { "id": "a", "text": "Stop sending traffic to an unhealthy target and resume when it recovers" },
-          { "id": "b", "text": "Repair the unhealthy server" },
-          { "id": "c", "text": "Replicate the database" }
+          {
+            "id": "a",
+            "text": "Stop sending traffic to an unhealthy target and resume when it recovers"
+          },
+          {
+            "id": "b",
+            "text": "Repair the unhealthy server"
+          },
+          {
+            "id": "c",
+            "text": "Replicate the database"
+          }
         ],
         "answer": "a",
         "explanation": "The load balancer monitors targets, routes only to healthy ones, and sends traffic again once a target is healthy. It does not fix servers."
@@ -84,7 +120,9 @@
       "body": [
         "Even with a load balancer, load is rarely even. Google's SRE book notes that the busiest task limits how far traffic can grow, so imbalance forces you to over-provision. One example: a service reserving 1,000 CPUs might only use about 700 of them.",
         "Simple round robin can leave the most loaded backend using up to about twice the CPU of the least loaded one. Reasons include requests with very different costs (the most expensive can cost 1,000 times the cheapest), different machine types, and noisy neighbors.",
-        "Better policies use feedback. Weighted round robin lets backends report load and error rates, and clients favor those with more spare capacity. Counting only active requests is a weak signal, and a broken backend that fails fast can look idle and attract extra traffic, so recent errors should count as load too."
+        "Better policies use feedback. Weighted round robin lets backends report load and error rates, and clients favor those with more spare capacity. Counting only active requests is a weak signal, and a broken backend that fails fast can look idle and attract extra traffic, so recent errors should count as load too.",
+        "**Count work, not just keys.** Four shards with the same number of keys can receive very different request rates. One celebrity account or large tenant may dominate traffic. Measure per-key or per-tenant load and identify whether the hot work can be split, cached or isolated. Uniform hashing balances many independent keys, not necessarily one popular key.",
+        "**Rebalance safely.** Moving a partition changes where requests should go while writes may still be arriving. You need a migration plan for routing, copying and cutover, plus a way to check that the moved data is complete. The extra operational complexity is why reducing unnecessary work or scaling one constrained component may be the better first step."
       ],
       "example": {
         "title": "Expensive queries on one backend",
@@ -93,10 +131,22 @@
       "check": {
         "prompt": "Why can plain round robin still leave some backends much busier than others?",
         "options": [
-          { "id": "a", "text": "Round robin ignores health checks entirely" },
-          { "id": "b", "text": "It gives each backend the same number of requests, but requests can cost very different amounts of work" },
-          { "id": "c", "text": "It sends all traffic to the first backend" },
-          { "id": "d", "text": "It only works with vertical scaling" }
+          {
+            "id": "a",
+            "text": "Round robin ignores health checks entirely"
+          },
+          {
+            "id": "b",
+            "text": "It gives each backend the same number of requests, but requests can cost very different amounts of work"
+          },
+          {
+            "id": "c",
+            "text": "It sends all traffic to the first backend"
+          },
+          {
+            "id": "d",
+            "text": "It only works with vertical scaling"
+          }
         ],
         "answer": "b",
         "explanation": "Equal request counts do not mean equal load when request cost and machine capacity vary, so some backends run much hotter."
@@ -104,8 +154,20 @@
     }
   ],
   "sources": [
-    { "title": "Architecture strategies for optimizing scaling and partitioning", "url": "https://learn.microsoft.com/en-us/azure/well-architected/performance-efficiency/scale-partition", "publisher": "Microsoft (Azure Well-Architected Framework)" },
-    { "title": "How Elastic Load Balancing works", "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html", "publisher": "Amazon Web Services" },
-    { "title": "Load Balancing in the Datacenter", "url": "https://sre.google/sre-book/load-balancing-datacenter/", "publisher": "Google (Site Reliability Engineering book)" }
+    {
+      "title": "Architecture strategies for optimizing scaling and partitioning",
+      "url": "https://learn.microsoft.com/en-us/azure/well-architected/performance-efficiency/scale-partition",
+      "publisher": "Microsoft (Azure Well-Architected Framework)"
+    },
+    {
+      "title": "How Elastic Load Balancing works",
+      "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html",
+      "publisher": "Amazon Web Services"
+    },
+    {
+      "title": "Load Balancing in the Datacenter",
+      "url": "https://sre.google/sre-book/load-balancing-datacenter/",
+      "publisher": "Google (Site Reliability Engineering book)"
+    }
   ]
 }
